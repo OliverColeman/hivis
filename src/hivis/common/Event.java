@@ -1,0 +1,55 @@
+/**
+ * 
+ */
+package hivis.common;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Stores data about events that occur for a set of data. 
+ * 
+ * @author O. J. Coleman
+ */
+public class Event<O, T, S extends Event<?, ?, ?>> {
+	/**
+	 * The object affected by the change.
+	 */
+	public final O affected;
+	
+	/**
+	 * The underlying event, if applicable.
+	 */
+	public final S sourceEvent;
+	
+	protected Set<T> types;
+	
+	public Event(O affected, S sourceEvent, T... types) {
+		this.affected = affected;
+		this.sourceEvent = sourceEvent;
+		this.types = Collections.unmodifiableSet(new HashSet<T>(Arrays.asList(types)));
+	}
+
+	public Event(O affected, T... types) {
+		this(affected, null, types);
+	}
+
+	/**
+	 * Returns true iff this event represents the given type. Note that an event may represent multiple types.
+	 * An event type is typically a dataset-type-specific enum.
+	 */
+	public boolean isType(Object type) {
+		return types.contains(type);
+	}
+	
+	/**
+	 * Get the list of change types represented by this event.
+	 * @return
+	 */
+	public Set<T> getTypes() {
+		return types;
+	}
+}
