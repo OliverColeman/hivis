@@ -25,21 +25,21 @@ import hivis.data.DataSeries;
  * @author O. J. Coleman
  *
  */
-public abstract class SFunc<I, O> extends ViewSeries<I, O> {
+public abstract class SeriesViewFunction<I, O> extends SeriesView<I, O> {
 	private int length = Integer.MIN_VALUE;
 	
 	
 	/**
 	 * Create a DataSeries function of the given input series, with length equal to the (first) input series.
 	 */
-	public SFunc(DataSeries<I>... input) {
+	public SeriesViewFunction(DataSeries<I>... input) {
 		super(input);
 	}
 	
 	/**
 	 * Create a DataSeries function with the given length.
 	 */
-	public SFunc(int length) {
+	public SeriesViewFunction(int length) {
 		super();
 		this.length = length;
 	}

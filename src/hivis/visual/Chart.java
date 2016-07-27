@@ -14,8 +14,13 @@
  * Boston, MA 02111-1307 USA
  */
 
+package hivis.visual;
+
 /**
- * Contains classes for DataSets that are a "view" of another DataSet. A "view" DataSet usually presents a view of an input DataSet 
- * by selecting a subset of, rearranging, transforming, or otherwise processing the input DataSet.
+ * Base class for chart implementations. Binds a DataTable to the chart and provides 
+ * 
+ * @author O. J. Coleman
  */
-package hivis.data.view;
+public class Chart {
+
+}

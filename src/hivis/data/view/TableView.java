@@ -43,7 +43,7 @@ import hivis.data.DataTableChange;
  * 
  * @author O. J. Coleman
  */
-public abstract class ViewTable extends AbstractDataTable implements DataListener {
+public abstract class TableView extends AbstractDataTable implements DataListener {
 	protected int rowKeySeries = Integer.MIN_VALUE;
 	
 	
@@ -60,14 +60,14 @@ public abstract class ViewTable extends AbstractDataTable implements DataListene
 	/**
 	 * Create a ViewTable that is not derived from a source DataTable.
 	 */
-	public ViewTable() {
+	public TableView() {
 		this(null);
 	}
 
 	/**
 	 * Create a ViewTable that is derived from the given source DataTable.
 	 */
-	public ViewTable(DataTable... inputTables) {
+	public TableView(DataTable... inputTables) {
 		super();
 		
 		if (inputTables == null) {

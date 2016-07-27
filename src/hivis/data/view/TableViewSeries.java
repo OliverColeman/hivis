@@ -34,11 +34,11 @@ import hivis.data.DataTableDefault;
  * 
  * @author O. J. Coleman
  */
-public class ViewTableSeries extends ViewTableSeriesBase {
+public class TableViewSeries extends TableViewSeriesBase {
 	ListSet<String> selected;
 	ListSet<String> selectedRename;
 
-	public ViewTableSeries(DataTable source) {
+	public TableViewSeries(DataTable source) {
 		super(source);
 
 		selected = new BMListSet<>();

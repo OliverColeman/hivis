@@ -32,7 +32,7 @@ import hivis.data.DataTable;
  * @author O. J. Coleman
  *
  */
-public class ViewTableFunction extends ViewTable {
+public class TableViewFunction extends TableView {
 	TableFunction function;
 	boolean includeInputSeries;
 	
@@ -42,7 +42,7 @@ public class ViewTableFunction extends ViewTable {
 	 * @param source The input DataTable.
 	 * @param function The function to generate the new DataSeries.
 	 */
-	public ViewTableFunction(TableFunction function, DataTable... source) {
+	public TableViewFunction(TableFunction function, DataTable... source) {
 		this(function, false, source);
 	}
 	
@@ -53,7 +53,7 @@ public class ViewTableFunction extends ViewTable {
 	 * @param function The function to generate the new DataSeries.
 	 * @param includeInputSeries Whether to include the DataSeries from the input DataTable in this DataTable view.
 	 */
-	public ViewTableFunction(TableFunction function, boolean includeInputSeries, DataTable... source) {
+	public TableViewFunction(TableFunction function, boolean includeInputSeries, DataTable... source) {
 		super(source);
 		this.function = function;
 		this.includeInputSeries = includeInputSeries;

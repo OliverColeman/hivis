@@ -28,7 +28,7 @@ import hivis.common.ListSet;
 import hivis.data.DataEvent;
 import hivis.data.DataTable;
 import hivis.data.DataTableChange;
-import hivis.data.view.ViewTableSeries;
+import hivis.data.view.TableViewSeries;
 
 /**
  * A view that filters a DataTable to a specified set of columns and/or rows. 
@@ -41,7 +41,7 @@ import hivis.data.view.ViewTableSeries;
  * 
  * @author O. J. Coleman
  */
-public class ViewTableSeriesParametrisedSelect extends ViewTableSeries implements Parametrised {
+public class ViewTableSeriesParametrisedSelect extends TableViewSeries implements Parametrised {
 	ListSet<Parameter<?>> params;
 	Set<ParameterListener> changeListeners;
 	

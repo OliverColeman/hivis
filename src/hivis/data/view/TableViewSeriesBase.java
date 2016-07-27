@@ -37,8 +37,8 @@ import hivis.data.DataTableDefault;
  * 
  * @author O. J. Coleman
  */
-public abstract class ViewTableSeriesBase extends ViewTable {
-	public ViewTableSeriesBase(DataTable source) {
+public abstract class TableViewSeriesBase extends TableView {
+	public TableViewSeriesBase(DataTable source) {
 		super(source);
 	}
 	

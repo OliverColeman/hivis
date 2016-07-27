@@ -25,11 +25,11 @@ import hivis.data.DataSeries;
  * 
  * @author O. J. Coleman
  */
-public class ViewSeriesAppend<V> extends ViewSeries<V, V> {
+public class SeriesViewAppend<V> extends SeriesView<V, V> {
 	/**
 	 * Create a new ViewSeriesAppend that appends the given input series in the order given.
 	 */
-	public ViewSeriesAppend(DataSeries<V>... input) {
+	public SeriesViewAppend(DataSeries<V>... input) {
 		super(input);
 	}
 	

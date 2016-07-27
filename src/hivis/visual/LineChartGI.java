@@ -14,7 +14,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-package hivis.chart;
+package hivis.visual;
 
 import org.gicentre.utils.stat.XYChart;
 

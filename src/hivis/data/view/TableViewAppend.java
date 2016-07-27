@@ -28,8 +28,8 @@ import hivis.data.DataTableChange;
  *  
  * @author O. J. Coleman
  */
-public class ViewTableAppend extends ViewTable {
-	public ViewTableAppend(DataTable... input) {
+public class TableViewAppend extends TableView {
+	public TableViewAppend(DataTable... input) {
 		super(input);
 		updateSeries();
 	}
@@ -78,7 +78,7 @@ public class ViewTableAppend extends ViewTable {
 						seriesToAppend[ti] = source.get(ti).get(label);
 					}
 					// Create new series appender and add to series in this view.
-					DataSeries<?> appendedSeries = new ViewSeriesAppend(seriesToAppend);
+					DataSeries<?> appendedSeries = new SeriesViewAppend(seriesToAppend);
 					series.put(label, appendedSeries);
 				}
 			}

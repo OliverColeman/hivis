@@ -27,7 +27,7 @@ import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataSeries;
 
-public abstract class ViewSeries<I, O> extends AbstractDataSeries<O> implements DataListener {
+public abstract class SeriesView<I, O> extends AbstractDataSeries<O> implements DataListener {
 	private TypeToken<O> typeToken = new TypeToken<O>(getClass()) {};
 	private Class<?> type = typeToken.getRawType();
 	
@@ -39,7 +39,7 @@ public abstract class ViewSeries<I, O> extends AbstractDataSeries<O> implements 
 	/**
 	 * Create a ViewSeries for the given input series, with length equal to the (first) input series.
 	 */
-	public ViewSeries(DataSeries<I>... input) {
+	public SeriesView(DataSeries<I>... input) {
 		inputSeries = Arrays.asList(Arrays.copyOf(input, input.length));
 		for (DataSeries<I> s : inputSeries) {
 			s.addChangeListener(this);
@@ -49,7 +49,7 @@ public abstract class ViewSeries<I, O> extends AbstractDataSeries<O> implements 
 	/**
 	 * Create a ViewSeries that is not based in input series.
 	 */
-	public ViewSeries() {
+	public SeriesView() {
 	}
 	
 	@Override

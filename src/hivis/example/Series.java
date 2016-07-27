@@ -21,7 +21,7 @@ import hivis.common.HV;
 import hivis.data.DataSeries;
 import hivis.data.DataTable;
 import hivis.data.view.Function;
-import hivis.data.view.ViewTableTranspose;
+import hivis.data.view.TableViewTranspose;
 
 /**
  * Examples of working with DataSeries.

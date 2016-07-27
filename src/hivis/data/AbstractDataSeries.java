@@ -28,9 +28,8 @@ import com.google.common.reflect.TypeToken;
 
 import hivis.data.view.CalcSeries;
 import hivis.data.view.Function;
-import hivis.data.view.SFunc;
-import hivis.data.view.SeriesFunction;
-import hivis.data.view.ViewSeriesAppend;
+import hivis.data.view.SeriesViewFunction;
+import hivis.data.view.SeriesViewAppend;
 
 /**
  * Default base implementation of {@link DataSeries}.
@@ -329,7 +328,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	@Override
 	public DataSeries<V> append(DataSeries<V> otherSeries) {
-		return new ViewSeriesAppend<V>(this, otherSeries);
+		return new SeriesViewAppend<V>(this, otherSeries);
 	}
 	
 	

@@ -22,10 +22,10 @@ import hivis.common.ListMap;
 import hivis.common.ListSet;
 import hivis.common.Util;
 import hivis.data.view.TableFunction;
-import hivis.data.view.ViewTableAppend;
-import hivis.data.view.ViewTableFunction;
-import hivis.data.view.ViewTableSeries;
-import hivis.data.view.ViewTableTranspose;
+import hivis.data.view.TableViewAppend;
+import hivis.data.view.TableViewFunction;
+import hivis.data.view.TableViewSeries;
+import hivis.data.view.TableViewTranspose;
 
 public abstract class AbstractDataTable extends DataSetDefault implements DataTable {
 	public AbstractDataTable() {
@@ -97,57 +97,57 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 
 	@Override
 	public DataTable select(int... series) {
-		return (new ViewTableSeries(this)).setSeries(series);
+		return (new TableViewSeries(this)).setSeries(series);
 	}
 
 	@Override
 	public DataTable selectRange(int begin, int end) {
-		return (new ViewTableSeries(this)).setSeriesRange(begin, end);
+		return (new TableViewSeries(this)).setSeriesRange(begin, end);
 	}
 
 	@Override
 	public DataTable select(String... series) {
-		return (new ViewTableSeries(this)).setSeries(series);
+		return (new TableViewSeries(this)).setSeries(series);
 	}
 
 	@Override
 	public DataTable selectGlob(String pattern) {
-		return (new ViewTableSeries(this)).setSeriesGlob(pattern);
+		return (new TableViewSeries(this)).setSeriesGlob(pattern);
 	}
 
 	@Override
 	public DataTable selectRE(Pattern pattern) {
-		return (new ViewTableSeries(this)).setSeriesRE(pattern);
+		return (new TableViewSeries(this)).setSeriesRE(pattern);
 	}
 
 	@Override
 	public DataTable selectRE(Pattern pattern, String renamePattern) {
-		return (new ViewTableSeries(this)).setSeriesRE(pattern, renamePattern);
+		return (new TableViewSeries(this)).setSeriesRE(pattern, renamePattern);
 	}
 
 	@Override
 	public DataTable relabel(String... labels) {
-		return (new ViewTableSeries(this)).renameSeries(labels);
+		return (new TableViewSeries(this)).renameSeries(labels);
 	}
 
 	@Override
 	public DataTable relabelPP(String prefix, String postfix) {
-		return (new ViewTableSeries(this)).renameSeriesPP(prefix, postfix);
+		return (new TableViewSeries(this)).renameSeriesPP(prefix, postfix);
 	}
 
 	@Override
 	public DataTable apply(TableFunction function, boolean includeOriginalSeries) {
-		return new ViewTableFunction(function, includeOriginalSeries, this);
+		return new TableViewFunction(function, includeOriginalSeries, this);
 	}
 	
 	@Override 
 	public DataTable transpose() {
-		return new ViewTableTranspose(this);
+		return new TableViewTranspose(this);
 	}
 
 	@Override 
 	public DataTable append(DataTable table) {
-		return new ViewTableAppend(this, table);
+		return new TableViewAppend(this, table);
 	}
 
 	/**

@@ -30,8 +30,8 @@ import hivis.data.DataTable;
  * 
  * @author O. J. Coleman
  */
-public class ViewTableTranspose extends ViewTable {
-	public ViewTableTranspose(DataTable inputTable) {
+public class TableViewTranspose extends TableView {
+	public TableViewTranspose(DataTable inputTable) {
 		super(inputTable);
 		updateSeries();
 	}

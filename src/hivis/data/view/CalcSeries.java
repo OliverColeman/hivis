@@ -36,7 +36,7 @@ import hivis.data.DataSeriesReal;
  * 
  * @author O. J. Coleman
  */
-public abstract class CalcSeries<I, O> extends SFunc<I, O> {
+public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	boolean recalc = true;
 	/**
 	 * The cache of values. This is lazily calculated on the first call to

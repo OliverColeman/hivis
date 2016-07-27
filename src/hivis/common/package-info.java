@@ -14,13 +14,7 @@
  * Boston, MA 02111-1307 USA
  */
 
-package hivis.chart;
-
 /**
- * Base class for chart implementations. Binds a DataTable to the chart and provides 
- * 
- * @author O. J. Coleman
+ * Contains utility and common data structure classes.
  */
-public class Chart {
-
-}
+package hivis.common;

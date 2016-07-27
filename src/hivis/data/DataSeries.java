@@ -19,7 +19,6 @@ package hivis.data;
 import java.util.List;
 
 import hivis.data.view.Function;
-import hivis.data.view.SeriesFunction;
 import hivis.data.view.TableFunction;
 
 /**
