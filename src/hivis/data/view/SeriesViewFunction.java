@@ -25,7 +25,7 @@ import hivis.data.DataSeries;
  * @author O. J. Coleman
  *
  */
-public abstract class SeriesViewFunction<I, O> extends SeriesView<I, O> {
+public abstract class SeriesViewFunction<I, O> extends AbstractSeriesView<I, O> {
 	private int length = Integer.MIN_VALUE;
 	
 	
@@ -51,7 +51,7 @@ public abstract class SeriesViewFunction<I, O> extends SeriesView<I, O> {
 			return length;
 		}
 		if (inputSeries.isEmpty()) {
-			throw new RuntimeException("If an SFunc has no input series then either the length() method must be overridden or the length field set to provide the length of the calculated series.");
+			throw new RuntimeException("If a SeriesViewFunction has no input series then either the length() method must be overridden or the length field set to provide the length of the calculated series.");
 		}
 		return inputSeries.get(0).length();
 	}

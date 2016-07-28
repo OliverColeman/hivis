@@ -32,7 +32,7 @@ import hivis.data.DataTable;
  * @author O. J. Coleman
  *
  */
-public class TableViewFunction extends TableView {
+public class TableViewFunction extends AbstractTableView<DataSeries<?>> {
 	TableFunction function;
 	boolean includeInputSeries;
 	
@@ -66,13 +66,13 @@ public class TableViewFunction extends TableView {
 		series.clear();
 		
 		if (includeInputSeries) {
-			for (DataTable dt : source) {
+			for (DataTable dt : inputTables) {
 				series.putAll(dt.getLabelledSeries());
 			}
 		}
 		
 		ListMap<String, DataSeries<?>> map = new LSListMap<>();
-		function.getSeries(source, map);
+		function.getSeries(inputTables, map);
 		
 		for (Map.Entry<String, DataSeries<?>> s : map.entrySet()) {
 			series.put(s.getKey(), s.getValue());

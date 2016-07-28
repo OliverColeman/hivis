@@ -30,7 +30,7 @@ import hivis.data.DataTable;
  * 
  * @author O. J. Coleman
  */
-public class TableViewTranspose extends TableView {
+public class TableViewTranspose extends AbstractTableView<DataSeries<?>> {
 	public TableViewTranspose(DataTable inputTable) {
 		super(inputTable);
 		updateSeries();
@@ -41,7 +41,7 @@ public class TableViewTranspose extends TableView {
 		HashMap<String, DataSeries<?>> oldSeries = new HashMap<>(series);
 		series.clear();
 		
-		DataTable table = source.get(0);
+		DataTable table = inputTables.get(0);
 		
 		if (table.seriesCount() == 0 || table.length() == 0) {
 			return;
@@ -52,7 +52,7 @@ public class TableViewTranspose extends TableView {
 		}
 		
 		// Get the row keys series from the table, if set. They will be used as the series labels in the transposed table (if possible).
-		DataSeries<?> origRowKeys = table.hasRowKeys() ? table.get(table.getRowKeyIndex()) : null;
+		DataSeries<?> origRowKeys = table.hasRowKeys() ? table.getSeries(table.getRowKeyIndex()) : null;
 		// If a row key was set, make sure it contains unique values (series in a table must have unique labels).
 		if (origRowKeys != null) {
 			Set<Object> uniqueRowKeys = new HashSet<>();
@@ -78,10 +78,10 @@ public class TableViewTranspose extends TableView {
 				newRowKeys.set(nri, newKey);
 				nri++;
 				
-				type = getType(type, table.get(osi));
+				type = getType(type, table.getSeries(osi));
 				// If this series has the right type use it as an example to generate new series.
-				if (type.equals(table.get(osi).get(0).getClass())) {
-					seriesExample = table.get(osi);
+				if (type.equals(table.getSeries(osi).get(0).getClass())) {
+					seriesExample = table.getSeries(osi);
 				}
 			}
 		}
@@ -101,7 +101,7 @@ public class TableViewTranspose extends TableView {
 			
 			for (int osi = 0, nri = 0; osi < table.seriesCount(); osi++) {
 				if (osi != table.getRowKeyIndex()) {
-					newSeries.set(nri, table.get(osi).get(ori));
+					newSeries.set(nri, table.getSeries(osi).get(ori));
 					nri++;
 				}
 			}

@@ -25,7 +25,7 @@ import hivis.data.DataSeries;
  * 
  * @author O. J. Coleman
  */
-public class SeriesViewAppend<V> extends SeriesView<V, V> {
+public class SeriesViewAppend<V> extends AbstractSeriesView<V, V> {
 	/**
 	 * Create a new ViewSeriesAppend that appends the given input series in the order given.
 	 */
@@ -49,6 +49,7 @@ public class SeriesViewAppend<V> extends SeriesView<V, V> {
 	public Class<?> getType() {
 		return inputSeries.get(0).getType();
 	}
+	
 	@Override
 	public synchronized V get(int index) {
 		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
@@ -60,19 +61,47 @@ public class SeriesViewAppend<V> extends SeriesView<V, V> {
 	}
 	
 	@Override
-	public void setValue(int index, V value) {
-		throw new UnsupportedOperationException("Can not set values in a series view.");
+	public synchronized boolean getBoolean(int index) {
+		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
+			int len = inputSeries.get(seriesIndex).length();
+			if (index < len) return inputSeries.get(seriesIndex).getBoolean(index);
+			index -= len;
+		}
+		return (boolean) (Boolean) getEmptyValue();
 	}
+
 	@Override
-	public void appendValue(V value) {
-		throw new UnsupportedOperationException("Can not append values to a series view.");
+	public synchronized int getInt(int index) {
+		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
+			int len = inputSeries.get(seriesIndex).length();
+			if (index < len) return inputSeries.get(seriesIndex).getInt(index);
+			index -= len;
+		}
+		return (int) (Integer) getEmptyValue();
 	}
+
 	@Override
-	public void remove(int index) {
-		throw new UnsupportedOperationException("Can not remove values from a series view.");
+	public synchronized long getLong(int index) {
+		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
+			int len = inputSeries.get(seriesIndex).length();
+			if (index < len) return inputSeries.get(seriesIndex).getLong(index);
+			index -= len;
+		}
+		return (long) (Long) getEmptyValue();
 	}
+
 	@Override
-	public void resize(int newLength) {
-		throw new UnsupportedOperationException("Can not resize a series view.");
+	public synchronized double getDouble(int index) {
+		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
+			int len = inputSeries.get(seriesIndex).length();
+			if (index < len) return inputSeries.get(seriesIndex).getDouble(index);
+			index -= len;
+		}
+		return (double) (Double) getEmptyValue();
+	}
+
+	@Override
+	public void updateView(Object cause) {
+		// Nothing to do, view is not cached.
 	}
 }

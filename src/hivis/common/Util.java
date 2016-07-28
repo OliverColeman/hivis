@@ -54,7 +54,7 @@ public class Util {
 		boolean[] numeric = new boolean[table.seriesCount()];
 		double[] magnitude = new double[table.seriesCount()];
 		for (int s = 0; s < table.seriesCount(); s++) {
-			DataSeries<?> series = table.get(s);
+			DataSeries<?> series = table.getSeries(s);
 			if (Number.class.isAssignableFrom(series.getType())) {
 				numeric[s] = true;
 				for (int r = 0; r < table.length(); r++) {
@@ -123,7 +123,7 @@ public class Util {
 		Object[] row = new Object[table.seriesCount()];
 		for (int r = 0; r < table.length(); r++) {
 			for (int s = 0; s < table.seriesCount(); s++) {
-				row[s] = table.get(s).get(r);
+				row[s] = table.getSeries(s).get(r);
 			}
 			sb.append(String.format(format, row));
 			sb.append("\n");		

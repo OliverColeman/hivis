@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.reflect.TypeToken;
+
 import hivis.common.Util;
 
 
@@ -32,6 +34,9 @@ import hivis.common.Util;
  * @author O. J. Coleman
  */
 public class DataSeriesGeneric<V> extends AbstractDataSeries<V> {
+	private TypeToken<V> typeToken = new TypeToken<V>(getClass()) {};
+	private Class<?> type = typeToken.getRawType();
+	
 	protected List<V> elements;
 	
 	
@@ -60,6 +65,19 @@ public class DataSeriesGeneric<V> extends AbstractDataSeries<V> {
     	this.elements = new ArrayList<V>(data.elements);
     }
     
+
+	@Override
+	public Class<?> getType() {
+		// If the type info seems to be available, use it.
+		if (type != null && !type.isAssignableFrom(Object.class)) return type;
+		// Otherwise try to get type from an instance.
+		V e = length() > 0 ? get(0) : null;
+		if (e != null) {
+			type = e.getClass();
+			return type;
+		}
+		return Object.class;
+	}
     
 	@Override
 	public int length() {
@@ -94,10 +112,6 @@ public class DataSeriesGeneric<V> extends AbstractDataSeries<V> {
 		this.setDataChanged(DataSeriesChange.ValuesRemoved);
 	}
 	
-	@Override
-	public V getEmptyValue() {
-		return null;
-	}
 	
 	@Override
 	public V[] asArray(V[] data) {

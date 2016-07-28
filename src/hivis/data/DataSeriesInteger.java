@@ -109,7 +109,7 @@ public class DataSeriesInteger extends AbstractDataSeries<Integer> {
 
 	@Override
 	public Integer getEmptyValue() {
-		return 0;
+		return Integer.MIN_VALUE;
 	}
 	
 	@Override

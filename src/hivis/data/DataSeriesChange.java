@@ -22,6 +22,5 @@ package hivis.data;
 public enum DataSeriesChange {
 	ValuesChanged,
 	ValuesAdded,
-	ValuesRemoved,
-	LabelChanged
+	ValuesRemoved
 }

@@ -15,6 +15,8 @@
  */
 
 /**
+ * This package is probably defunct.
+ * 
  * Contains classes to allow interaction with a data set processing pipeline and visualisations.
  */
 package hivis.interact;

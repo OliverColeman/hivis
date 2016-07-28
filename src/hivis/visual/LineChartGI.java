@@ -47,7 +47,6 @@ public class LineChartGI extends LineChart<XYChart> {
 	
 	@Override
 	public void dataChanged(DataEvent event) {
-		System.out.println("LineChartGI.dataChanged");
 		updateData();
 	}
 	
@@ -73,7 +72,7 @@ public class LineChartGI extends LineChart<XYChart> {
 		}
 		
 		if (data.seriesCount() == 1) {
-			DataSeries<?> ySeries = data.get(0);
+			DataSeries<?> ySeries = data.getSeries(0);
 			
 			for (int i = 0; i < size; i++) {
 				xData[i] = i;
@@ -83,8 +82,8 @@ public class LineChartGI extends LineChart<XYChart> {
 			chart.setYAxisLabel(data.getSeriesLabel(0));
 		}
 		else {
-			DataSeries<?> xSeries = data.get(0);
-			DataSeries<?> ySeries = data.get(1);
+			DataSeries<?> xSeries = data.getSeries(0);
+			DataSeries<?> ySeries = data.getSeries(1);
 			
 			for (int i = 0; i < size; i++) {
 				xData[i] = (float) xSeries.getDouble(i);
@@ -99,7 +98,7 @@ public class LineChartGI extends LineChart<XYChart> {
 	}
 	
 	private boolean checkSeries(int s) {
-		if (!data.get(0).isNumeric()) {
+		if (data.getSeries(s).length() > 0 && !data.getSeries(s).isNumeric()) {
 			System.err.println("Cannot chart series '" + data.getSeriesLabel(s) + "' as it is not numeric.");
 			return false;
 		}

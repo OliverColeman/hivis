@@ -151,7 +151,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 					dataset.addSeries(label, dataSeriesFromCellType(firstDataRow.getCell(c)));
 				}
 				
-				series.add(dataset.get(label));
+				series.add(dataset.getSeries(label));
 			}
 			currentDataCellTypes = newDataCellTypes;
 			
@@ -165,7 +165,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 					dataset.removeSeries(currentLabel);
 				}
 				else {
-					DataSeries<?> s = dataset.get(currentLabel);
+					DataSeries<?> s = dataset.getSeries(currentLabel);
 					
 					// Notify series that we're going to make changes to it (to suppress events being fired
 					// every time we change the values).
@@ -190,7 +190,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 					if (label == null || label.length() == 0) {
 						continue;
 					}
-					DataSeries<?> s = dataset.get(label);
+					DataSeries<?> s = dataset.getSeries(label);
 					
 					try {
 						Object val = getCellValue(row.getCell(c));

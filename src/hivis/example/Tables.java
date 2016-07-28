@@ -21,6 +21,7 @@ import hivis.common.HV;
 import hivis.data.DataSeries;
 import hivis.data.DataTable;
 import hivis.data.view.Function;
+import hivis.data.view.RowFilter;
 import hivis.data.view.TableViewTranspose;
 
 /**
@@ -51,9 +52,9 @@ public class Tables {
 		
 		// Add some of the series from the random table to the first table.
 		// Selecting series by label.
-		myTable.addSeries("rand", randomTable.get("real normal"));
+		myTable.addSeries("rand", randomTable.getSeries("real normal"));
 		// Selecting series by index (counting from 0).
-		myTable.addSeries("date", randomTable.get(3));
+		myTable.addSeries("date", randomTable.getSeries(3));
 		
 		
 		// Print out our table.
@@ -73,25 +74,25 @@ public class Tables {
 		// We can get views of the series in a table in various ways:
 		
 		// Relabeling the series.
-		DataTable relabelled = myTable.relabel("Integers", "Reals", "Normal distribution", "Dates");
+		DataTable relabelled = myTable.relabelSeries("Integers", "Reals", "Normal distribution", "Dates");
 		System.out.println("\nrelabelled = myTable.relabel(\"Integers\", \"Reals\", \"Normal distribution\", \"Dates\")\n" + relabelled);
 		
 		// Relabeling the series by adding a prefix and/or postfix.
 		// If the prefix or postfix contain '\\oi' this will be replaced by the index of the series. 
 		// An '\\oi' may be followed by numerals to indicate an offset, 
 		// for example "my\\oi5pf" will give labels "my5pf",  my6pf", "my7pf" and so on.
-		DataTable relabelledPP = myTable.relabelPP("my ", " \\oi1");
+		DataTable relabelledPP = myTable.relabelSeriesPP("my ", " \\oi1");
 		System.out.println("\nrelabelledPP = myTable.relabelPP(\"my\", \" \\\\oi1\")\n" + relabelledPP);
 		
 		// Selecting and reordering based on indices.
 		// (The same can be performed using series labels instead of indices).
-		DataTable selectReorder = relabelledPP.select(2, 0, 1);
+		DataTable selectReorder = relabelledPP.selectSeries(2, 0, 1);
 		System.out.println("\nselectReorder = relabelledPP.select(2, 0, 1)\n" + selectReorder);
 		
 		// Selecting based on a "glob" pattern. In a glob pattern ? matches any single character and * matches zero or more of any character.
 		// In the pattern below we select any series whose labels starts with "my r", followed by any number 
 		// of other characters, followed by an "s", followed by two more of any other characters. 
-		DataTable selectGlob = selectReorder.selectGlob("my*s??");
+		DataTable selectGlob = selectReorder.selectSeriesGlob("my*s??");
 		System.out.println("\nselectGlob = selectReorder.selectGlob(\"my*s??\")\n" + selectGlob);
 		
 		// Get a DataTable view of one table appended to another:
@@ -100,7 +101,7 @@ public class Tables {
 		
 		// Changes to the values in the original series/table are reflected in the views:
 		ints.set(0, -10);
-		myTable.get("reals").set(0, 100); 
+		myTable.getSeries("reals").set(0, 100); 
 		System.out.println("\nmyTable modified values\n" + myTable);
 		System.out.println("\nselectGlob table reflecting modified values\n" + selectGlob);
 		
@@ -108,15 +109,25 @@ public class Tables {
 		// Tables can be transposed. If the table contains a "row key" series containing 
 		// no duplicate values it will be used for the series labels in the transposed table. 
 		// (HV.mtCars() provides a DataTable containing data for ten variables over 32 automobiles extracted from the 1974 Motor Trend US magazine.)
-		DataTable mt = HV.mtCars();
-		System.out.println("\nOriginal mtCars table:\n" + mt);
+		DataTable mtCars = HV.mtCars();
+		System.out.println("\nOriginal mtCars table:\n" + mtCars);
 		
-		DataTable mttran = mt.transpose();
+		DataTable mtCarsTran = mtCars.transpose();
 		
 		//  The transpose() method provides a view of the underlying DataTable, so changes to this table are reflected in the view: 
-		mt.get("cyl").set(1, 12);
+		mtCars.getSeries("cyl").set(1, 12);
 		
 		// The "Mazda RX4 Wag" now has 12 cylinders.
-		System.out.println("\nTransposed mtCars table, reflecting changed value for Mazda RX4 wag/cyl in original table:\n" + mttran);
+		System.out.println("\nTransposed mtCars table, reflecting changed value for Mazda RX4 wag/cyl in original table:\n" + mtCarsTran);
+		
+		
+		// Create a view of the cars table with some rows filtered out based on custom criteria.
+		DataTable mtFiltered = mtCars.selectRows(new RowFilter() {
+			public boolean excludeRow(DataTable input, int index) {
+				// Exclude cars with 6 cylinders whose horsepower is less than 120.
+				return input.getSeries("cyl").getInt(index) == 6 && input.getSeries("hp").getInt(index) < 120;
+			}
+		});
+		System.out.println("\nmtCars table with rows filtered out (cars with 6 cylinders whose horsepower is less than 120):\n" + mtFiltered);
 	}
 }

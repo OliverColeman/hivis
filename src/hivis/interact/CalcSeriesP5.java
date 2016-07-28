@@ -60,7 +60,7 @@ public class CalcSeriesP5<V> extends CalcSeries<V, V> implements ControlListener
 	
 	@Override
 	public void controlEvent(ControlEvent theEvent) {
-		update();
+		updateView(theEvent);
 	}
 	
 	@Override

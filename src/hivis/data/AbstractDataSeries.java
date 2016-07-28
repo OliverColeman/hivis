@@ -28,7 +28,10 @@ import com.google.common.reflect.TypeToken;
 
 import hivis.data.view.CalcSeries;
 import hivis.data.view.Function;
+import hivis.data.view.SeriesView;
+import hivis.data.view.AbstractSeriesView;
 import hivis.data.view.SeriesViewFunction;
+import hivis.data.view.SeriesViewRow;
 import hivis.data.view.SeriesViewAppend;
 
 /**
@@ -89,8 +92,42 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	@Override
 	public Class<?> getType() {
-		return type;
+		// If the type info seems to be available, use it.
+		if (type != null && !type.isAssignableFrom(Object.class)) return type;
+		// Otherwise try to get type from an instance.
+		V e = length() > 0 ? get(0) : null;
+		if (e != null) {
+			type = e.getClass();
+			return type;
+		}
+		return null;
 	}
+	
+
+	@Override
+	public V getEmptyValue() {
+		Class<?> type = getType();
+		if (Double.class.isAssignableFrom(type)) {
+			return (V) (Double) Double.NaN;
+		}
+		if (Float.class.isAssignableFrom(type)) {
+			return (V) (Float) Float.NaN;
+		}
+		if (Long.class.isAssignableFrom(type)) {
+			return (V) (Long) Long.MIN_VALUE;
+		}
+		if (Integer.class.isAssignableFrom(type)) {
+			return (V) (Integer) Integer.MIN_VALUE;
+		}
+		if (Short.class.isAssignableFrom(type)) {
+			return (V) (Short) Short.MIN_VALUE;
+		}
+		if (Byte.class.isAssignableFrom(type)) {
+			return (V) (Byte) Byte.MIN_VALUE;
+		}
+		return null;
+	}
+	
 	
 	/**
 	 * Get the value stored at the given index as a boolean.
@@ -136,6 +173,80 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 		return ((Number) get(index)).doubleValue();
 	}
 	
+	/**
+	 * Get a view of this series representing the values as double-precision floating point numbers.
+	 * This default implementation first checks if the type of this series is Double and returns it if so,
+	 * otherwise creates an {@link AbstractSeriesView} that casts the values to the correct type.
+	 */
+	public DataSeries<Double> asDouble() {
+		if (Double.class.isAssignableFrom(getType())) {
+			return (DataSeries<Double>) this;
+		}
+		final DataSeries<V> me = this;
+		return new AbstractSeriesView<V, Double>(this) {
+			public int length() {
+				return me.length();
+			}
+			public Double get(int index) {
+				return me.getDouble(index);
+			}
+			public double getDouble(int index) {
+				return me.getDouble(index);
+			}
+			public void updateView(Object cause) {
+			}
+		};
+	}
+	
+	/**
+	 * Get a view of this series representing the values as integers.
+	 * This default implementation first checks if the type of this series is Integer and returns it if so,
+	 * otherwise creates an {@link AbstractSeriesView} that casts the values to the correct type.
+	 */
+	public DataSeries<Integer> asInt() {
+		if (Integer.class.isAssignableFrom(getType())) {
+			return (DataSeries<Integer>) this;
+		}
+		final DataSeries<V> me = this;
+		return new AbstractSeriesView<V, Integer>(this) {
+			public int length() {
+				return me.length();
+			}
+			public Integer get(int index) {
+				return me.getInt(index);
+			}
+			public int getInteger(int index) {
+				return me.getInt(index);
+			}
+			public void updateView(Object cause) {
+			}
+		};
+	}
+	
+	/**
+	 * Get a view of this series representing the values as long integers.
+	 * This default implementation first checks if the type of this series is Long and returns it if so,
+	 * otherwise creates an {@link AbstractSeriesView} that casts the values to the correct type.
+	 */
+	public DataSeries<Long> asLong(){
+		if (Long.class.isAssignableFrom(getType())) {
+			return (DataSeries<Long>) this;
+		}
+		final DataSeries<V> me = this;
+		return new AbstractSeriesView<V, Long>(this) {
+			public int length() {
+				return me.length();
+			}
+			public Long get(int index) {
+				return me.getLong(index);
+			}
+			public long getLong(int index) {
+				return me.getLong(index);
+			}
+			public void updateView(Object cause) {
+			}
+		};
+	}
 	
 	/**
 	 * This default implementation uses {@link #get(int)} to populate the array.
@@ -309,7 +420,13 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	
 	@Override
-	public <O> DataSeries<O> apply(final Function<V, O> function) {
+	public SeriesView<V> select(int... indices) {
+		return new SeriesViewRow<>(this, indices);
+	}
+	
+	
+	@Override
+	public <O> SeriesView<O> apply(final Function<V, O> function) {
 		final DataSeries<V> me = this;
 		
 		return new CalcSeries<V,O> (this) {
@@ -327,150 +444,150 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	
 	@Override
-	public DataSeries<V> append(DataSeries<V> otherSeries) {
+	public SeriesView<V> append(DataSeries<V> otherSeries) {
 		return new SeriesViewAppend<V>(this, otherSeries);
 	}
 	
 	
 	@Override
-	public DataSeries<V> add(final V value) {
+	public SeriesView<V> add(final V value) {
 		if (getType().equals(Double.class)) {
-			return (DataSeries<V>) new CalcSeries.Real.Add(this, (Double) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.Real.Add(this, (Double) castToNumericType(value));
 		}
 		if (getType().equals(Integer.class)) {
-			return (DataSeries<V>) new CalcSeries.Int.Add(this, (Integer) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.Int.Add(this, (Integer) castToNumericType(value));
 		}
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public DataSeries<V> add(double value) {
+	public SeriesView<V> add(double value) {
 		return add(castToType(value));
 	}
 	
 	@Override
-	public DataSeries<V> add(long value) {
+	public SeriesView<V> add(long value) {
 		return add(castToType(value));
 	}
 	
 	@Override
-	public DataSeries<V> add(final DataSeries<?> series) {
+	public SeriesView<V> add(final DataSeries<?> series) {
 		if (this.length() != series.length()) {
 			throw new IllegalArgumentException("Can not add two DataSeries with differing lengths.");
 		}
 		if (getType().equals(Double.class)) {
-			return (DataSeries<V>) new CalcSeries.Real.AddSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.Real.AddSeries(this, series);
 		}
 		if (getType().equals(Integer.class)) {
-			return (DataSeries<V>) new CalcSeries.Int.AddSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.Int.AddSeries(this, series);
 		}
 		throw new UnsupportedOperationException();
 	}
 	
 
 	@Override
-	public DataSeries<V> subtract(V value) {
+	public SeriesView<V> subtract(V value) {
 		if (getType().equals(Double.class)) {
-			return (DataSeries<V>) new CalcSeries.Real.Subtract(this, (Double) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.Real.Subtract(this, (Double) castToNumericType(value));
 		}
 		if (getType().equals(Integer.class)) {
-			return (DataSeries<V>) new CalcSeries.Int.Subtract(this, (Integer) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.Int.Subtract(this, (Integer) castToNumericType(value));
 		}
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public DataSeries<V> subtract(double value) {
+	public SeriesView<V> subtract(double value) {
 		return subtract(castToType(value));
 	}
 	
 	@Override
-	public DataSeries<V> subtract(long value) {
+	public SeriesView<V> subtract(long value) {
 		return subtract(castToType(value));
 	}
 	
 	@Override
-	public DataSeries<V> subtract(DataSeries<?> series) {
+	public SeriesView<V> subtract(DataSeries<?> series) {
 		if (this.length() != series.length()) {
 			throw new IllegalArgumentException("Can not subtract two DataSeries with differing lengths.");
 		}
 		if (getType().equals(Double.class)) {
-			return (DataSeries<V>) new CalcSeries.Real.SubtractSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.Real.SubtractSeries(this, series);
 		}
 		if (getType().equals(Integer.class)) {
-			return (DataSeries<V>) new CalcSeries.Int.SubtractSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.Int.SubtractSeries(this, series);
 		}
 		throw new UnsupportedOperationException();
 	}
 	
 	
 	@Override
-	public DataSeries<V> multiply(V value) {
+	public SeriesView<V> multiply(V value) {
 		if (getType().equals(Double.class)) {
-			return (DataSeries<V>) new CalcSeries.Real.Multiply(this, (Double) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.Real.Multiply(this, (Double) castToNumericType(value));
 		}
 		if (getType().equals(Integer.class)) {
-			return (DataSeries<V>) new CalcSeries.Int.Multiply(this, (Integer) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.Int.Multiply(this, (Integer) castToNumericType(value));
 		}
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public DataSeries<V> multiply(double value) {
+	public SeriesView<V> multiply(double value) {
 		return multiply(castToType(value));
 	}
 	
 	@Override
-	public DataSeries<V> multiply(long value) {
+	public SeriesView<V> multiply(long value) {
 		return multiply(castToType(value));
 	}
 	
 	@Override
-	public DataSeries<V> multiply(DataSeries<?> series) {
+	public SeriesView<V> multiply(DataSeries<?> series) {
 		if (this.length() != series.length()) {
 			throw new IllegalArgumentException("Can not multiply two DataSeries with differing lengths.");
 		}
 		if (getType().equals(Double.class)) {
-			return (DataSeries<V>) new CalcSeries.Real.MultiplySeries(this, series);
+			return (SeriesView<V>) new CalcSeries.Real.MultiplySeries(this, series);
 		}
 		if (getType().equals(Integer.class)) {
-			return (DataSeries<V>) new CalcSeries.Int.MultiplySeries(this, series);
+			return (SeriesView<V>) new CalcSeries.Int.MultiplySeries(this, series);
 		}
 		throw new UnsupportedOperationException();
 	}
 	
 	
 	@Override
-	public DataSeries<V> divide(V value) {
+	public SeriesView<V> divide(V value) {
 		if (getType().equals(Double.class)) {
-			return (DataSeries<V>) new CalcSeries.Real.Divide(this, (Double) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.Real.Divide(this, (Double) castToNumericType(value));
 		}
 		if (getType().equals(Integer.class)) {
-			return (DataSeries<V>) new CalcSeries.Int.Divide(this, (Integer) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.Int.Divide(this, (Integer) castToNumericType(value));
 		}
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public DataSeries<V> divide(double value) {
+	public SeriesView<V> divide(double value) {
 		return divide(castToType(value));
 	}
 	
 	@Override
-	public DataSeries<V> divide(long value) {
+	public SeriesView<V> divide(long value) {
 		return divide(castToType(value));
 	}
 
 	@Override
-	public DataSeries<V> divide(DataSeries<?> series) {
+	public SeriesView<V> divide(DataSeries<?> series) {
 		if (this.length() != series.length()) {
 			throw new IllegalArgumentException("Can not divide two DataSeries with differing lengths.");
 		}
 		if (getType().equals(Double.class)) {
-			return (DataSeries<V>) new CalcSeries.Real.DivideSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.Real.DivideSeries(this, series);
 		}
 		if (getType().equals(Integer.class)) {
-			return (DataSeries<V>) new CalcSeries.Int.DivideSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.Int.DivideSeries(this, series);
 		}
 		throw new UnsupportedOperationException();
 	}

@@ -19,6 +19,8 @@ package hivis.data;
 import java.util.List;
 
 import hivis.data.view.Function;
+import hivis.data.view.RowFilter;
+import hivis.data.view.SeriesView;
 import hivis.data.view.TableFunction;
 
 /**
@@ -72,9 +74,8 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	void remove(int index);
 
 	/**
-	 * Get the value corresponding to an empty value. This will typically be 
-	 * null or a 'NaN' (Not a Number) value, for example Double.NaN for a 
-	 * series storing double values.
+	 * Get the value corresponding to an empty value. For floating-point numbers this is either Double.NaN or Float.NaN.
+	 * For integer types it is Long.MIN_VALUE, Integer.MIN_VALUE, etc. For all other types this is usually null.
 	 */
 	V getEmptyValue();
 
@@ -131,6 +132,22 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	 */
 	double getDouble(int index);
 	
+	
+	/**
+	 * Get a view of this series representing the values as double-precision floating point numbers.
+	 */
+	DataSeries<Double> asDouble();
+
+	/**
+	 * Get a view of this series representing the values as integers.
+	 */
+	DataSeries<Integer> asInt();
+
+	/**
+	 * Get a view of this series representing the values as long integers.
+	 */
+	DataSeries<Long> asLong();
+
 	/**
 	 * Get the values in this series as an array of values.
 	 * @return An array containing the values in this series. 
@@ -237,40 +254,45 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	
 
 	/**
-	 * Get a series that is calculated using the given function over each element in this series.
-	 * 
-	 * @param function
-	 *            The function to generate the series for the new table.
-	 */
-	public <O> DataSeries<O> apply(Function<V, O> function);
-	
-	/**
 	 * Create a view of this series that contains the values of 
 	 * this series followed by the values in the given series.
 	 * @param series The series to append.
 	 * @return A view of this series with the given series appended.
 	 */
-	public DataSeries<V> append(DataSeries<V> series);
+	public SeriesView<V> append(DataSeries<V> series);
 	
-	public DataSeries<V> add(V value);
-	public DataSeries<V> add(double value);
-	public DataSeries<V> add(long value);
-	public DataSeries<V> add(DataSeries<?> series);
+	/**
+	 * Get a series that is calculated using the given function over each element in this series.
+	 * 
+	 * @param function
+	 *            The function to generate the series for the new table.
+	 */
+	public <O> SeriesView<O> apply(Function<V, O> function);
 	
-	public DataSeries<V> subtract(V value);
-	public DataSeries<V> subtract(double value);
-	public DataSeries<V> subtract(long value);
-	public DataSeries<V> subtract(DataSeries<?> series);
-	
-	public DataSeries<V> multiply(V value);
-	public DataSeries<V> multiply(double value);
-	public DataSeries<V> multiply(long value);
-	public DataSeries<V> multiply(DataSeries<?> series);
-	
-	public DataSeries<V> divide(V value);
-	public DataSeries<V> divide(double value);
-	public DataSeries<V> divide(long value);
-	public DataSeries<V> divide(DataSeries<?> series);
+	/**
+	 * Get a view of this series that filters and/or rearranges the elements.
+	 * @param indices The indices of the elements to include, in the order to include them.
+	 */
+	SeriesView<V> select(int... indices);
 	
 	
+	public SeriesView<V> add(V value);
+	public SeriesView<V> add(double value);
+	public SeriesView<V> add(long value);
+	public SeriesView<V> add(DataSeries<?> series);
+	
+	public SeriesView<V> subtract(V value);
+	public SeriesView<V> subtract(double value);
+	public SeriesView<V> subtract(long value);
+	public SeriesView<V> subtract(DataSeries<?> series);
+	
+	public SeriesView<V> multiply(V value);
+	public SeriesView<V> multiply(double value);
+	public SeriesView<V> multiply(long value);
+	public SeriesView<V> multiply(DataSeries<?> series);
+	
+	public SeriesView<V> divide(V value);
+	public SeriesView<V> divide(double value);
+	public SeriesView<V> divide(long value);
+	public SeriesView<V> divide(DataSeries<?> series);
 }

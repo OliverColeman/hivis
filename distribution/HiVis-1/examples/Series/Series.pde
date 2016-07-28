@@ -19,6 +19,7 @@ void setup() {
 	
 	
 	// We can set the values in a series, here we swap the first values in our series.
+	// Some thing to note here is that we assigned a real (double) number value to a series that stores integer (int) values. 
 	// In general HiVis will do its best to accommodate the interchange of data of different types when it makes sense to do so. 
 	// (If we tried to add a value of, say 0.5, to an integer series then an error would occur.)
 	int int0 = intNumbers.get(0);
@@ -61,6 +62,11 @@ void setup() {
 	println("\nplus1 reflecting appended value in realNumbers\n" + plus1);
 	println("\ncustomFunc reflecting appended value in realNumbers (via plus1)\n" + customFunc);
 	println("\nrealNumbersAppendPlus1 reflecting appended value in realNumbers\n" + realNumbersAppendPlus1);
+	
+	
+	// We can create a series that provides a view of the elements in a series filtered and/or rearranged:
+	DataSeries<Double> realNumbersRearranged = realNumbers.select(5, 3, 1);
+	println("\nrealNumbersRearranged = realNumbers.select(5, 3, 1)\n" + realNumbersRearranged);
 }
 
 

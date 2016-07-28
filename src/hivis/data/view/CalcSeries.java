@@ -86,7 +86,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	 * this to provide a more efficient implementation, for example avoiding
 	 * autoboxing if a primitive type is stored.
 	 */
-	public void update() {
+	public void updateView(Object cause) {
 		this.beginChanges(this);
 		// Make sure cache series is the right length.
 		cache.resize(length());
@@ -106,7 +106,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 
 	/**
 	 * Primitive equivalent to {@link #calc(int)}. This allows for more
-	 * efficient implementations of {@link #update()} if a primitive type
+	 * efficient implementations of {@link #updateView(cause)} if a primitive type
 	 * is stored. This implementation throws an UnsupportedOperationException.
 	 */
 	public boolean calcBoolean(int index) {
@@ -115,16 +115,16 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 
 	/**
 	 * Primitive equivalent to {@link #calc(int)}. This allows for more
-	 * efficient implementations of {@link #update()} if a primitive type
+	 * efficient implementations of {@link #updateView(cause)} if a primitive type
 	 * is stored. This implementation throws an UnsupportedOperationException.
 	 */
-	public int calcInt(int index) {
+	public int calcInteger(int index) {
 		throw new UnsupportedOperationException();
 	}
 
 	/**
 	 * Primitive equivalent to {@link #calc(int)}. This allows for more
-	 * efficient implementations of {@link #update()} if a primitive type
+	 * efficient implementations of {@link #updateView(cause)} if a primitive type
 	 * is stored. This implementation throws an UnsupportedOperationException.
 	 */
 	public long calcLong(int index) {
@@ -132,10 +132,10 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	}
 	/**
 	 * Primitive equivalent to {@link #calc(int)}. This allows for more
-	 * efficient implementations of {@link #update()} if a primitive type
+	 * efficient implementations of {@link #updateView(cause)} if a primitive type
 	 * is stored. This implementation throws an UnsupportedOperationException.
 	 */
-	public double calcDouble(int index) {
+	public double calcReal(int index) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -153,7 +153,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	@Override
 	public final O get(int index) {
 		if (recalc) {
-			update();
+			updateView(null);
 			recalc = false;
 		}
 		return cache.get(index);
@@ -162,7 +162,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	@Override
 	public final boolean getBoolean(int index) {
 		if (recalc) {
-			update();
+			updateView(null);
 			recalc = false;
 		}
 		return cache.getBoolean(index);
@@ -171,7 +171,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	@Override
 	public final int getInt(int index) {
 		if (recalc) {
-			update();
+			updateView(null);
 			recalc = false;
 		}
 		return cache.getInt(index);
@@ -180,7 +180,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	@Override
 	public final long getLong(int index) {
 		if (recalc) {
-			update();
+			updateView(null);
 			recalc = false;
 		}
 		return cache.getLong(index);
@@ -189,7 +189,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	@Override
 	public final double getDouble(int index) {
 		if (recalc) {
-			update();
+			updateView(null);
 			recalc = false;
 		}
 		return cache.getDouble(index);
@@ -206,10 +206,10 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		}
 		
 		@Override
-		public void update() {
+		public void updateView(Object cause) {
 			cache.resize(length());
 			for (int i = 0; i < length(); i++) {
-				cache.setValue(i, calcDouble(i));
+				cache.setValue(i, calcReal(i));
 			}
 		}
 		
@@ -220,12 +220,12 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 
 		@Override
 		public Double calc(int index) {
-			return calcDouble(index);
+			return calcReal(index);
 		}
 		
 		@Override
-		public double calcDouble(int index) {
-			throw new RuntimeException("Implementations of CSFunc.Real must override calcDouble(int).");
+		public double calcReal(int index) {
+			throw new RuntimeException("Implementations of CalcSeries.Real must override calcReal(int).");
 		}
 		
 		
@@ -254,7 +254,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public Add(DataSeries<?> series, double value) {
 				super(series, value);
 			}
-			public double calcDouble(int index) {
+			public double calcReal(int index) {
 				return series.getDouble(index) + value;
 			}
 		}
@@ -262,7 +262,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public AddSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
 				super(series, seriesOther);
 			}
-			public double calcDouble(int index) {
+			public double calcReal(int index) {
 				return series.getDouble(index) + seriesOther.getDouble(index);
 			}
 		}
@@ -270,7 +270,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public Subtract(DataSeries<?> series, double value) {
 				super(series, value);
 			}
-			public double calcDouble(int index) {
+			public double calcReal(int index) {
 				return series.getDouble(index) - value;
 			}
 		}
@@ -278,7 +278,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public SubtractSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
 				super(series, seriesOther);
 			}
-			public double calcDouble(int index) {
+			public double calcReal(int index) {
 				return series.getDouble(index) - seriesOther.getDouble(index);
 			}
 		}
@@ -286,7 +286,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public Multiply(DataSeries<?> series, double value) {
 				super(series, value);
 			}
-			public double calcDouble(int index) {
+			public double calcReal(int index) {
 				return series.getDouble(index) * value;
 			}
 		}
@@ -294,7 +294,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public MultiplySeries(DataSeries<?> series, DataSeries<?> seriesOther) {
 				super(series, seriesOther);
 			}
-			public double calcDouble(int index) {
+			public double calcReal(int index) {
 				return series.getDouble(index) * seriesOther.getDouble(index);
 			}
 		}
@@ -302,7 +302,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public Divide(DataSeries<?> series, double value) {
 				super(series, value);
 			}
-			public double calcDouble(int index) {
+			public double calcReal(int index) {
 				return series.getDouble(index) / value;
 			}
 		}
@@ -310,7 +310,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public DivideSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
 				super(series, seriesOther);
 			}
-			public double calcDouble(int index) {
+			public double calcReal(int index) {
 				return series.getDouble(index) / seriesOther.getDouble(index);
 			}
 		}
@@ -328,10 +328,10 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		}
 		
 		@Override
-		public void update() {
+		public void updateView(Object cause) {
 			cache.resize(length());
 			for (int i = 0; i < length(); i++) {
-				cache.setValue(i, calcInt(i));
+				cache.setValue(i, calcInteger(i));
 			}
 		}
 		
@@ -342,12 +342,12 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 
 		@Override
 		public Integer calc(int index) {
-			return calcInt(index);
+			return calcInteger(index);
 		}
 		
 		@Override
-		public int calcInt(int index) {
-			throw new RuntimeException("Implementations of CSFunc.Int must override calcInteger(int).");
+		public int calcInteger(int index) {
+			throw new RuntimeException("Implementations of CalcSeries.Int must override calcInteger(int).");
 		}
 		
 		

@@ -87,5 +87,10 @@ public class Series {
 		System.out.println("\nplus1 reflecting appended value in realNumbers\n" + plus1);
 		System.out.println("\ncustomFunc reflecting appended value in realNumbers (via plus1)\n" + customFunc);
 		System.out.println("\nrealNumbersAppendPlus1 reflecting appended value in realNumbers\n" + realNumbersAppendPlus1);
+		
+		
+		// We can create a series that provides a view of the elements in a series filtered and/or rearranged:
+		DataSeries<Double> realNumbersRearranged = realNumbers.select(5, 3, 1);
+		System.out.println("\nrealNumbersRearranged = realNumbers.select(5, 3, 1)\n" + realNumbersRearranged);
 	}
 }

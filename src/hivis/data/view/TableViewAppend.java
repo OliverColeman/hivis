@@ -28,7 +28,7 @@ import hivis.data.DataTableChange;
  *  
  * @author O. J. Coleman
  */
-public class TableViewAppend extends TableView {
+public class TableViewAppend extends AbstractTableView<SeriesViewAppend<?>> {
 	public TableViewAppend(DataTable... input) {
 		super(input);
 		updateSeries();
@@ -40,9 +40,9 @@ public class TableViewAppend extends TableView {
 		// (which will trigger a change event if necessary).
 		if (eventTypes.isEmpty() || eventTypes.contains(DataTableChange.SeriesAdded) || eventTypes.contains(DataTableChange.SeriesRemoved) || eventTypes.contains(DataTableChange.SeriesReordered)) {
 			// Check series in input tables match.
-			DataTable first = source.get(0);
-			for (int tableIndex = 1; tableIndex < source.size(); tableIndex++) {
-				DataTable table = source.get(tableIndex);
+			DataTable first = inputTables.get(0);
+			for (int tableIndex = 1; tableIndex < inputTables.size(); tableIndex++) {
+				DataTable table = inputTables.get(tableIndex);
 				
 				if (first.seriesCount() != table.seriesCount()) {
 					throw new IllegalArgumentException("Cannot append tables with differing numbers of series.");
@@ -53,14 +53,14 @@ public class TableViewAppend extends TableView {
 						throw new IllegalArgumentException("Cannot append tables with differing series labels.");
 					}
 					
-					if (!first.get(si).getType().equals(table.get(si).getType())) {
+					if (!first.getSeries(si).getType().equals(table.getSeries(si).getType())) {
 						throw new IllegalArgumentException("Cannot append tables with differing series types.");
 					}
 				}
 			}
 			
 			// Reuse appended series views if possible.
-			HashMap<String, DataSeries<?>> oldSeries = new HashMap<>(series);
+			HashMap<String, SeriesViewAppend<?>> oldSeries = new HashMap<>(series);
 			series.clear();
 			
 			// For each series.
@@ -73,12 +73,12 @@ public class TableViewAppend extends TableView {
 					
 					
 					// Get the corresponding series from each table.
-					DataSeries<?>[] seriesToAppend = new DataSeries[source.size()];
-					for (int ti = 0; ti < source.size(); ti++) {
-						seriesToAppend[ti] = source.get(ti).get(label);
+					DataSeries<?>[] seriesToAppend = new DataSeries[inputTables.size()];
+					for (int ti = 0; ti < inputTables.size(); ti++) {
+						seriesToAppend[ti] = inputTables.get(ti).getSeries(label);
 					}
 					// Create new series appender and add to series in this view.
-					DataSeries<?> appendedSeries = new SeriesViewAppend(seriesToAppend);
+					SeriesViewAppend<?> appendedSeries = new SeriesViewAppend(seriesToAppend);
 					series.put(label, appendedSeries);
 				}
 			}

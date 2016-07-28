@@ -27,7 +27,7 @@ import hivis.data.DataSeriesReal;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
 import hivis.data.view.CalcSeries;
-import hivis.data.view.SeriesView;
+import hivis.data.view.AbstractSeriesView;
 
 /**
  * Collection of factory and utility methods.
@@ -119,19 +119,17 @@ public class HV {
 	 * @param step The step between values, may be positive or negative.
 	 */
 	public static DataSeries<Integer> integerSequence(final int length, final int start, final int step) {
-		return new SeriesView<Object, Integer>() {
-			@Override
+		return new AbstractSeriesView<Object, Integer>() {
 			public int length() {
 				return length;
 			}
-			@Override
 			public Integer get(int index) {
 				return start + index * step;
 			}
-
-			@Override
 			public Integer getEmptyValue() {
-				return 0;
+				return Integer.MIN_VALUE;
+			}
+			public void updateView(Object cause) {
 			}
 		};
 	}
@@ -143,19 +141,17 @@ public class HV {
 	 * @param step The step between values, may be positive or negative.
 	 */
 	public static DataSeries<Double> realSequence(final int length, final double start, final double step) {
-		return new SeriesView<Object, Double>() {
-			@Override
+		return new AbstractSeriesView<Object, Double>() {
 			public int length() {
 				return length;
 			}
-			@Override
 			public Double get(int index) {
 				return start + index * step;
 			}
-
-			@Override
 			public Double getEmptyValue() {
 				return Double.NaN;
+			}
+			public void updateView(Object cause) {
 			}
 		};
 	}

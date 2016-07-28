@@ -57,7 +57,7 @@ public class ViewTableSeriesParametrised extends TableViewSeries implements Para
 	
 	@Override
 	public ListSet<String> getParameterLabels() {
-		return source.get(0).getSeriesLabels();
+		return inputTables.get(0).getSeriesLabels();
 	}
 	
 
@@ -101,7 +101,7 @@ public class ViewTableSeriesParametrised extends TableViewSeries implements Para
 		}
 		params.clear();
 		// Re-add available params in correct order, adding new ones as necessary.
-		for (String s : source.get(0).getSeriesLabels()) {
+		for (String s : inputTables.get(0).getSeriesLabels()) {
 			params.add(cp.containsKey(s) ? cp.get(s) : new Param(s));
 		}
 	}
@@ -120,14 +120,14 @@ public class ViewTableSeriesParametrised extends TableViewSeries implements Para
 	
 	
 	@Override
-	public synchronized DataTable setSeries(int[] series) {
+	public synchronized TableViewSeries setSeries(int[] series) {
 		super.setSeries(series);
 		fireParameterChange(new ParameterEvent(this, ParameterEvent.Type.ValueChanged));
 		return this;
 	}
 	
 	@Override
-	public synchronized DataTable setSeries(String[] series) {
+	public synchronized TableViewSeries setSeries(String[] series) {
 		super.setSeries(series);
 		fireParameterChange(new ParameterEvent(this, ParameterEvent.Type.ValueChanged));
 		return this;
@@ -184,7 +184,7 @@ public class ViewTableSeriesParametrised extends TableViewSeries implements Para
 
 		@Override
 		public boolean isValid() {
-			return source.get(0).hasSeries(label);
+			return inputTables.get(0).hasSeries(label);
 		}
 	}
 }

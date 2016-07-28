@@ -56,16 +56,16 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 * @param labels The new labels. The number of labels must match the number of series in the input table.
 	 * @return This data table view.
 	 */
-	public synchronized DataTable renameSeries(String...labels) {
-		if (labels.length != source.get(0).seriesCount()) {
+	public synchronized TableViewSeries renameSeries(String...labels) {
+		if (labels.length != inputTables.get(0).seriesCount()) {
 			throw new IllegalArgumentException("The number of labels given does not match the number of series in the input table.");
 		}
 		
 		selected.clear();
-		selected.addAll(source.get(0).getSeriesLabels());
+		selected.addAll(inputTables.get(0).getSeriesLabels());
 		selectedRename = new BMListSet<>(labels);
 
-		if (selectedRename.size() != source.get(0).seriesCount()) {
+		if (selectedRename.size() != inputTables.get(0).seriesCount()) {
 			throw new IllegalArgumentException("The labels given are not unique.");
 		}
 		
@@ -88,14 +88,14 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 *            string.
 	 * @return This data table view.
 	 */
-	public synchronized DataTable renameSeriesPP(String prefix, String postfix) {
+	public synchronized TableViewSeries renameSeriesPP(String prefix, String postfix) {
 		if (prefix == null)
 			prefix = "";
 		if (postfix == null)
 			postfix = "";
 
 		selected.clear();
-		selected.addAll(source.get(0).getSeriesLabels());
+		selected.addAll(inputTables.get(0).getSeriesLabels());
 
 		selectedRename = new BMListSet<>();
 		for (int i = 0; i < selected.size(); i++) {
@@ -127,14 +127,14 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 *            Indices of series to select in the order to select them.
 	 * @return This data table view.
 	 */
-	public synchronized DataTable setSeries(int... series) {
+	public synchronized TableViewSeries setSeries(int... series) {
 		selected.clear();
 		for (int index : series) {
-			if (index >= source.get(0).seriesCount()) {
+			if (index >= inputTables.get(0).seriesCount()) {
 				throw new IllegalArgumentException(
 						"Error setting series for ViewTableSeries: no series with index " + index + " in input table.");
 			}
-			selected.add(source.get(0).getSeriesLabel(index));
+			selected.add(inputTables.get(0).getSeriesLabel(index));
 		}
 		// No rename.
 		selectedRename = selected;
@@ -150,20 +150,20 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 * 
 	 * @return This data table view.
 	 */
-	public synchronized DataTable setSeriesRange(int begin, int end) {
+	public synchronized TableViewSeries setSeriesRange(int begin, int end) {
 		if (begin > end) {
 			throw new IllegalArgumentException("Error setting series for ViewTableSeries: first index must be less than or equal to end index.");
 		}
 		if (begin <= 0) {
 			throw new IllegalArgumentException("Error setting series for ViewTableSeries: first index less than 0.");
 		}
-		if (end >= source.get(0).seriesCount()) {
+		if (end >= inputTables.get(0).seriesCount()) {
 			throw new IllegalArgumentException("Error setting series for ViewTableSeries: last index greater than last series index in input table.");
 		}
 		
 		selected.clear();
 		for (int index = begin; index <= end; index++) {
-			selected.add(source.get(0).getSeriesLabel(index));
+			selected.add(inputTables.get(0).getSeriesLabel(index));
 		}
 		// No rename.
 		selectedRename = selected;
@@ -178,12 +178,12 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 *            Labels of series to select in the order to select them.
 	 * @return This data table view.
 	 */
-	public synchronized DataTable setSeries(String... series) {
+	public synchronized TableViewSeries setSeries(String... series) {
 		selected.clear();
 		for (String label : series) {
-			if (!source.get(0).hasSeries(label)) {
+			if (!inputTables.get(0).hasSeries(label)) {
 				label = label.trim();
-				if (!source.get(0).hasSeries(label)) {
+				if (!inputTables.get(0).hasSeries(label)) {
 					System.err.println("No series with label " + label + " in input table, ignoring.");
 					continue;
 				}
@@ -204,7 +204,7 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 *            The glob pattern to use to match series labels.
 	 * @return This data table view.
 	 */
-	public synchronized DataTable setSeriesGlob(String pattern) {
+	public synchronized TableViewSeries setSeriesGlob(String pattern) {
 		String regex = pattern.replaceAll("([^a-zA-z*?0-9])", "\\\\$1");
 		regex = regex.replace("?", ".");
 		regex = regex.replace("*", ".*");
@@ -221,7 +221,7 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 *            The regular expression pattern to use to match series labels.
 	 * @return This data table view.
 	 */
-	public synchronized DataTable setSeriesRE(Pattern pattern) {
+	public synchronized TableViewSeries setSeriesRE(Pattern pattern) {
 		setSeriesRE(pattern, null);
 		return this;
 	}
@@ -241,11 +241,11 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 *            strings "my5pf", my6pf", "my7pf" and so on.
 	 * @return This data table view.
 	 */
-	public synchronized DataTable setSeriesRE(Pattern pattern, String renamePattern) {
+	public synchronized TableViewSeries setSeriesRE(Pattern pattern, String renamePattern) {
 		selected.clear();
 		selectedRename = new BMListSet<>();
-		for (int oi = 0; oi < source.get(0).getAll().size(); oi++) {
-			String label = source.get(0).getSeriesLabels().get(oi);
+		for (int oi = 0; oi < inputTables.get(0).getAll().size(); oi++) {
+			String label = inputTables.get(0).getSeriesLabels().get(oi);
 			Matcher m = pattern.matcher(label);
 			if (m.matches()) {
 				if (renamePattern != null) {

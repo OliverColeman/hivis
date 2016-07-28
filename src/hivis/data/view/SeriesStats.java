@@ -63,7 +63,7 @@ public class SeriesStats implements TableFunction {
 		boolean[] numeric = new boolean[seriesCount];
 		
 		for (int si = 0; si < seriesCount; si++) {
-			DataSeries<?> s = input.get(si);
+			DataSeries<?> s = input.getSeries(si);
 			
 			if (s.isNumeric()) {
 				numeric[si] = true;

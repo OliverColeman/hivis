@@ -25,6 +25,7 @@ import hivis.common.BMListSet;
 import hivis.common.ListSet;
 import hivis.common.Util;
 import hivis.data.AbstractDataSeries;
+import hivis.data.DataSeries;
 import hivis.data.DataSetDefault;
 import hivis.data.DataTable;
 import hivis.data.DataTableChange;
@@ -37,7 +38,7 @@ import hivis.data.DataTableDefault;
  * 
  * @author O. J. Coleman
  */
-public abstract class TableViewSeriesBase extends TableView {
+public abstract class TableViewSeriesBase extends AbstractTableView<DataSeries<?>> {
 	public TableViewSeriesBase(DataTable source) {
 		super(source);
 	}
@@ -74,9 +75,9 @@ public abstract class TableViewSeriesBase extends TableView {
 				String srcLabel = newSelected[0].get(idx);
 				String newLabel = newSelected[1].get(idx);
 				
-				if (source.get(0).hasSeries(srcLabel)) {
-					series.put(newLabel, source.get(0).get(srcLabel));
-					source.get(0).get(srcLabel).addContainer(this);
+				if (inputTables.get(0).hasSeries(srcLabel)) {
+					series.put(newLabel, inputTables.get(0).getSeries(srcLabel));
+					inputTables.get(0).getSeries(srcLabel).addContainer(this);
 				}
 			}
 		}

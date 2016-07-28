@@ -21,8 +21,11 @@ import java.util.regex.Pattern;
 import hivis.common.ListMap;
 import hivis.common.ListSet;
 import hivis.common.Util;
+import hivis.data.view.RowFilter;
 import hivis.data.view.TableFunction;
+import hivis.data.view.TableView;
 import hivis.data.view.TableViewAppend;
+import hivis.data.view.TableViewFilterRows;
 import hivis.data.view.TableViewFunction;
 import hivis.data.view.TableViewSeries;
 import hivis.data.view.TableViewTranspose;
@@ -38,11 +41,11 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 
 	@Override
 	public int seriesCount() {
-		return  getLabelledSeries().size();
+		return getLabelledSeries().size();
 	}
 
 	@Override
-	public int length() {
+	public synchronized int length() {
 		int l = 0;
 		for (DataSeries<?> s : getLabelledSeries().values()) {
 			if (s.length() > l) {
@@ -64,12 +67,12 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 	}
 
 	@Override
-	public DataSeries<?> get(int index) {
+	public DataSeries<?> getSeries(int index) {
 		return getLabelledSeries().get(index).getValue();
 	}
 
 	@Override
-	public DataSeries<?> get(String label) {
+	public DataSeries<?> getSeries(String label) {
 		return getLabelledSeries().get(label);
 	}
 
@@ -96,58 +99,63 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 	
 
 	@Override
-	public DataTable select(int... series) {
+	public TableView selectSeries(int... series) {
 		return (new TableViewSeries(this)).setSeries(series);
 	}
 
 	@Override
-	public DataTable selectRange(int begin, int end) {
+	public TableView selectSeriesRange(int begin, int end) {
 		return (new TableViewSeries(this)).setSeriesRange(begin, end);
 	}
 
 	@Override
-	public DataTable select(String... series) {
+	public TableView selectSeries(String... series) {
 		return (new TableViewSeries(this)).setSeries(series);
 	}
 
 	@Override
-	public DataTable selectGlob(String pattern) {
+	public TableView selectSeriesGlob(String pattern) {
 		return (new TableViewSeries(this)).setSeriesGlob(pattern);
 	}
 
 	@Override
-	public DataTable selectRE(Pattern pattern) {
+	public TableView selectSeriesRE(Pattern pattern) {
 		return (new TableViewSeries(this)).setSeriesRE(pattern);
 	}
 
 	@Override
-	public DataTable selectRE(Pattern pattern, String renamePattern) {
+	public TableView selectSeriesRE(Pattern pattern, String renamePattern) {
 		return (new TableViewSeries(this)).setSeriesRE(pattern, renamePattern);
 	}
 
 	@Override
-	public DataTable relabel(String... labels) {
+	public TableView relabelSeries(String... labels) {
 		return (new TableViewSeries(this)).renameSeries(labels);
 	}
 
 	@Override
-	public DataTable relabelPP(String prefix, String postfix) {
+	public TableView relabelSeriesPP(String prefix, String postfix) {
 		return (new TableViewSeries(this)).renameSeriesPP(prefix, postfix);
 	}
 
 	@Override
-	public DataTable apply(TableFunction function, boolean includeOriginalSeries) {
+	public TableView apply(TableFunction function, boolean includeOriginalSeries) {
 		return new TableViewFunction(function, includeOriginalSeries, this);
 	}
 	
 	@Override 
-	public DataTable transpose() {
+	public TableView transpose() {
 		return new TableViewTranspose(this);
 	}
 
 	@Override 
-	public DataTable append(DataTable table) {
+	public TableView append(DataTable table) {
 		return new TableViewAppend(this, table);
+	}
+	
+	@Override
+	public TableView selectRows(RowFilter filter) {
+		return new TableViewFilterRows(this, filter);
 	}
 
 	/**
