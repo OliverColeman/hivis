@@ -174,8 +174,8 @@ public class HV {
 	/**
 	 * Generates a DataSeries containing normally (Gaussian) distributed numbers.
 	 * @param length The length of the series.
-	 * @param min The mean of the distribution.
-	 * @param max The standard deviation of the distribution.
+	 * @param mean The mean of the distribution.
+	 * @param stdDev The standard deviation of the distribution.
 	 */
 	public static DataSeriesReal randomNormalSeries(int length, double mean, double stdDev) {
 		double[] data = new double[length];

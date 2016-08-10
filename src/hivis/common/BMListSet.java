@@ -104,7 +104,7 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
      * array in the same order. If any items are duplicated, according to their equals
      * method, then only the first item is included.
      *
-     * @param c the collection whose elements are to be placed into this list
+     * @param a the elements to be placed into this list
      * @throws NullPointerException if the specified collection is null
 	 */
 	public BMListSet(T[] a) {

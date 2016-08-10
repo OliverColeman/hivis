@@ -60,7 +60,6 @@ public class Event<O, T, S extends Event<?, ?, ?>> {
 	
 	/**
 	 * Get the list of change types represented by this event.
-	 * @return
 	 */
 	public Set<T> getTypes() {
 		return types;

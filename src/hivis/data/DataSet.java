@@ -61,7 +61,6 @@ public interface DataSet {
 	 * Notify this DataSet that changes are about to be made to it.
 	 * 
 	 * @param changer The object making the changes.
-	 * @param changeType The type of change to be made. This is usually one of {@link DataSetEventType} or an Enum relevant to the specific DataSet subclass.
 	 */
 	void beginChanges(Object changer);
 	
@@ -94,7 +93,7 @@ public interface DataSet {
 	 * beginChanges on the container DataTable) before calling finishChanges on the
 	 * DataSeries and then the DataTable. In each call to finishChanges only one
 	 * of the occurrences of the DataTable will be removed.
-	 * @see #beginChanges(Object, Object)
+	 * @see #beginChanges(Object)
 	 */
 	List<Object> getCurrentChangers();
 }

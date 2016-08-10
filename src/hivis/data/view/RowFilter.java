@@ -21,7 +21,7 @@ import hivis.data.DataTable;
  * Interface for class that specifies which rows should be filtered from a DataTable.
  *
  * @see TableViewFilterRows
- * @see DataTable#select(DataTableRowFilter)
+ * @see DataTable#selectRows(RowFilter)
  * 
  * @author O. J. Coleman
  */

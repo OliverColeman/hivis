@@ -29,7 +29,7 @@ import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
 
 /**
- * A view that allows selecting, reordering and renaming the {@link DataSeries}
+ * A view that allows selecting, reordering and renaming the {@link hivis.data.DataSeries}
  * from a {@link DataTable} based on a list of series indexes or labels.
  * 
  * @author O. J. Coleman
@@ -200,7 +200,7 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 * Selects series from the input table whose labels match the given "glob"
 	 * pattern.
 	 * 
-	 * @param cache
+	 * @param pattern
 	 *            The glob pattern to use to match series labels.
 	 * @return This data table view.
 	 */

@@ -33,7 +33,7 @@ public interface TableFunction {
 	 * For the given DataTable produce the series this function generates and add them to the given output list.
 	 * 
 	 * @param input The input DataTable(s). If the series this function generates are not derived from an input table this may be null.
-	 * @param output The ListMap to add the output DataSeries to, key is a label suggestion. One or more DataSeries may be added.
+	 * @param outputSeries The ListMap to add the output DataSeries to, key is a label suggestion. One or more DataSeries may be added.
 	 */
 	public void getSeries(List<DataTable> input, ListMap<String, DataSeries<?>> outputSeries);
 }

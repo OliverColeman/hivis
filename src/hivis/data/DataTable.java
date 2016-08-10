@@ -185,7 +185,7 @@ public interface DataTable extends DataSet {
 	 * Get a view of this table containing the series for which the label
 	 * matches the given "glob" pattern.
 	 * 
-	 * @param series
+	 * @param pattern
 	 *            The glob pattern to use to match series labels.
 	 * @return a view of this table containing the specified series in the order
 	 *         they appear in this table.

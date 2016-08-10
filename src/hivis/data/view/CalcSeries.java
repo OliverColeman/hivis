@@ -106,7 +106,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 
 	/**
 	 * Primitive equivalent to {@link #calc(int)}. This allows for more
-	 * efficient implementations of {@link #updateView(cause)} if a primitive type
+	 * efficient implementations of {@link #updateView(Object)} if a primitive type
 	 * is stored. This implementation throws an UnsupportedOperationException.
 	 */
 	public boolean calcBoolean(int index) {
@@ -115,7 +115,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 
 	/**
 	 * Primitive equivalent to {@link #calc(int)}. This allows for more
-	 * efficient implementations of {@link #updateView(cause)} if a primitive type
+	 * efficient implementations of {@link #updateView(Object)} if a primitive type
 	 * is stored. This implementation throws an UnsupportedOperationException.
 	 */
 	public int calcInteger(int index) {
@@ -124,7 +124,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 
 	/**
 	 * Primitive equivalent to {@link #calc(int)}. This allows for more
-	 * efficient implementations of {@link #updateView(cause)} if a primitive type
+	 * efficient implementations of {@link #updateView(Object)} if a primitive type
 	 * is stored. This implementation throws an UnsupportedOperationException.
 	 */
 	public long calcLong(int index) {
@@ -132,7 +132,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	}
 	/**
 	 * Primitive equivalent to {@link #calc(int)}. This allows for more
-	 * efficient implementations of {@link #updateView(cause)} if a primitive type
+	 * efficient implementations of {@link #updateView(Object)} if a primitive type
 	 * is stored. This implementation throws an UnsupportedOperationException.
 	 */
 	public double calcReal(int index) {

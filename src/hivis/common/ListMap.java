@@ -42,7 +42,6 @@ public interface ListMap<K, V> extends Map<K, V> {
 	 *            the index of the entry to be removed
 	 * @return the entry that was removed from the list
 	 * @throws IndexOutOfBoundsException
-	 *             {@inheritDoc}
 	 */
 	public Map.Entry<K, V> remove(int index);
 

@@ -306,7 +306,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	/**
 	 * This default implementation uses {@link #get(int)} to populate the array.
-	 * @see hivis.data.DataSeries#asArray(V[])
+	 * @see hivis.data.DataSeries#asArray(Object[])
 	 */
 	@Override
 	public V[] asArray(V[] data) {
