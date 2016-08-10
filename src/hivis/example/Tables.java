@@ -35,8 +35,8 @@ public class Tables {
 		DataTable myTable = HV.newTable();
 		
 		// Make a couple of new series.
-		// (HV.randomIntegerSeries(length, min, max) creates a new series containing randomly generated integer values.
-		// (HV.randomUniformSeries(length, min, max) creates a new series containing randomly generated real values.
+		// HV.randomIntegerSeries(length, min, max) creates a new series containing randomly generated integer values.
+		// HV.randomUniformSeries(length, min, max) creates a new series containing randomly generated real values.
 		DataSeries<Integer> ints = HV.randomIntegerSeries(5, 0, 10);
 		DataSeries<Double> reals = HV.randomUniformSeries(5, 0, 10);
 		
