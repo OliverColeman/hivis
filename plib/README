@@ -1,0 +1,3 @@
+Include other Processing libraries in plib as necessary. 
+Do not put them in the lib folder as they will then be included in the 
+generated library file and cause conflicts when included in Processing.
