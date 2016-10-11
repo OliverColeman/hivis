@@ -1,14 +1,14 @@
 # HiVis
 
-HiVis is a Java library for importing, manipulating and (interactively) visualising various kinds of data. 
-It integrates with the programming environment [Processing](http://www.processing.org) for the visualisation aspect, but may be used outside of Processing.
+HiVis is a Java library for importing, manipulating and working with various kinds of data. 
+It was designed with the programming environment [Processing](http://www.processing.org) in mind, but may be used outside of Processing.
 
 
 ## Overview / Features
 
 A collection of data is a DataSet. Built-in DataSet types are:
-- Series (storing sequential data elements that may be numeric, Date, String or any other kind of object);
-- Tables, which combine a set of Series with associated labels;
+- DataSeries (storing sequential data elements that may be numeric, Date, String or any other kind of object);
+- DataTable, which combine a set of Series with associated labels;
 - Graphs (coming soon).
 
 DataSets may be manipulated using various filters and transformations. New filters and transformations may be created easily.

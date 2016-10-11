@@ -47,11 +47,6 @@ void setup() {
   retailCost = data.getSeries(6).asFloat();
   tasteStrength = data.getSeries(2).asInt();
   
-  println("\nretailMarkup:\n" + retailMarkup);
-  println("\nhealthRating:\n" + healthRating);
-  println("\nretailCost:\n" + retailCost);
-  println("\ntasteStrength:\n" + tasteStrength);
-  
   // Set-up audio.
   AudioContext ac = new AudioContext();
   freqEnv = new Envelope(ac);
@@ -69,8 +64,8 @@ void setup() {
 
 // Draws the plot.
 void draw() {
-  float width90 = width * 0.96;
-  float height90 = height * 0.96;
+  float widthScaled = width * 0.96;
+  float heightScaled = height * 0.96;
   float marginTop = width * 0.01;
   float marginLeft = width * 0.03;
   
@@ -85,13 +80,13 @@ void draw() {
     textAlign(CENTER, BOTTOM);
     
     text("Retail Markup", width/2, height-5);
-    line(marginLeft, marginTop+height90, marginLeft + width90, marginTop+height90);
+    line(marginLeft, marginTop+heightScaled, marginLeft + widthScaled, marginTop+heightScaled);
     
     
     rotate(HALF_PI);
     text("Health Rating", height / 2, -10);
     rotate(-HALF_PI);
-    line(marginLeft, marginTop, marginLeft, marginTop+height90);
+    line(marginLeft, marginTop, marginLeft, marginTop+heightScaled);
     
     // Flag to indicate that the audio output should be silenced when no point is being hovered over.
     boolean silenceAudio = true;
@@ -103,8 +98,8 @@ void draw() {
       // If data exists for this row.
       if (data.getSeries(0).get(row) != null) {
         // Get values from series. Multiply x and y by a constant factor to scale to canvas size. See exercise 2.
-        float x = retailMarkup.get(row) * width90 + marginLeft;
-        float y = healthRating.get(row) * height90 + marginTop;
+        float x = retailMarkup.get(row) * widthScaled + marginLeft;
+        float y = healthRating.get(row) * heightScaled + marginTop;
         
         fill(0, 0, 0, 127);
         ellipse(x, y, 10, 10);

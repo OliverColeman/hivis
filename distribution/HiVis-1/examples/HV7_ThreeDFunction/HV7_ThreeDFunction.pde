@@ -5,7 +5,9 @@ import hivis.data.view.*;
 import controlP5.*;
 import java.util.*;
 
-// Example of visualising data in a 3D plot.
+// Example of visualising data in a 3D plot, transforming the data with a custom function, 
+// and using an interactive control to modify the behaviour of the function. 
+// A ControlP5 slider (shown at bottom of the window) controls a parameter to the function. Try sliding it. 
 // Exercises:
 // 1. Play around with different functions.
 // 2. Add more sliders or other control elements to allow interactively setting the values for other parameters or control the animated rotation.
@@ -14,7 +16,7 @@ import java.util.*;
 // Data series associated with x and y coordinates and a series to contain values based on the x and y series.
 DataSeries<Double> x;
 DataSeries<Double> y; 
-CalcSeries.Real func; 
+CalcSeries.DoubleSeries func; 
 
 // Minimum and maximum values for the x and y series.
 float minValueX = 0;
@@ -50,10 +52,11 @@ void setup() {
   y = HV.randomUniformSeries(dataLength, minValueY, maxValueY);
   
   // Make a series that is a function of the x and y series.
-  // CalcSeries.Real produces a DataSeries<Double> from one or more input series. CalcSeries.Real<Double> indicates that the CalcSeries.Real takes DataSeries<Double> as the input series. 
-  func = new CalcSeries.Real<Double>(x, y) {
-    public double calcReal(int index) {
-      // A CalcSeries may be calculated from one or more input series. We've supplied two series (x and y). inputSeries.get(0) and inputSeries.get(1) gets a reference to these series respectively.
+  // CalcSeries.DoubleSeries produces a DataSeries<Double> from one or more input series. CalcSeries.DoubleSeries<Double> indicates that the CalcSeries.DoubleSeries takes DataSeries<Double> as the input series. 
+  func = new CalcSeries.DoubleSeries<Double>(x, y) {
+    public double calcDouble(int index) {
+      // A CalcSeries may be calculated from one or more input series. We've supplied two series (x and y). 
+      // inputSeries.get(0) and inputSeries.get(1) gets a reference to these series respectively.
       double x = inputSeries.get(0).get(index);
       double y = inputSeries.get(1).get(index);
       
@@ -68,6 +71,8 @@ void setup() {
 }
 
 // Update the calculated values for the function when the slider value changes.
+// This method is called by ControlP5 when the slider is adjusted. It must match
+// the name given to the slider.
 void sliderParam(float value) {
   // (only if the calc series has been initialised).
   if (func != null) {
@@ -79,7 +84,7 @@ void sliderParam(float value) {
 float rotateX = 0;
 float rotateY = 0;
 
-// Draws the chart and a title.
+// Draw the visualisation.
 void draw() {
   background(0, 0, 0);
   
@@ -117,4 +122,3 @@ void draw() {
   
   popMatrix();
 }
-
