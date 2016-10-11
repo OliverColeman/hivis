@@ -1,7 +1,6 @@
 import hivis.common.*;
 import hivis.data.*;
 import hivis.data.reader.*;
-import hivis.visual.*;
 import hivis.data.view.*;
 import controlP5.*;
 import java.util.*;
@@ -60,7 +59,7 @@ void fileSelected(File selection) {
   } 
   else {
     // Get data from spread sheet. The SpreadSheetReader will automatically update the DataTable it provides.
-    SpreadSheetReader reader = new SpreadSheetReader(selection.getAbsolutePath());
+    SpreadSheetReader reader = new SpreadSheetReader(selection.getAbsolutePath(), 0, 0, 1, 0);
     data = reader.getData();
     println("\nLoaded data:\n" + data);
     
@@ -130,13 +129,13 @@ void draw() {
     for (int row = 0; row < toPlot.length(); row++) {
       //"label", "x", "y", "hue", "brightness", "shape size", "shape type", "shape edges"
       String label = toPlot.getSeries(0).get(row).toString();
-      float x = (float) toPlot.getSeries(1).getDouble(row) * (width - maxShapeSize - 10) + 5 + maxShapeSize/2;
-      float y = (float) (1 - toPlot.getSeries(2).getDouble(row)) * (height - maxShapeSize - paddingTop - 10) + paddingTop + 5;
-      float hue = (float) toPlot.getSeries(3).getDouble(row);
-      float bri = (float) toPlot.getSeries(4).getDouble(row) * 0.7 + 0.3;
-      float size = (float) toPlot.getSeries(5).getDouble(row) * (maxShapeSize - minShapeSize) + minShapeSize;
-      int edges = (int) Math.round(toPlot.getSeries(6).getInt(row));
-      boolean type = toPlot.getSeries(7).getDouble(row) > 0.5;
+      float x = toPlot.getSeries(1).getFloat(row) * (width - maxShapeSize - 10) + 5 + maxShapeSize/2;
+      float y = (1 - toPlot.getSeries(2).getFloat(row)) * (height - maxShapeSize - paddingTop - 10) + paddingTop + 5;
+      float hue = toPlot.getSeries(3).getFloat(row);
+      float bri = toPlot.getSeries(4).getFloat(row) * 0.7 + 0.3;
+      float size = toPlot.getSeries(5).getFloat(row) * (maxShapeSize - minShapeSize) + minShapeSize;
+      int edges = round(toPlot.getSeries(6).getInt(row));
+      boolean type = toPlot.getSeries(7).getFloat(row) > 0.5;
       
       // If this is a spiky shape rather than a polygon
       if (type) {

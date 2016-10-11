@@ -1,7 +1,6 @@
 import hivis.common.*;
 import hivis.data.*;
 import hivis.data.reader.*;
-import hivis.visual.*;
 import hivis.data.view.*;
 import controlP5.*;
 import org.gicentre.utils.stat.*;

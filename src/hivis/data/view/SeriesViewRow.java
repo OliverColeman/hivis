@@ -63,9 +63,11 @@ public class SeriesViewRow<V> extends AbstractSeriesView<V, V> {
 	public synchronized void setRowMap(int... map) {
 		// See if any value changes result from the change, and check the new indices.
 		boolean changedValues = false;
+		
 		for (int i = 0; i < map.length; i++) {
 			if (map[i] < 0 || map[i] >= inputSeries().length()) {
-				throw new IllegalArgumentException("New row map for SeriesViewRow contains an index less than 0 or greater than the length of the input series: " + map[i]);
+				//throw new IllegalArgumentException("New row map for SeriesViewRow contains an index less than 0 or greater than the length of the input series (" + inputSeries().length() + "): " + map[i]);
+				continue;
 			}
 			
 			// See if a value has changed (if we haven't already established this).

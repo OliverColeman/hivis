@@ -24,7 +24,9 @@ import hivis.data.DataListener;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesInteger;
-import hivis.data.DataSeriesReal;
+import hivis.data.DataSeriesLong;
+import hivis.data.DataSeriesDouble;
+import hivis.data.DataSeriesFloat;
 
 /**
  * Base class for creating {@link DataSeries} that are calculated from zero, one
@@ -89,8 +91,9 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	public void updateView(Object cause) {
 		this.beginChanges(this);
 		// Make sure cache series is the right length.
-		cache.resize(length());
-		for (int i = 0; i < length(); i++) {
+		int length = length();
+		cache.resize(length);
+		for (int i = 0; i < length; i++) {
 			cache.setValue(i, calc(i));
 		}
 		this.finishChanges(this);
@@ -130,12 +133,22 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	public long calcLong(int index) {
 		throw new UnsupportedOperationException();
 	}
+	
 	/**
 	 * Primitive equivalent to {@link #calc(int)}. This allows for more
 	 * efficient implementations of {@link #updateView(Object)} if a primitive type
 	 * is stored. This implementation throws an UnsupportedOperationException.
 	 */
-	public double calcReal(int index) {
+	public float calcFloat(int index) {
+		throw new UnsupportedOperationException();
+	}
+	
+	/**
+	 * Primitive equivalent to {@link #calc(int)}. This allows for more
+	 * efficient implementations of {@link #updateView(Object)} if a primitive type
+	 * is stored. This implementation throws an UnsupportedOperationException.
+	 */
+	public double calcDouble(int index) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -185,6 +198,15 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		}
 		return cache.getLong(index);
 	}
+	
+	@Override
+	public final float getFloat(int index) {
+		if (recalc) {
+			updateView(null);
+			recalc = false;
+		}
+		return cache.getFloat(index);
+	}
 
 	@Override
 	public final double getDouble(int index) {
@@ -196,12 +218,14 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	}
 	
 	
-	public static class Real<I extends Object> extends CalcSeries<I, Double> {
-		public Real(int length) {
+	
+	
+	public static class FloatSeries<I extends Object> extends CalcSeries<I, Float> {
+		public FloatSeries(int length) {
 			super(length);
 		}
 		
-		public Real(DataSeries<I>... input) {
+		public FloatSeries(DataSeries<I>... input) {
 			super(input);
 		}
 		
@@ -209,27 +233,150 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		public void updateView(Object cause) {
 			cache.resize(length());
 			for (int i = 0; i < length(); i++) {
-				cache.setValue(i, calcReal(i));
+				cache.setValue(i, calcFloat(i));
+			}
+		}
+		
+		@Override 
+		public DataSeries<Float> getNewSeries() {
+			return new DataSeriesFloat();
+		}
+
+		@Override
+		public Float calc(int index) {
+			return calcFloat(index);
+		}
+		
+		@Override
+		public float calcFloat(int index) {
+			throw new RuntimeException("Implementations of CalcSeries.Float must override calcFloat(int).");
+		}
+		
+		
+		protected static class Func extends FloatSeries {
+			protected final DataSeries<?> series;
+			protected final DataSeries<?> seriesOther;
+			protected final float value;
+			public Func(DataSeries<?> series, float value) {
+				super(series);
+				this.series = series;
+				this.seriesOther = null;
+				this.value = value;
+			}
+			public Func(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+				this.series = series;
+				this.seriesOther = seriesOther;
+				this.value = 0;
+			}
+			public int length() {
+				return ((DataSeries<?>) inputSeries.get(0)).length();
+			}
+		}
+		
+		public static class Add extends Func {
+			public Add(DataSeries<?> series, float value) {
+				super(series, value);
+			}
+			public float calcFloat(int index) {
+				return series.getFloat(index) + value;
+			}
+		}
+		public static class AddSeries extends Func {
+			public AddSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+			}
+			public float calcFloat(int index) {
+				return series.getFloat(index) + seriesOther.getFloat(index);
+			}
+		}
+		public static class Subtract extends Func {
+			public Subtract(DataSeries<?> series, float value) {
+				super(series, value);
+			}
+			public float calcFloat(int index) {
+				return series.getFloat(index) - value;
+			}
+		}
+		public static class SubtractSeries extends Func {
+			public SubtractSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+			}
+			public float calcFloat(int index) {
+				return series.getFloat(index) - seriesOther.getFloat(index);
+			}
+		}
+		public static class Multiply extends Func {
+			public Multiply(DataSeries<?> series, float value) {
+				super(series, value);
+			}
+			public float calcFloat(int index) {
+				return series.getFloat(index) * value;
+			}
+		}
+		public static class MultiplySeries extends Func {
+			public MultiplySeries(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+			}
+			public float calcFloat(int index) {
+				return series.getFloat(index) * seriesOther.getFloat(index);
+			}
+		}
+		public static class Divide extends Func {
+			public Divide(DataSeries<?> series, float value) {
+				super(series, value);
+			}
+			public float calcFloat(int index) {
+				return series.getFloat(index) / value;
+			}
+		}
+		public static class DivideSeries extends Func {
+			public DivideSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+			}
+			public float calcFloat(int index) {
+				return series.getFloat(index) / seriesOther.getFloat(index);
+			}
+		}
+	}
+	
+	
+	
+	
+	public static class DoubleSeries<I extends Object> extends CalcSeries<I, Double> {
+		public DoubleSeries(int length) {
+			super(length);
+		}
+		
+		public DoubleSeries(DataSeries<I>... input) {
+			super(input);
+		}
+		
+		@Override
+		public void updateView(Object cause) {
+			cache.resize(length());
+			for (int i = 0; i < length(); i++) {
+				cache.setValue(i, calcDouble(i));
 			}
 		}
 		
 		@Override 
 		public DataSeries<Double> getNewSeries() {
-			return new DataSeriesReal();
+			return new DataSeriesDouble();
 		}
 
 		@Override
 		public Double calc(int index) {
-			return calcReal(index);
+			return calcDouble(index);
 		}
 		
 		@Override
-		public double calcReal(int index) {
-			throw new RuntimeException("Implementations of CalcSeries.Real must override calcReal(int).");
+		public double calcDouble(int index) {
+			throw new RuntimeException("Implementations of CalcSeries.Real must override calcDouble(int).");
 		}
 		
 		
-		protected static class Func extends Real {
+		protected static class Func extends DoubleSeries {
 			protected final DataSeries<?> series;
 			protected final DataSeries<?> seriesOther;
 			protected final double value;
@@ -254,7 +401,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public Add(DataSeries<?> series, double value) {
 				super(series, value);
 			}
-			public double calcReal(int index) {
+			public double calcDouble(int index) {
 				return series.getDouble(index) + value;
 			}
 		}
@@ -262,7 +409,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public AddSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
 				super(series, seriesOther);
 			}
-			public double calcReal(int index) {
+			public double calcDouble(int index) {
 				return series.getDouble(index) + seriesOther.getDouble(index);
 			}
 		}
@@ -270,7 +417,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public Subtract(DataSeries<?> series, double value) {
 				super(series, value);
 			}
-			public double calcReal(int index) {
+			public double calcDouble(int index) {
 				return series.getDouble(index) - value;
 			}
 		}
@@ -278,7 +425,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public SubtractSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
 				super(series, seriesOther);
 			}
-			public double calcReal(int index) {
+			public double calcDouble(int index) {
 				return series.getDouble(index) - seriesOther.getDouble(index);
 			}
 		}
@@ -286,7 +433,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public Multiply(DataSeries<?> series, double value) {
 				super(series, value);
 			}
-			public double calcReal(int index) {
+			public double calcDouble(int index) {
 				return series.getDouble(index) * value;
 			}
 		}
@@ -294,7 +441,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public MultiplySeries(DataSeries<?> series, DataSeries<?> seriesOther) {
 				super(series, seriesOther);
 			}
-			public double calcReal(int index) {
+			public double calcDouble(int index) {
 				return series.getDouble(index) * seriesOther.getDouble(index);
 			}
 		}
@@ -302,7 +449,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public Divide(DataSeries<?> series, double value) {
 				super(series, value);
 			}
-			public double calcReal(int index) {
+			public double calcDouble(int index) {
 				return series.getDouble(index) / value;
 			}
 		}
@@ -310,20 +457,21 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			public DivideSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
 				super(series, seriesOther);
 			}
-			public double calcReal(int index) {
+			public double calcDouble(int index) {
 				return series.getDouble(index) / seriesOther.getDouble(index);
 			}
 		}
 	}
 	
 	
+	
 
-	public static class Int<I extends Object> extends CalcSeries<I, Integer> {
-		public Int(int length) {
+	public static class IntSeries<I extends Object> extends CalcSeries<I, Integer> {
+		public IntSeries(int length) {
 			super(length);
 		}
 		
-		public Int(DataSeries<I>... input) {
+		public IntSeries(DataSeries<I>... input) {
 			super(input);
 		}
 		
@@ -351,7 +499,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		}
 		
 		
-		protected static class Func extends Int {
+		protected static class Func extends IntSeries {
 			protected final DataSeries<?> series;
 			protected final DataSeries<?> seriesOther;
 			protected final int value;
@@ -434,6 +582,128 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			}
 			public int calcInteger(int index) {
 				return series.getInt(index) / seriesOther.getInt(index);
+			}
+		}
+	}
+	
+	
+	
+	public static class LongSeries<I extends Object> extends CalcSeries<I, Long> {
+		public LongSeries(int length) {
+			super(length);
+		}
+		
+		public LongSeries(DataSeries<I>... input) {
+			super(input);
+		}
+		
+		@Override
+		public void updateView(Object cause) {
+			cache.resize(length());
+			for (int i = 0; i < length(); i++) {
+				cache.setValue(i, calcLong(i));
+			}
+		}
+		
+		@Override 
+		public DataSeries<Long> getNewSeries() {
+			return new DataSeriesLong();
+		}
+
+		@Override
+		public Long calc(int index) {
+			return calcLong(index);
+		}
+		
+		@Override
+		public long calcLong(int index) {
+			throw new RuntimeException("Implementations of CalcSeries.Long must override calcLong(long).");
+		}
+		
+		
+		protected static class Func extends LongSeries {
+			protected final DataSeries<?> series;
+			protected final DataSeries<?> seriesOther;
+			protected final long value;
+			public Func(DataSeries<?> series, long value) {
+				super(series);
+				this.series = series;
+				this.seriesOther = null;
+				this.value = value;
+			}
+			public Func(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+				this.series = series;
+				this.seriesOther = seriesOther;
+				this.value = 0;
+			}
+			public int length() {
+				return series.length();
+			}
+		}
+		
+		public static class Add extends Func {
+			public Add(DataSeries<?> series, long value) {
+				super(series, value);
+			}
+			public long calcLong(int index) {
+				return series.getLong(index) + value;
+			}
+		}
+		public static class AddSeries extends Func {
+			public AddSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+			}
+			public long calcLong(int index) {
+				return series.getLong(index) + seriesOther.getLong(index);
+			}
+		}
+		public static class Subtract extends Func {
+			public Subtract(DataSeries<?> series, long value) {
+				super(series, value);
+			}
+			public long calcLong(int index) {
+				return series.getLong(index) - value;
+			}
+		}
+		public static class SubtractSeries extends Func {
+			public SubtractSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+			}
+			public long calcLong(int index) {
+				return series.getLong(index) - seriesOther.getLong(index);
+			}
+		}
+		public static class Multiply extends Func {
+			public Multiply(DataSeries<?> series, long value) {
+				super(series, value);
+			}
+			public long calcLong(int index) {
+				return series.getLong(index) * value;
+			}
+		}
+		public static class MultiplySeries extends Func {
+			public MultiplySeries(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+			}
+			public long calcLong(int index) {
+				return series.getLong(index) * seriesOther.getLong(index);
+			}
+		}
+		public static class Divide extends Func {
+			public Divide(DataSeries<?> series, long value) {
+				super(series, value);
+			}
+			public long calcLong(int index) {
+				return series.getLong(index) / value;
+			}
+		}
+		public static class DivideSeries extends Func {
+			public DivideSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
+				super(series, seriesOther);
+			}
+			public long calcLong(int index) {
+				return series.getLong(index) / seriesOther.getLong(index);
 			}
 		}
 	}

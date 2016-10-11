@@ -23,6 +23,7 @@ import hivis.common.ListSet;
 import hivis.data.view.RowFilter;
 import hivis.data.view.TableFunction;
 import hivis.data.view.TableView;
+import hivis.data.view.TableViewFilterRows;
 
 /**
  * Represents a table of data in which the columns are represented as
@@ -279,6 +280,19 @@ public interface DataTable extends DataSet {
 	 * If the series labels (both presence and order) or types do not match then an error will occur.
 	 */
 	TableView append(DataTable table);
+	
+	/**
+	 * Get a view of this table containing the specified contiguous range of rows.
+	 * @param beginIndex The index of the first row to include, inclusive.
+	 * @param endIndex The index of the last row to include, inclusive.
+	 */
+	TableView selectRowRange(int beginIndex, final int endIndex);
+
+	/**
+	 * Get a view of this table containing the specified rows.
+	 * @param rows The indices of the rows to include, in any order. May be an array or list of ints.
+	 */
+	TableView selectRows(int... rows);
 	
 	/**
 	 * Get a view of this table with some rows filtered out.

@@ -120,7 +120,14 @@ public class Tables {
 		// The "Mazda RX4 Wag" now has 12 cylinders.
 		System.out.println("\nTransposed mtCars table, reflecting changed value for Mazda RX4 wag/cyl in original table:\n" + mtCarsTran);
 		
+		// Create a view of the cars table containing a specified range of rows.
+		DataTable mtRowsRange = mtCars.selectRowRange(5, 10);
+		System.out.println("\nRows 5 through 10 inclusive of mtCars table:\n" + mtRowsRange);
 		
+		// Create a view of the cars table containing the specified rows.
+		DataTable mtRowsSelect = mtCars.selectRows(1, 3, 10);
+		System.out.println("\nRows 1, 3 and 10 of mtCars table:\n" + mtRowsSelect);
+				
 		// Create a view of the cars table with some rows filtered out based on custom criteria.
 		DataTable mtFiltered = mtCars.selectRows(new RowFilter() {
 			public boolean excludeRow(DataTable input, int index) {

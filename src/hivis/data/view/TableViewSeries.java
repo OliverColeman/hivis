@@ -24,7 +24,7 @@ import hivis.common.BMListSet;
 import hivis.common.HV;
 import hivis.common.ListSet;
 import hivis.common.Util;
-import hivis.data.DataSeriesReal;
+import hivis.data.DataSeriesDouble;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
 
@@ -154,7 +154,7 @@ public class TableViewSeries extends TableViewSeriesBase {
 		if (begin > end) {
 			throw new IllegalArgumentException("Error setting series for ViewTableSeries: first index must be less than or equal to end index.");
 		}
-		if (begin <= 0) {
+		if (begin < 0) {
 			throw new IllegalArgumentException("Error setting series for ViewTableSeries: first index less than 0.");
 		}
 		if (end >= inputTables.get(0).seriesCount()) {

@@ -43,10 +43,25 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	private TypeToken<V> typeToken = new TypeToken<V>(getClass()) {};
 	private Class<?> type = typeToken.getRawType();
 	
+	private boolean recalcMinValue = true;
+	private boolean recalcMaxValue = true;
+	V minValue;
+	V maxValue;
+	
 	
 	public AbstractDataSeries() {
 		super();
+		
+		// Recalculate minimum and maximum values if the data is changed.
+		this.addChangeListener(new DataListener() {
+			@Override
+			public void dataChanged(DataEvent event) {
+				recalcMinValue = true;
+				recalcMaxValue = true;
+			}
+		});
 	}
+	
 	
 	@Override
 	@SuppressWarnings("unchecked")
@@ -144,7 +159,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	 * Get the value stored at the given index as an int.
 	 * This default implementation casts the value given by {@link #get(int)}.
 	 * Sub-classes may override this to improve efficiency.
-	 * @see hivis.data.DataSeries#getBoolean(int)
+	 * @see hivis.data.DataSeries#getInt(int)
 	 */
 	@Override
 	public int getInt(int index) {
@@ -155,22 +170,60 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	 * Get the value stored at the given index as a long.
 	 * This default implementation casts the value given by {@link #get(int)}.
 	 * Sub-classes may override this to improve efficiency.
-	 * @see hivis.data.DataSeries#getBoolean(int)
+	 * @see hivis.data.DataSeries#getLong(int)
 	 */
 	@Override
 	public long getLong(int index) {
 		return ((Number) get(index)).longValue();
+	}
+	
+	/**
+	 * Get the value stored at the given index as a float.
+	 * This default implementation casts the value given by {@link #get(int)}.
+	 * Sub-classes may override this to improve efficiency.
+	 * @see hivis.data.DataSeries#getFloat(int)
+	 */
+	@Override
+	public float getFloat(int index) {
+		return ((Number) get(index)).floatValue();
 	}
 
 	/**
 	 * Get the value stored at the given index as a double.
 	 * This default implementation casts the value given by {@link #get(int)}.
 	 * Sub-classes may override this to improve efficiency.
-	 * @see hivis.data.DataSeries#getBoolean(int)
+	 * @see hivis.data.DataSeries#getDouble(int)
 	 */
 	@Override
 	public double getDouble(int index) {
 		return ((Number) get(index)).doubleValue();
+	}
+	
+
+	/**
+	 * Get a view of this series representing the values as single-precision floating point numbers.
+	 * This default implementation first checks if the type of this series is Float and returns it if so,
+	 * otherwise creates an {@link AbstractSeriesView} that casts the values to the correct type.
+	 */
+	@Override
+	public DataSeries<Float> asFloat() {
+		if (Float.class.isAssignableFrom(getType())) {
+			return (DataSeries<Float>) this;
+		}
+		final DataSeries<V> me = this;
+		return new AbstractSeriesView<V, Float>(this) {
+			public int length() {
+				return me.length();
+			}
+			public Float get(int index) {
+				return me.getFloat(index);
+			}
+			public float getFloat(int index) {
+				return me.getFloat(index);
+			}
+			public void updateView(Object cause) {
+			}
+		};
 	}
 	
 	/**
@@ -178,6 +231,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	 * This default implementation first checks if the type of this series is Double and returns it if so,
 	 * otherwise creates an {@link AbstractSeriesView} that casts the values to the correct type.
 	 */
+	@Override
 	public DataSeries<Double> asDouble() {
 		if (Double.class.isAssignableFrom(getType())) {
 			return (DataSeries<Double>) this;
@@ -203,6 +257,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	 * This default implementation first checks if the type of this series is Integer and returns it if so,
 	 * otherwise creates an {@link AbstractSeriesView} that casts the values to the correct type.
 	 */
+	@Override
 	public DataSeries<Integer> asInt() {
 		if (Integer.class.isAssignableFrom(getType())) {
 			return (DataSeries<Integer>) this;
@@ -228,6 +283,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	 * This default implementation first checks if the type of this series is Long and returns it if so,
 	 * otherwise creates an {@link AbstractSeriesView} that casts the values to the correct type.
 	 */
+	@Override
 	public DataSeries<Long> asLong(){
 		if (Long.class.isAssignableFrom(getType())) {
 			return (DataSeries<Long>) this;
@@ -283,6 +339,15 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	@Override
 	public long[] asLongArray() {
 		return asLongArray(new long[length()]);
+	}
+	
+	/**
+	 * This default implementation uses {@link #getFloat(int)} to populate the array.
+	 * @see hivis.data.DataSeries#asDoubleArray()
+	 */
+	@Override
+	public float[] asFloatArray() {
+		return asFloatArray(new float[length()]);
 	}
 	
 	/**
@@ -366,6 +431,21 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	}
 	
 	/**
+	 * This default implementation uses {@link #getFloat(int)} to populate the array.
+	 * @see hivis.data.DataSeries#asFloatArray(double[])
+	 */
+	@Override
+	public float[] asFloatArray(float[] data) {
+		if (data == null || data.length < length()) {
+			data = new float[length()];
+		}
+		for (int i = 0; i < length(); i++) {
+			data[i] = getFloat(i);
+		}
+		return data;
+	}
+	
+	/**
 	 * This default implementation uses {@link #getDouble(int)} to populate the array.
 	 * @see hivis.data.DataSeries#asDoubleArray(double[])
 	 */
@@ -403,11 +483,17 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	
 	public static <V> DataSeries<V> getNewSeries(Class<V> type) {
+		if (type.equals(Float.class) || type.equals(float.class)) {
+			return (DataSeries<V>) new DataSeriesFloat();
+		}
 		if (type.equals(Double.class) || type.equals(double.class)) {
-			return (DataSeries<V>) new DataSeriesReal();
+			return (DataSeries<V>) new DataSeriesDouble();
 		}
 		if (type.equals(Integer.class) || type.equals(int.class)) {
 			return (DataSeries<V>) new DataSeriesInteger();
+		}
+		if (type.equals(Long.class) || type.equals(long.class)) {
+			return (DataSeries<V>) new DataSeriesLong();
 		}
 		throw new UnsupportedOperationException("Don't know how to create a DataSeries containing type " + type);
 	}
@@ -418,6 +504,42 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 		return Number.class.isAssignableFrom(getType());
 	}
 	
+
+	@Override
+	public V minValue() {
+		if (recalcMinValue) {
+			if (length() == 0) {
+				return getEmptyValue();
+			}
+			minValue = getEmptyValue();
+			for (V el : this) {
+				if ((!(el instanceof Double) || (!Double.isNaN((Double) el)) && (!(el instanceof Float) || (!Float.isNaN((Float) el))))) {
+					if (minValue == null || minValue.equals(getEmptyValue()) || (el instanceof Comparable && ((Comparable<V>) el).compareTo(minValue) < 0)) {
+						minValue = el;
+					}
+				}
+			}
+		}
+		return minValue;
+	}
+
+	@Override
+	public V maxValue() {
+		if (recalcMaxValue) {
+			if (length() == 0) {
+				return getEmptyValue();
+			}
+			maxValue = getEmptyValue();
+			for (V el : this) {
+				if ((!(el instanceof Double) || (!Double.isNaN((Double) el)) && (!(el instanceof Float) || (!Float.isNaN((Float) el))))) {
+					if (maxValue == null || maxValue.equals(getEmptyValue()) || (el instanceof Comparable && ((Comparable<V>) el).compareTo(maxValue) > 0)) {
+						maxValue = el;
+					}
+				}
+			}
+		}
+		return maxValue;
+	}
 	
 	@Override
 	public SeriesView<V> select(int... indices) {
@@ -451,11 +573,17 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	@Override
 	public SeriesView<V> add(final V value) {
+		if (getType().equals(Float.class)) {
+			return (SeriesView<V>) new CalcSeries.FloatSeries.Add(this, (Float) castToNumericType(value));
+		}
 		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.Real.Add(this, (Double) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.DoubleSeries.Add(this, (Double) castToNumericType(value));
 		}
 		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.Int.Add(this, (Integer) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.IntSeries.Add(this, (Integer) castToNumericType(value));
+		}
+		if (getType().equals(Long.class)) {
+			return (SeriesView<V>) new CalcSeries.LongSeries.Add(this, (Long) castToNumericType(value));
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -475,11 +603,17 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 		if (this.length() != series.length()) {
 			throw new IllegalArgumentException("Can not add two DataSeries with differing lengths.");
 		}
+		if (getType().equals(Float.class)) {
+			return (SeriesView<V>) new CalcSeries.FloatSeries.AddSeries(this, series);
+		}
 		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.Real.AddSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.DoubleSeries.AddSeries(this, series);
 		}
 		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.Int.AddSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.IntSeries.AddSeries(this, series);
+		}
+		if (getType().equals(Long.class)) {
+			return (SeriesView<V>) new CalcSeries.LongSeries.AddSeries(this, series);
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -487,11 +621,17 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 
 	@Override
 	public SeriesView<V> subtract(V value) {
+		if (getType().equals(Float.class)) {
+			return (SeriesView<V>) new CalcSeries.FloatSeries.Subtract(this, (Float) castToNumericType(value));
+		}
 		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.Real.Subtract(this, (Double) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.DoubleSeries.Subtract(this, (Double) castToNumericType(value));
 		}
 		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.Int.Subtract(this, (Integer) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.IntSeries.Subtract(this, (Integer) castToNumericType(value));
+		}
+		if (getType().equals(Long.class)) {
+			return (SeriesView<V>) new CalcSeries.LongSeries.Subtract(this, (Long) castToNumericType(value));
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -511,11 +651,17 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 		if (this.length() != series.length()) {
 			throw new IllegalArgumentException("Can not subtract two DataSeries with differing lengths.");
 		}
+		if (getType().equals(Float.class)) {
+			return (SeriesView<V>) new CalcSeries.FloatSeries.SubtractSeries(this, series);
+		}
 		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.Real.SubtractSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.DoubleSeries.SubtractSeries(this, series);
 		}
 		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.Int.SubtractSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.IntSeries.SubtractSeries(this, series);
+		}
+		if (getType().equals(Long.class)) {
+			return (SeriesView<V>) new CalcSeries.LongSeries.SubtractSeries(this, series);
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -523,11 +669,17 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	@Override
 	public SeriesView<V> multiply(V value) {
+		if (getType().equals(Float.class)) {
+			return (SeriesView<V>) new CalcSeries.FloatSeries.Multiply(this, (Float) castToNumericType(value));
+		}
 		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.Real.Multiply(this, (Double) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.DoubleSeries.Multiply(this, (Double) castToNumericType(value));
 		}
 		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.Int.Multiply(this, (Integer) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.IntSeries.Multiply(this, (Integer) castToNumericType(value));
+		}
+		if (getType().equals(Long.class)) {
+			return (SeriesView<V>) new CalcSeries.LongSeries.Multiply(this, (Long) castToNumericType(value));
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -547,11 +699,17 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 		if (this.length() != series.length()) {
 			throw new IllegalArgumentException("Can not multiply two DataSeries with differing lengths.");
 		}
+		if (getType().equals(Float.class)) {
+			return (SeriesView<V>) new CalcSeries.FloatSeries.MultiplySeries(this, series);
+		}
 		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.Real.MultiplySeries(this, series);
+			return (SeriesView<V>) new CalcSeries.DoubleSeries.MultiplySeries(this, series);
 		}
 		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.Int.MultiplySeries(this, series);
+			return (SeriesView<V>) new CalcSeries.IntSeries.MultiplySeries(this, series);
+		}
+		if (getType().equals(Long.class)) {
+			return (SeriesView<V>) new CalcSeries.LongSeries.MultiplySeries(this, series);
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -559,11 +717,17 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	@Override
 	public SeriesView<V> divide(V value) {
+		if (getType().equals(Float.class)) {
+			return (SeriesView<V>) new CalcSeries.FloatSeries.Divide(this, (Float) castToNumericType(value));
+		}
 		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.Real.Divide(this, (Double) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.DoubleSeries.Divide(this, (Double) castToNumericType(value));
 		}
 		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.Int.Divide(this, (Integer) castToNumericType(value));
+			return (SeriesView<V>) new CalcSeries.IntSeries.Divide(this, (Integer) castToNumericType(value));
+		}
+		if (getType().equals(Long.class)) {
+			return (SeriesView<V>) new CalcSeries.LongSeries.Divide(this, (Long) castToNumericType(value));
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -583,11 +747,17 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 		if (this.length() != series.length()) {
 			throw new IllegalArgumentException("Can not divide two DataSeries with differing lengths.");
 		}
+		if (getType().equals(Float.class)) {
+			return (SeriesView<V>) new CalcSeries.FloatSeries.DivideSeries(this, series);
+		}
 		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.Real.DivideSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.DoubleSeries.DivideSeries(this, series);
 		}
 		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.Int.DivideSeries(this, series);
+			return (SeriesView<V>) new CalcSeries.IntSeries.DivideSeries(this, series);
+		}
+		if (getType().equals(Long.class)) {
+			return (SeriesView<V>) new CalcSeries.LongSeries.DivideSeries(this, series);
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -788,6 +958,74 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 			return length();
 		}
 		
+	}
+	
+	
+	@Override
+	public DataSeries<Double> toUnitRange() {
+		if (!isNumeric()) {
+			throw new UnsupportedOperationException("Cannot perform scaleToUnit operation on non-numeric DataSeries containing " + getType().getSimpleName());
+		}
+		return new UnitSeries(this);
+	}
+
+	// A CalcSeries that scales the values in a given input series to unit
+	// values [0, 1].
+	// When the input series changes the scaled values are also updated.
+	private class UnitSeries extends CalcSeries<Object, Double> {
+		public UnitSeries(DataSeries input) {
+			super(input);
+		}
+
+		// Updates the cache field in CalcSeries. This gets called whenever a
+		// change to the input DataSeries occurs.
+		// We override this rather than calc() because we need to know the min
+		// and max over the series before we can convert values to unit range.
+		@Override
+		public void updateView(Object cause) {
+			// Suppress change events occurring until we've finished updating
+			// the values.
+			this.beginChanges(this);
+			
+			// Make sure cache series is the right length.
+			cache.resize(length());
+
+			DataSeries<?> input = inputSeries.get(0);
+			Number minObj = (Number) input.minValue();
+			Number maxObj = (Number) input.maxValue();
+
+			if (minObj instanceof Float || minObj instanceof Double) {
+				double min = ((Number) minObj).doubleValue();
+				double max = ((Number) maxObj).doubleValue();
+				double range = max - min;
+
+				// Then set values.
+				for (int i = 0; i < length(); i++) {
+					// Convert to unit range.
+					double value = (input.getDouble(i) - min) / range;
+					cache.setValue(i, value);
+				}
+			} else {
+				long min = ((Number) minObj).longValue();
+				long max = ((Number) maxObj).longValue();
+				double range = max - min;
+
+				// Then set values.
+				for (int i = 0; i < length(); i++) {
+					// Convert to unit range.
+					double value = (input.getLong(i) - min) / range;
+					cache.setValue(i, value);
+				}
+			}
+
+			this.finishChanges(this);
+		}
+
+		// Not used but must implement from abstract class.
+		@Override
+		public Double calc(int index) {
+			return 0.0d;
+		}
 	}
 }
 

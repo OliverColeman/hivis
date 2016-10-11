@@ -33,12 +33,11 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
-import hivis.data.AbstractDataTable;
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
-import hivis.data.DataSeriesReal;
+import hivis.data.DataSeriesDouble;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
 
@@ -54,6 +53,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	
 	private File sourceFile;
 	
+	private int sheetIndex;
 	private int rowCount;
 	private int colCount;
 	
@@ -66,26 +66,18 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	
 	WatchService watcher; // Service to monitor the file for changes.
 	
-	/**
-	 * Create a new SpreadSheetReader that reads data from the specified file, 
-	 * with data beginning at row 2, column 1, and headers at row 1.
-	 */
-	public SpreadSheetReader(String filepath) {
-		this(filepath, 1, 0, true);
-	}
-	
 	
 	/**
-	 * Create a new SpreadSheetReader that reads data from the specified file, 
-	 * with data beginning at the specified row and column, and if hasHeaderRow 
-	 * is true then a header row at firstDataRow-1.
+	 * Create a new SpreadSheetReader that reads data from the specified file and sheet, 
+	 * with data beginning at the specified row and column.
 	 */
-	public SpreadSheetReader(String filepath, int firstDataRow, int firstDataColumn, boolean hasHeaderRow) {
+	public SpreadSheetReader(String filepath, int sheetIndex, int headerRowIndex, int firstDataRow, int firstDataColumn) {
+		this.sheetIndex = sheetIndex;
 		sourceFile = new File(filepath);
 		System.out.println("SpreadSheetReader reading from " + sourceFile.getAbsolutePath());
 		firstDataRowIndex = firstDataRow;
 		firstDataColumnIndex = firstDataColumn;
-		headerRowIndex = hasHeaderRow ? firstDataRow - 1 : -1;
+		this.headerRowIndex = headerRowIndex;
 		
 		try {
 			watcher = FileSystems.getDefault().newWatchService();
@@ -105,7 +97,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 		try {
 			Workbook wb = WorkbookFactory.create(sourceFile);
 			
-			Sheet sheet = wb.getSheetAt(0);
+			Sheet sheet = wb.getSheetAt(sheetIndex);
 			
 			rowCount = sheet.getLastRowNum() + 1;
 			colCount = sheet.getRow(0).getLastCellNum();
@@ -118,8 +110,8 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			
 			// Ensure series in data table are consistent with what's in the sheet (or set-up for first read).
 			// We use the first row of data to determine the type of a series.
-			Row firstDataRow = sheet.getRow(firstDataRowIndex);
 			List<String> columnLabels = new ArrayList<>(colCount);
+			List<Integer> columnIndices = new ArrayList<>(colCount);
 			List<DataSeries<?>> series = new ArrayList<>(colCount);
 			List<Integer> newDataCellTypes = new ArrayList<>();
 			for (int c = firstDataColumnIndex, ci = 0; c < colCount; c++, ci++) {
@@ -131,29 +123,43 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 				}
 				catch (Exception ex) {}
 				
-				columnLabels.add(label);
-				
 				// Ignore columns with no header (when a header row is defined).
 				if (label == null || label.length() == 0) {
-					System.out.println(6);
 					continue;
 				}
 				
-				newDataCellTypes.add(firstDataRow.getCell(c).getCellType());
+				Cell sampleCell = findSampleDataCellInColumn(sheet, c, firstDataRowIndex, rowCount);
+				// Ignore columns for which we cannot determine a valid data type from any cell.
+				if (sampleCell == null) {
+					continue;
+				}
+				
+				columnLabels.add(label);
+				columnIndices.add(c);
+				
+				newDataCellTypes.add(sampleCell.getCellType());
 				
 				// If this is a new column (or the header was renamed).
 				if (!dataset.hasSeries(label)) {
-					dataset.addSeries(label, dataSeriesFromCellType(firstDataRow.getCell(c)));
+					dataset.addSeries(label, dataSeriesFromSampleCell(sampleCell));
 				}
 				// If the type/formatting of the data was changed.
 				else if (currentDataCellTypes.size() <= ci || currentDataCellTypes.get(ci) != newDataCellTypes.get(ci)) {
 					dataset.removeSeries(label);
-					dataset.addSeries(label, dataSeriesFromCellType(firstDataRow.getCell(c)));
+					dataset.addSeries(label, dataSeriesFromSampleCell(sampleCell));
 				}
 				
 				series.add(dataset.getSeries(label));
 			}
+			
 			currentDataCellTypes = newDataCellTypes;
+			
+
+			// Notify series that we're going to make changes to them 
+			// (to suppress events being fired every time we change the values).
+			for (DataSeries<?> s : series) {
+				s.beginChanges(this);
+			}
 			
 			// Remove series for which the columns have been removed from the sheet (or which were renamed),
 			// otherwise notify the series we're going to make changes to it (to suppress events being fired
@@ -166,10 +172,6 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 				}
 				else {
 					DataSeries<?> s = dataset.getSeries(currentLabel);
-					
-					// Notify series that we're going to make changes to it (to suppress events being fired
-					// every time we change the values).
-					s.beginChanges(this);
 					
 					// If values have been removed from the sheet, remove them from the series.
 					if (s.length() > rowCount - firstDataRowIndex) {
@@ -184,16 +186,20 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			for (int r = firstDataRowIndex, ri = 0; r < rowCount; r++, ri++) {
 				Row row = sheet.getRow(r);
 				
-				for (int c = firstDataColumnIndex, ci = 0; c < colCount; c++, ci++) {
-					String label = columnLabels.get(ci);
+				for (int c = 0; c < columnLabels.size(); c++) {
+					int ci = columnIndices.get(c);
+					String label = columnLabels.get(c);
 					// Ignore columns with no header (when a header row is defined).
 					if (label == null || label.length() == 0) {
 						continue;
 					}
+					
 					DataSeries<?> s = dataset.getSeries(label);
 					
+					
 					try {
-						Object val = getCellValue(row.getCell(c));
+						Cell cell = row.getCell(ci);
+						Object val = cell == null ? null : getCellValue(cell);
 						
 						if (val == null) {
 							val = s.getEmptyValue();
@@ -236,6 +242,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			}
 			return cell.getNumericCellValue();
 		}
+		
 		if (type == Cell.CELL_TYPE_STRING) {
 			return cell.getStringCellValue();
 		}
@@ -244,22 +251,35 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	}
 	
 	
-	private DataSeries<?> dataSeriesFromCellType(Cell cell) {
+	private Cell findSampleDataCellInColumn(Sheet sheet, int columnIndex, int firstRowIndex, int rowCount) {
+		for (int row = firstRowIndex; row < rowCount; row++) {
+			Cell cell = sheet.getRow(row).getCell(columnIndex);
+			
+			if (cell != null) {
+				int type = cell.getCellType();
+				if (type == Cell.CELL_TYPE_NUMERIC || type == Cell.CELL_TYPE_FORMULA || type == Cell.CELL_TYPE_STRING) {
+					return cell;
+				}
+			}
+		}
+		return null;
+	}
+	
+	
+	private DataSeries<?> dataSeriesFromSampleCell(Cell cell) {
 		int type = cell.getCellType();
 		
 		if (type == Cell.CELL_TYPE_NUMERIC || type == Cell.CELL_TYPE_FORMULA) {
 			if (HSSFDateUtil.isCellDateFormatted(cell)) {
 				return new DataSeriesGeneric<Date>();
 			}
-			return new DataSeriesReal();
+			return new DataSeriesDouble();
 		}
-		if (type == Cell.CELL_TYPE_STRING) {
-			return new DataSeriesGeneric<String>();
-		}
-		throw new DataReadException("Could not determine type of data cell at " + cell.getRowIndex() + ":" + cell.getColumnIndex());
+		// Default to String.
+		return new DataSeriesGeneric<String>();
 	}
-
-
+	
+	
 	@Override
 	public DataTable getData() {
 		return dataset;
@@ -291,7 +311,12 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 								System.err.println("The data source file " + sourceFile.getAbsolutePath() + " was deleted.");
 								return;
 							} else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
-								readFromExcel();
+								try {
+									readFromExcel();
+								}
+								catch (Exception ex) {
+									System.err.println("Error reading modified source file \"" + sourceFile.getAbsolutePath() + "\". Will try again on next modification. Error was: " + ex.getMessage());
+								}
 							}
 						}
 					}
@@ -314,7 +339,29 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	}
 	
 	public static void main(String[] args) {
-		SpreadSheetReader reader = new SpreadSheetReader(args[0]);
+		  int sheetIndex = 1;
+		  int headerRowIndex = 0;
+		  int firstDataRow = 3;
+		  int firstDataColumn = 0;
+		  SpreadSheetReader reader = new SpreadSheetReader("/home/data/processing/sketchbook/libraries/HiVis/examples/HV6_InteractiveSonification/KIB - Oil Well.xlsx", sheetIndex, headerRowIndex, firstDataRow, firstDataColumn);
+		  DataTable data = reader.getData();
+		  System.out.println("\ndata:\n" + data);
+		  
+		  // Get the series/columns we're interested in.
+		  // Transform some to unit range [0, 1] to make them easier to work with.
+		  DataSeries<Float> retailMarkup = data.getSeries(7).toUnitRange().asFloat();
+		  DataSeries<Float> healthRating = data.getSeries(19).toUnitRange().asFloat();
+		  DataSeries<Float> retailCost = data.getSeries(6).asFloat();
+		  DataSeries<Integer> tasteStrength = data.getSeries(2).asInt();
+		  
+		  System.out.println("\nretailMarkup:\n" + retailMarkup);
+		  System.out.println("\nhealthRating:\n" + healthRating);
+		  System.out.println("\nretailCost:\n" + retailCost);
+		  System.out.println("\ntasteStrength:\n" + tasteStrength);
+		  
+		  
+		  /*
+		SpreadSheetReader reader = new SpreadSheetReader(args[0], 0, 0, 1, 0);
 		DataTable data = reader.getData();
 		System.out.println(data.toString());
 		
@@ -324,5 +371,6 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 				System.out.println(event.toString());
 			}
 		});
+		*/
 	}
 }

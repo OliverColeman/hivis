@@ -29,7 +29,7 @@ import hivis.common.Util;
 
 /**
  * Generic data series implementation. If the data is numeric then the specialised 
- * series classes, for example {@link DataSeriesReal} should be used for efficiency.
+ * series classes, for example {@link DataSeriesDouble} should be used for efficiency.
  * 
  * @author O. J. Coleman
  */

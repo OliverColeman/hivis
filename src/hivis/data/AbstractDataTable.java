@@ -16,6 +16,7 @@
 
 package hivis.data;
 
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import hivis.common.ListMap;
@@ -153,6 +154,28 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 		return new TableViewAppend(this, table);
 	}
 	
+	@Override
+	public TableView selectRowRange(final int beginIndex, final int endIndex) {
+		return new TableViewFilterRows(this, new RowFilter() {
+			@Override
+			public boolean excludeRow(DataTable input, int index) {
+				return index < beginIndex || index > endIndex;
+			}
+		});
+	}
+
+	@Override
+	public TableView selectRows(final int... rows) {
+		final int[] rowsSorted = Arrays.copyOf(rows, rows.length);
+		Arrays.sort(rowsSorted);
+		return new TableViewFilterRows(this, new RowFilter() {
+			@Override
+			public boolean excludeRow(DataTable input, int index) {
+				return Arrays.binarySearch(rowsSorted, index) < 0;
+			}
+		});
+	}
+
 	@Override
 	public TableView selectRows(RowFilter filter) {
 		return new TableViewFilterRows(this, filter);

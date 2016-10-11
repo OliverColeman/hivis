@@ -64,6 +64,11 @@ public class Series {
 		DataSeries<Double> realsMinusInts = realNumbers.subtract(intNumbers);
 		System.out.println("\nrealsMinusInts = realNumbers.subtract(intNumbers)\n" + realsMinusInts);
 		
+		// A useful built-in series method is toUnitRange(), which creates a series containing the
+		// values in the original series scaled to the unit range [0, 1]:	
+		DataSeries<Double> realNumbersUnitRange = realNumbers.toUnitRange();
+		System.out.println("\nrealNumbersUnitRange = realNumbers.toUnitRange()\n" + realNumbersUnitRange);
+		
 		
 		// We can also create new series by performing custom operations on each element of an existing series:
 		DataSeries<Double> customFunc = plus1.apply(new Function<Double, Double>() {
@@ -84,6 +89,7 @@ public class Series {
 		// Note that the customFunc series is a view of the "plus1" series, which in turn is a view of realNumbers; 
 		// changes to the underlying data will "bubble up" through the chain of views.
 		realNumbers.append(55.55);
+		System.out.println("\nrealNumbersUnitRange reflecting appended value in realNumbers\n" + realNumbersUnitRange);
 		System.out.println("\nplus1 reflecting appended value in realNumbers\n" + plus1);
 		System.out.println("\ncustomFunc reflecting appended value in realNumbers (via plus1)\n" + customFunc);
 		System.out.println("\nrealNumbersAppendPlus1 reflecting appended value in realNumbers\n" + realNumbersAppendPlus1);

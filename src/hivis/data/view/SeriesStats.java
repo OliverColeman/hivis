@@ -25,7 +25,7 @@ import hivis.common.LSListMap;
 import hivis.common.ListMap;
 import hivis.common.ListSet;
 import hivis.data.DataSeries;
-import hivis.data.DataSeriesReal;
+import hivis.data.DataSeriesDouble;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
 
@@ -40,11 +40,11 @@ import hivis.data.DataTableDefault;
  */
 public class SeriesStats implements TableFunction {
 	ListSet<String> labels = new BMListSet<String>(new String[] {"min", "max", "mean", "median", "std. dev."});
-	ListMap<String, DataSeriesReal> series = new LSListMap<>();
+	ListMap<String, DataSeriesDouble> series = new LSListMap<>();
 	
 	public SeriesStats() {
 		for (String label : labels) {
-			series.put(label, new DataSeriesReal());
+			series.put(label, new DataSeriesDouble());
 		}
 	}
 	
@@ -69,7 +69,7 @@ public class SeriesStats implements TableFunction {
 				numeric[si] = true;
 				numericSeriesCount++;
 				
-				double[] d = (s instanceof DataSeriesReal) ? ((DataSeriesReal) s).getDataRef() : s.asDoubleArray(new double[length]);
+				double[] d = (s instanceof DataSeriesDouble) ? ((DataSeriesDouble) s).getDataRef() : s.asDoubleArray(new double[length]);
 				for (int ri = 0; ri < length; ri++) {
 					data[ri][si] = d[ri];
 				}
@@ -81,7 +81,7 @@ public class SeriesStats implements TableFunction {
 		}
 		
 		for (int si = 0; si < series.size(); si++) {
-			DataSeriesReal s = series.get(si).getValue();
+			DataSeriesDouble s = series.get(si).getValue();
 			
 			if (s.length() != length) {
 				s.resize(length);

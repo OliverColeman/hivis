@@ -124,6 +124,16 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	long getLong(int index);
 
 	/**
+	 * Get the element at the specified index as the primitive type 'float'.
+	 * This is an optional operation, not all DataSeries implementations support
+	 * it, in which case an {@link UnsupportedOperationException} will be
+	 * thrown. It is provided to allow more efficient access to series that
+	 * store float values as a primitive type (to avoid auto-boxing) and to 
+	 * simplify working with APIs that use float by default.
+	 */
+	float getFloat(int index);
+	
+	/**
 	 * Get the element at the specified index as the primitive type 'double'.
 	 * This is an optional operation, not all DataSeries implementations support
 	 * it, in which case an {@link UnsupportedOperationException} will be
@@ -132,6 +142,11 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	 */
 	double getDouble(int index);
 	
+	
+	/**
+	 * Get a view of this series representing the values as single-precision floating point numbers.
+	 */
+	DataSeries<Float> asFloat();
 	
 	/**
 	 * Get a view of this series representing the values as double-precision floating point numbers.
@@ -172,6 +187,12 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	 */
 	long[] asLongArray();
 
+	/**
+	 * Get the values in this series as an array of float (real) values.
+	 * @return An array containing the values in this series.
+	 */
+	float[] asFloatArray();
+	
 	/**
 	 * Get the values in this series as an array of double (real) values.
 	 * @return An array containing the values in this series.
@@ -217,6 +238,14 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	long[] asLongArray(long[] data);
 
 	/**
+	 * Get the values in this series as an array of float (real) values.
+	 * @param data An array to put the values in, starting at index 0. If this 
+	 * is null or is not long enough to fit all the values a new array will be created.
+	 * @return An array containing the values in this series (the passed in array if possible).
+	 */
+	float[] asFloatArray(float[] data);
+	
+	/**
 	 * Get the values in this series as an array of double (real) values.
 	 * @param data An array to put the values in, starting at index 0. If this 
 	 * is null or is not long enough to fit all the values a new array will be created.
@@ -250,7 +279,32 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	public boolean isNumeric();
 	
 	
+	/**
+	 * Returns the minimum value contained in this series, 
+	 * or {@link #getEmptyValue()} if the series is empty.
+	 */
+	public V minValue();
+
+	/**
+	 * Returns the maximum value contained in this series.
+	 * or {@link #getEmptyValue()} if the series is empty.
+	 */
+	public V maxValue();
+
+	
 	// View/functional operations. 
+	
+	
+	/**
+	 * Create a view of this series containing the values in this 
+	 * series scaled to the unit range [0, 1]. Equivalent to
+	 * <code>this.subtract(this.minValue()).divide(this.maxValue() - this.minValue()).asDouble()</code>,
+	 * however the values in the view will be updated when the vales in the
+	 * series change.
+	 * 
+	 * @throws UnsupportedOperationException if this series is non-numeric.
+	 */
+	public DataSeries<Double> toUnitRange();
 	
 
 	/**
@@ -262,10 +316,10 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	public SeriesView<V> append(DataSeries<V> series);
 	
 	/**
-	 * Get a series that is calculated using the given function over each element in this series.
+	 * Get a view of this series that is calculated using the given function over each element in this series.
 	 * 
 	 * @param function
-	 *            The function to generate the series for the new table.
+	 *            The function to generate calculate the new values from the original values.
 	 */
 	public <O> SeriesView<O> apply(Function<V, O> function);
 	

@@ -25,7 +25,7 @@ import hivis.data.AbstractDataSeries;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesInteger;
-import hivis.data.DataSeriesReal;
+import hivis.data.DataSeriesDouble;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
 
@@ -55,10 +55,15 @@ public class Util {
 		double[] magnitude = new double[table.seriesCount()];
 		for (int s = 0; s < table.seriesCount(); s++) {
 			DataSeries<?> series = table.getSeries(s);
-			if (Number.class.isAssignableFrom(series.getType())) {
-				numeric[s] = true;
-				for (int r = 0; r < table.length(); r++) {
-					magnitude[s] = Math.max(magnitude[s], Math.abs(((Number) series.get(r)).doubleValue()));
+			Class<?> type = series.getType();
+			if (type != null) {
+				if (Number.class.isAssignableFrom(type)) {
+					numeric[s] = true;
+					for (int r = 0; r < table.length(); r++) {
+						if (series.get(r) != null) {
+							magnitude[s] = Math.max(magnitude[s], Math.abs(((Number) series.get(r)).doubleValue()));
+						}
+					}
 				}
 			}
 		}
@@ -70,6 +75,8 @@ public class Util {
 		int idx = 1;
 		for (DataSeries<?> s : table.getAll()) {
 			int headerLength = table.getSeriesLabel(idx-1).length();
+			
+			Class<?> type = s.getType();
 			
 			if (numeric[idx-1]) {
 				boolean big = magnitude[idx-1] >= 1000000000;
@@ -91,7 +98,7 @@ public class Util {
 				}
 				headerFormat += "%" + idx + "$" + width + "s | ";
 			}
-			else if (Date.class.isAssignableFrom(s.getType())) {
+			else if (type != null && Date.class.isAssignableFrom(type)) {
 				int width = Math.max(19, headerLength);
 				format += "%" + idx +"$tF %" + idx + "$tT | ";
 				headerFormat += "%" + idx + "$" + width + "s | ";
@@ -99,9 +106,12 @@ public class Util {
 			else {
 				int width = 0;
 				for (int i = 0; i < s.length(); i++) {
-					int l = s.get(i).toString().length();
-					if (l > width) {
-						width = l;
+					Object val = s.get(i);
+					if (val != null) {
+						int l = val.toString().length();
+						if (l > width) {
+							width = l;
+						}
 					}
 				}
 				width = Math.max(width, headerLength);

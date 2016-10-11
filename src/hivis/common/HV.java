@@ -23,7 +23,7 @@ import hivis.data.AbstractDataSeries;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesInteger;
-import hivis.data.DataSeriesReal;
+import hivis.data.DataSeriesDouble;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
 import hivis.data.view.CalcSeries;
@@ -46,14 +46,14 @@ public class HV {
 	 * Create a new DataSeries storing real (double) numbers.
 	 */
 	public static DataSeries<Double> newRealSeries() {
-		return new DataSeriesReal();
+		return new DataSeriesDouble();
 	}
 	
 	/**
 	 * Create a new DataSeries containing the given real (double) numbers.
 	 */
 	public static DataSeries<Double> newRealSeries(double... data) {
-		return new DataSeriesReal(data);
+		return new DataSeriesDouble(data);
 	}
 	
 	
@@ -163,12 +163,12 @@ public class HV {
 	 * @param min The minimum allowable value.
 	 * @param max The maximum allowable value.
 	 */
-	public static DataSeriesReal randomUniformSeries(int length, double min, double max) {
+	public static DataSeriesDouble randomUniformSeries(int length, double min, double max) {
 		double[] data = new double[length];
 		for (int i = 0; i < length; i++) {
 			data[i] = Math.random() * (max - min) + min;
 		}
-		return new DataSeriesReal(data);
+		return new DataSeriesDouble(data);
 	}
 	
 	/**
@@ -177,13 +177,13 @@ public class HV {
 	 * @param mean The mean of the distribution.
 	 * @param stdDev The standard deviation of the distribution.
 	 */
-	public static DataSeriesReal randomNormalSeries(int length, double mean, double stdDev) {
+	public static DataSeriesDouble randomNormalSeries(int length, double mean, double stdDev) {
 		double[] data = new double[length];
 		Random r = new Random();
 		for (int i = 0; i < length; i++) {
 			data[i] = r.nextGaussian() * stdDev + mean;
 		}
-		return new DataSeriesReal(data);
+		return new DataSeriesDouble(data);
 	}
 	
 	/**
