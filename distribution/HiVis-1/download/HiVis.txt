@@ -18,7 +18,7 @@ url = https://github.com/OliverColeman/hivis
 # 
 # If a value other than those listed is used, your Library will listed as 
 # "Other". Many categories must be comma-separated.
-categories = Data, GUI, Math
+categories = Data, Math
 
 # A short sentence (or fragment) to summarize the Library's function. This will 
 # be shown from inside the PDE when the Library is being installed. Avoid 

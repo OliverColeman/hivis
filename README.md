@@ -1,7 +1,7 @@
 # HiVis
 
 HiVis is a Java library for importing, manipulating and working with various kinds of data. 
-It was designed with the programming environment [Processing](http://www.processing.org) in mind, but may be used outside of Processing.
+It was designed with the programming environment [Processing](http://www.processing.org) (version 3) in mind, but may be used outside of Processing.
 
 
 ## Overview / Features
@@ -35,6 +35,11 @@ For interactive visualisation see the Processing sketches in [examples](https://
 ## API Reference
 
 The API reference is [here](http://htmlpreview.github.io/?https://github.com/OliverColeman/hivis/blob/master/distribution/HiVis-1/reference/index.html).
+
+
+## Download and Install
+
+Download this [zip](https://github.com/OliverColeman/hivis/raw/master/distribution/HiVis-1/download/HiVis.zip) file and unzip it into the `libraries` folder in the Processing sketchbook folder. You will need to create the libraries folder if it does not exist.
  
 
 ## Reporting Problems and Issues
