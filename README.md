@@ -22,7 +22,7 @@ Data may be imported from external sources, for example a spreadsheet. By defaul
 HiVis will do its best to accommodate the interchange of data of different types when it makes sense to do so, 
 for example a floating-point value with no fractional part may be assigned to a Series that stores integer values, or when transposing a Table comprising Series that store differing types (various precision floating-point or integer values) then the generated Series in the transposed Table will automatically assume the necessary data type to accurately store the data (and a warning will be given if this is not possible).
 
-Integration with popular Processing libraries such as ControlP5 and giCentre simplify the (interactive) visualisation of data.
+Includes many examples of loading, manipulating, and visualising data in Processing.
 
 
 ## Examples
