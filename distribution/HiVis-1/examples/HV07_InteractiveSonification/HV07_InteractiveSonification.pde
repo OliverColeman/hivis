@@ -8,6 +8,7 @@ import beads.*;
 // A scatter plot is produced, with two of the dimensions used for 
 // the coordinates, and two more dimensions are used to control the 
 // volume/gain and frequency of a tone when hovering over a data point.
+// THIS EXAMPLE REQUIRES the Beads Library (Sketch -> Import Library -> Add Library ...) 
 
 // Stores the data to plot.
 DataTable data;
