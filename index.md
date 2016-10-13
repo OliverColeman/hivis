@@ -39,7 +39,7 @@ For data import and interactive visualisation see the Processing sketches in [ex
 
 ## API Reference
 
-The API reference is [here](http://olivercoleman.github.io/hivis/).
+The API reference is [here](https://olivercoleman.github.io/hivis/reference/).
 
 
 ## Download and Install for Processing
