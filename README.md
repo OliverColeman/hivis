@@ -29,7 +29,7 @@ Includes many examples of loading, manipulating, and visualising data in Process
 
 For data manipulation see the examples (akin to tutorials) in [src/hivis/example](https://github.com/OliverColeman/hivis/tree/latest/src/hivis/example).
 
-For data import and interactive visualisation see the Processing sketches in [examples](https://github.com/OliverColeman/hivis/tree/latest/examples). The first two of these are identical to the data manipulation examples but formatted as Processing sketches. 
+For data import and interactive visualisation see the Processing sketches in [examples](https://github.com/OliverColeman/hivis/tree/latest/examples/examples). The first two of these are identical to the data manipulation examples but formatted as Processing sketches.
 
 
 ## API Reference

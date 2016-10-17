@@ -18,21 +18,19 @@ DataTable techEth;
 // This is a flag to indicate that data is being (re)loaded and so the plot should not be drawn yet.
 boolean settingUp = true;
 
-// A nice colour palette to use. violet, orange, blue, pink, green, tan, slate, brown.
-color[] palette = new color[] {#654982, #ea632b, #3b7fc4, #f15c75, #8eb021, #f1a257, #4a6765, #815b3a};
+// A nice colour palette to use.
+color[] palette = HVDraw.PASTEL8;
 
 void setup() {
   size(1000, 1000);
   textSize(14);
   
   // Get data from spread sheet. 
-  // The SpreadSheetReader will automatically update the DataTable it provides if the source file is changed.
-  int sheetIndex = 0;
+  int sheet = 0;
   int headerRow = 1;
   int firstDataRow = 2;
   int firstDataColumn = 0;
-  SpreadSheetReader reader = new SpreadSheetReader(sketchFile("Employee Diversity in tech.xlsx").getAbsolutePath(), sheetIndex, headerRow, firstDataRow, firstDataColumn);
-  data = reader.getData();
+  data = HV.loadSpreadSheet(sketchFile("Employee Diversity in tech.xlsx"), sheet, headerRow, firstDataRow, firstDataColumn);
   
   // Get male/female data (with names as first series).
   DataTable mf = HV.newTable().addSeries(data.selectSeries(0)).addSeries(data.selectSeriesRange(1, 2));
@@ -131,12 +129,12 @@ void draw() {
 // Draws a double pie chart using the specified row of the two given data tables.
 // diameter, x and y specify the size and center of the pie chart.
 void makePieInPie(DataTable mf, DataTable eth, int row, float diameter, float x, float y) {
-  makePie(eth, row, diameter, x, y, 2);
+  HVDraw.pie(this, eth, row, diameter, x, y, palette, 2);
     
   fill(255);
   ellipse(x, y, diameter * 0.6, diameter * 0.6);
 
-  makePie(mf, row, diameter * 0.5, x, y, 0);
+  HVDraw.pie(this, mf, row, diameter * 0.5, x, y, palette, 0);
   
   fill(255);
   ellipse(x, y, diameter * 0.2, diameter * 0.2);
@@ -145,47 +143,4 @@ void makePieInPie(DataTable mf, DataTable eth, int row, float diameter, float x,
   fill(64);
   textAlign(CENTER, TOP);
   text(mf.getSeries(0).get(row).toString(), x, y + diameter / 2);
-}
-
-
-// Draws a single pie chart.
-void makePie(DataTable data, int row, float diameter, float x, float y, int paletteOffset) {
-  int seriesCount = data.seriesCount();
-  
-  // First calculate the total of the given values. We start at 1 because the first series is the name.
-  float total = 0;
-  for (int s = 1; s < seriesCount; s++) {
-    // Get the value for this series from the row to chart.
-    float value = data.getSeries(s).getFloat(row);
-    
-    // If the data is not missing (represented as Not a Number, NaN).
-    if (!Float.isNaN(value)) {
-      total += value;
-    }
-  }
-  
-  // For remembering angle we're up to as we draw each slice.
-  float lastAngle = 0;
-  
-  // Draw a slice for each data point/column value.
-  for (int s = 1; s < seriesCount; s++) {
-    // Get the value for this series from the row to plot.
-    float value = data.getSeries(s).getFloat(row);
-    
-    // If the data is not missing (represented as Not a Number, NaN).
-    if (!Float.isNaN(value)) {
-      // Set colour.
-      int paletteIndex = (s - 1) + paletteOffset;
-      fill(palette[paletteIndex]);
-      
-      // Angle is the proportional magnitude of the data point.
-      float angle = (value / total) * TWO_PI; 
-  
-      // Draw a slice of the chart.
-      arc(x, y, diameter, diameter, lastAngle, lastAngle + angle);
-      
-      // Remember angle we're up to.
-      lastAngle += angle;
-    }
-  }
 }

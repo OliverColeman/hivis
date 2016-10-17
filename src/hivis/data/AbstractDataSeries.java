@@ -16,9 +16,7 @@
 
 package hivis.data;
 
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.AbstractList;
 import java.util.Date;
 import java.util.Iterator;
@@ -30,7 +28,6 @@ import hivis.data.view.CalcSeries;
 import hivis.data.view.Function;
 import hivis.data.view.SeriesView;
 import hivis.data.view.AbstractSeriesView;
-import hivis.data.view.SeriesViewFunction;
 import hivis.data.view.SeriesViewRow;
 import hivis.data.view.SeriesViewAppend;
 
@@ -513,7 +510,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 			}
 			minValue = getEmptyValue();
 			for (V el : this) {
-				if ((!(el instanceof Double) || (!Double.isNaN((Double) el)) && (!(el instanceof Float) || (!Float.isNaN((Float) el))))) {
+				if ((!(el instanceof Double) || (!Double.isNaN((Double) el))) && ((!(el instanceof Float) || (!Float.isNaN((Float) el))))) {
 					if (minValue == null || minValue.equals(getEmptyValue()) || (el instanceof Comparable && ((Comparable<V>) el).compareTo(minValue) < 0)) {
 						minValue = el;
 					}
@@ -531,7 +528,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 			}
 			maxValue = getEmptyValue();
 			for (V el : this) {
-				if ((!(el instanceof Double) || (!Double.isNaN((Double) el)) && (!(el instanceof Float) || (!Float.isNaN((Float) el))))) {
+				if ((!(el instanceof Double) || (!Double.isNaN((Double) el))) && ((!(el instanceof Float) || (!Float.isNaN((Float) el))))) {
 					if (maxValue == null || maxValue.equals(getEmptyValue()) || (el instanceof Comparable && ((Comparable<V>) el).compareTo(maxValue) > 0)) {
 						maxValue = el;
 					}

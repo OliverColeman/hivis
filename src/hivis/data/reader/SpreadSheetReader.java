@@ -33,11 +33,13 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
+import hivis.common.HV;
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesDouble;
+import hivis.data.DataSeriesFloat;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
 
@@ -47,7 +49,17 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
-
+/**
+ * Class to read data from a spreadsheet file. The data is presented as a {@link DataTable}. 
+ * The DataTable is automatically updated when the file changes.
+ * Currently only Excel files are supported (xlsx format).
+ * 
+ * TODO Support other file formats.
+ * TODO Currently columns in the sheet are read as DataSeries. Add support for row-based format.
+ * TODO Support specifying a range of cells to read from (rather than to the end of the sheet).
+ * 
+ * @author O. J. Coleman
+ */
 public class SpreadSheetReader implements DataSetSource<DataTable> {
 	private DataTableDefault dataset;
 	
@@ -62,22 +74,58 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	private int firstDataRowIndex;
 	private int firstDataColumnIndex;
 	
+	private boolean doublePrecision = false;
+	
 	private List<Integer> currentDataCellTypes = new ArrayList<>();
 	
 	WatchService watcher; // Service to monitor the file for changes.
 	
 	
 	/**
+	 * Create a new SpreadSheetReader that reads data from the specified file. Data is read from sheet 0.
+	 * If the first row contains all strings, except one column at most, then it is used as the header row.
+	 * Numeric series will be created as DataSeries&lt;Double&gt;.
+	 * 
+	 * @param file The spreadsheet file.
+	 */
+	public SpreadSheetReader(File file) {
+		this(file, 0, -2, 1, 0);
+	}
+	
+	/**
 	 * Create a new SpreadSheetReader that reads data from the specified file and sheet, 
 	 * with data beginning at the specified row and column.
+	 * Numeric series will be created as DataSeries&lt;Double&gt;.
+	 * 
+	 * @param file The spreadsheet file.
+	 * @param sheet The index of the sheet in the spreadsheet to read from.
+	 * @param headerRow The index of the row to use as column headers.
+	 * @param firstDataRow The row to start reading data from (to the end of the sheet).
+	 * @param firstDataColumn The column to start creating series from (up to the right-most column).
 	 */
-	public SpreadSheetReader(String filepath, int sheetIndex, int headerRowIndex, int firstDataRow, int firstDataColumn) {
-		this.sheetIndex = sheetIndex;
-		sourceFile = new File(filepath);
-		System.out.println("SpreadSheetReader reading from " + sourceFile.getAbsolutePath());
+	public SpreadSheetReader(File file, int sheet, int headerRow, int firstDataRow, int firstDataColumn) {
+		this(file, sheet, headerRow, firstDataRow, firstDataColumn, true);
+	}
+	
+	/**
+	 * Create a new SpreadSheetReader that reads data from the specified file and sheet, 
+	 * with data beginning at the specified row and column.
+	 *
+	 * @param file The spreadsheet file.
+	 * @param sheet The index of the sheet in the spreadsheet to read from.
+	 * @param headerRow The index of the row to use as column headers.
+	 * @param firstDataRow The row to start reading data from (to the end of the sheet).
+	 * @param firstDataColumn The column to start creating series from (up to the right-most column).
+	 * @param doublePrecision If true then numeric series will be created as DataSeries&lt;Double&gt;, otherwise they will be created as DataSeries&lt;Float&gt;.
+	 */
+	public SpreadSheetReader(File file, int sheet, int headerRow, int firstDataRow, int firstDataColumn, boolean doublePrecision) {
+		sheetIndex = sheet;
+		sourceFile = file;
+		//System.out.println("SpreadSheetReader reading from " + sourceFile.getAbsolutePath());
 		firstDataRowIndex = firstDataRow;
 		firstDataColumnIndex = firstDataColumn;
-		this.headerRowIndex = headerRowIndex;
+		headerRowIndex = headerRow;
+		this.doublePrecision = doublePrecision;
 		
 		try {
 			watcher = FileSystems.getDefault().newWatchService();
@@ -93,6 +141,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	}
 	
 	
+	
 	private synchronized void readFromExcel() {
 		try {
 			Workbook wb = WorkbookFactory.create(sourceFile);
@@ -102,7 +151,30 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			rowCount = sheet.getLastRowNum() + 1;
 			colCount = sheet.getRow(0).getLastCellNum();
 			
-			Row headerRow = headerRowIndex == -1 ? null : sheet.getRow(headerRowIndex);
+			Row headerRow = null;
+			// If we should try to automatically determine if the first row is a header row.
+			if (headerRowIndex == -2) {
+				headerRow = sheet.getRow(0);
+				int stringCount = 0;
+				for (Cell cell : headerRow) {
+					if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
+						stringCount++;
+					}
+				}
+				// If the first row contains all strings, except one column at most.
+				if (stringCount >= colCount-1) {
+					// Use it as the header row.
+					headerRowIndex = 0;
+				}
+				else {
+					// Otherwise assume no header row.
+					headerRow = null;
+					headerRowIndex = -1;
+				}
+			}
+			else {
+				headerRow = headerRowIndex == -1 ? null : sheet.getRow(headerRowIndex);
+			}
 			
 			// Notify table we're going to make changes to it (to suppress events being fired
 			// every time we add or remove a series.
@@ -273,7 +345,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			if (HSSFDateUtil.isCellDateFormatted(cell)) {
 				return new DataSeriesGeneric<Date>();
 			}
-			return new DataSeriesDouble();
+			return doublePrecision ? new DataSeriesDouble() : new DataSeriesFloat();
 		}
 		// Default to String.
 		return new DataSeriesGeneric<String>();
@@ -339,13 +411,13 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	}
 	
 	public static void main(String[] args) {
+		
 		  int sheetIndex = 1;
 		  int headerRowIndex = 0;
 		  int firstDataRow = 3;
 		  int firstDataColumn = 0;
-		  SpreadSheetReader reader = new SpreadSheetReader("/home/data/processing/sketchbook/libraries/HiVis/examples/HV6_InteractiveSonification/KIB - Oil Well.xlsx", sheetIndex, headerRowIndex, firstDataRow, firstDataColumn);
-		  DataTable data = reader.getData();
-		  System.out.println("\ndata:\n" + data);
+		  DataTable data = HV.loadSpreadSheet(new File("/home/data/processing/sketchbook/libraries/HiVis/examples/examples/HV07_InteractiveSonification/KIB - Oil Well.xlsx"), sheetIndex, headerRowIndex, firstDataRow, firstDataColumn);
+		  /*System.out.println("\ndata:\n" + data);
 		  
 		  // Get the series/columns we're interested in.
 		  // Transform some to unit range [0, 1] to make them easier to work with.
@@ -358,7 +430,10 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 		  System.out.println("\nhealthRating:\n" + healthRating);
 		  System.out.println("\nretailCost:\n" + retailCost);
 		  System.out.println("\ntasteStrength:\n" + tasteStrength);
+		  */
 		  
+		  System.out.println(data.getSeries(7).minValue());
+		  System.out.println(data.getSeries(7).maxValue());
 		  
 		  /*
 		SpreadSheetReader reader = new SpreadSheetReader(args[0], 0, 0, 1, 0);

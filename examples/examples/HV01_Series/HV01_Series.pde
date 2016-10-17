@@ -65,7 +65,7 @@ void setup() {
 	realNumbers.append(55.55);
 	println("\nrealNumbersUnitRange reflecting appended value in realNumbers\n" + realNumbersUnitRange);
 	println("\nplus1 reflecting appended value in realNumbers\n" + plus1);
-  println("\ncustomFunc reflecting appended value in realNumbers (via plus1)\n" + customFunc);
+    println("\ncustomFunc reflecting appended value in realNumbers (via plus1)\n" + customFunc);
 	println("\nrealNumbersAppendPlus1 reflecting appended value in realNumbers\n" + realNumbersAppendPlus1);
 	
 	

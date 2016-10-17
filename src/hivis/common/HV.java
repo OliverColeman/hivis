@@ -16,6 +16,7 @@
 
 package hivis.common;
 
+import java.io.File;
 import java.util.Date;
 import java.util.Random;
 
@@ -26,7 +27,9 @@ import hivis.data.DataSeriesInteger;
 import hivis.data.DataSeriesDouble;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
+import hivis.data.reader.SpreadSheetReader;
 import hivis.data.view.CalcSeries;
+import processing.core.PApplet;
 import hivis.data.view.AbstractSeriesView;
 
 /**
@@ -35,12 +38,49 @@ import hivis.data.view.AbstractSeriesView;
  * @author O. J. Coleman
  */
 public class HV {
+	public static final int FLOAT = 0;
+	public static final int DOUBLE = 1;
+	
+	public static int defaultFloatingPointPrecision = FLOAT;
+	
 	/**
 	 * Create a new DataTable.
 	 */
 	public static DataTable newTable() {
 		return new DataTableDefault();
 	}
+	
+	
+	/**
+	 * Load data from the specified spreadsheet.
+	 * If the first row contains all strings, except one column at most, then it is used as the header row.
+	 * The returned DataTable will be updated in real time as changes are saved to the file.
+	 * 
+	 * @param String Path to the spreadsheet file. Only XLSX files are currently supported.
+	 * @return The loaded data.
+	 */
+	public static DataTable loadSpreadSheet(File file) {
+		SpreadSheetReader reader = new SpreadSheetReader(file);
+		return reader.getData();
+	}
+	
+	
+	/**
+	 * Load data from the specified spreadsheet, reading data from the 
+	 * specified sheet starting at the specified row and column.
+	 * The returned DataTable will be updated in real time as changes are saved to the file.
+	 * 
+	 * @param file The spreadsheet file.
+	 * @param sheet The index of the sheet in the spreadsheet to read from.
+	 * @param headerRow The index of the row to use as column headers.
+	 * @param firstDataRow The row to start reading data from (to the end of the sheet).
+	 * @param firstDataColumn The column to start creating series from (up to the right-most column).
+	 */
+	public static DataTable loadSpreadSheet(File file, int sheet, int headerRow, int firstDataRow, int firstDataColumn) {
+		SpreadSheetReader reader = new SpreadSheetReader(file, sheet, headerRow, firstDataRow, firstDataColumn, false);
+		return reader.getData();
+	}
+	
 	
 	/**
 	 * Create a new DataSeries storing real (double) numbers.

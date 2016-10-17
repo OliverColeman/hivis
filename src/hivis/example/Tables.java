@@ -61,6 +61,17 @@ public class Tables {
 		System.out.println("myTable:\n" + myTable);
 		
 		
+		// Data can be loaded from a spreadsheet file with something like (uncomment and set the file location to a real file to try it out):
+		//   DataTable ssData = HV.loadSpreadSheet(new File("myspreadsheet.xlsx"));
+		// The above will try to figure out where the header row is and where the data starts.
+		// To specify these parameters:
+		//   int sheet = 0;
+		//   int headerRow = 0;
+		//   int firstDataRow = 1;
+		//   int firstDataColumn = 0;
+		//   DataTable ssData = HV.loadSpreadSheet(new File("myspreadsheet.xlsx"), sheet, headerRow, firstDataRow, firstDataColumn);
+		
+		
 		// Note that changes to the series after they're added to the table will be reflected in the table.
 		// (By default a table stores "references" to the series it contains).
 		// Here we change the first value in our "reals" series.

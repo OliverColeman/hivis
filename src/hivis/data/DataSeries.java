@@ -298,7 +298,7 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	/**
 	 * Create a view of this series containing the values in this 
 	 * series scaled to the unit range [0, 1]. Equivalent to
-	 * <code>this.subtract(this.minValue()).divide(this.maxValue() - this.minValue()).asDouble()</code>,
+	 * <code>this.asDouble().subtract(this.minValue()).divide(this.maxValue() - this.minValue())</code>,
 	 * however the values in the view will be updated when the vales in the
 	 * series change.
 	 * 
