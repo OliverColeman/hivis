@@ -89,7 +89,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	 * @param file The spreadsheet file.
 	 */
 	public SpreadSheetReader(File file) {
-		this(file, 0, -2, 1, 0);
+		this(file, 0, -2, 0, 0);
 	}
 	
 	/**
@@ -99,7 +99,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	 * 
 	 * @param file The spreadsheet file.
 	 * @param sheet The index of the sheet in the spreadsheet to read from.
-	 * @param headerRow The index of the row to use as column headers.
+	 * @param headerRow The index of the row to use as column headers, or -1 for no header row.
 	 * @param firstDataRow The row to start reading data from (to the end of the sheet).
 	 * @param firstDataColumn The column to start creating series from (up to the right-most column).
 	 */
@@ -113,7 +113,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	 *
 	 * @param file The spreadsheet file.
 	 * @param sheet The index of the sheet in the spreadsheet to read from.
-	 * @param headerRow The index of the row to use as column headers.
+	 * @param headerRow The index of the row to use as column headers, or -1 for no header row.
 	 * @param firstDataRow The row to start reading data from (to the end of the sheet).
 	 * @param firstDataColumn The column to start creating series from (up to the right-most column).
 	 * @param doublePrecision If true then numeric series will be created as DataSeries&lt;Double&gt;, otherwise they will be created as DataSeries&lt;Float&gt;.
@@ -165,6 +165,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 				if (stringCount >= colCount-1) {
 					// Use it as the header row.
 					headerRowIndex = 0;
+					firstDataRowIndex = Math.max(firstDataRowIndex, headerRowIndex + 1);
 				}
 				else {
 					// Otherwise assume no header row.
