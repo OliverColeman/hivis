@@ -1,8 +1,7 @@
 # HiVis
 
 HiVis is a Java library for importing, manipulating and working with various kinds of data. 
-It was designed with the programming environment [Processing](http://www.processing.org) (version 3) in mind, but may be used outside of Processing.
-
+It was designed with the programming environment [Processing](http://www.processing.org) (version 3) in mind, but may be used outside of Processing. HiVis was developed as part of a collaboration between the School of Medical Sciences at the University of Sydney and the Interactive Media Lab in Art and Design at the University of New South Wales.
 
 ## Overview / Features
 
@@ -47,6 +46,9 @@ Download the latest [zip](https://github.com/OliverColeman/hivis/releases/downlo
 If you run into problems or issues, please use the issues section that comes with this repository.
 
 
-## Supporting Organisations
+## Credits
 
-This library is developed by the Interactive Media Lab at the University of New South Wales, Australia with funding from the University of Sydney Medical School, Faculty of Science.
+Concept: Phil Poronnik (University of Sydney) and Oliver Bown (University of New South Wales).
+Programming: Oliver Coleman, Narayan Sankaran.
+
+This library was developed in collaboration between the School of Medical Sciences at the University of Sydney and the Interactive Media Lab in Art and Design at the University of New South Wales. The library was funded  by a University of Sydney Large Education Innovation grant. 
