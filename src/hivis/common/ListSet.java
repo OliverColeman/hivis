@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.Spliterator;
 
 /**
  * <p>Interface for a List that enforces uniqueness amongst its members. 
@@ -257,4 +258,9 @@ public interface ListSet<E> extends List<E>, Set<E> {
      * Returns an unmodifiable view of this ListSet.
      */
     public ListSet<E> unmodifiableView();
+
+	@Override
+	default Spliterator<E> spliterator() {
+		return List.super.spliterator();
+	}
 }

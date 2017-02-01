@@ -32,8 +32,10 @@ void fileSelected(File selection) {
   else {
     // Get data from spread sheet. 
     // The SpreadSheetReader will automatically update the DataTable it provides if the source file is changed.
-    data = HV.loadSpreadSheet(selection);
-    
+	data = HV.loadSpreadSheet(
+	  HV.loadSSConfig().sourceFile(selection)
+	);
+  
     // Get the series containing the data we want to plot. 
     // Note that the first series starts at index 0 (column A in the spreadsheet).
     // We scale the values in the series to be in the unit range [0, 1] with the method toUnitRange(). This will make it easier to work with.

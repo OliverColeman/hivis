@@ -34,7 +34,19 @@ void setup() {
 	// Print out our table.
 	println("myTable:\n" + myTable);
 	
-	
+	// Data can be loaded from a spreadsheet file with something like 
+	// (uncomment and set the file location to a real file to try it out):
+	//   DataTable ssData = HV.loadSpreadSheet(new File("myspreadsheet.xlsx"));
+	// The above will try to figure out where the header row is and where the 
+	// data starts.
+	// To specify these parameters, and many more, use something like:
+	//   DataTable data = HV.loadSpreadSheet(
+    //     HV.loadSSConfig().sourceFile("myspreadsheet.csv").headerRowIndex(2).rowIndex(3).columnIndex(2)
+    //   );
+    // For all configuration options see https://olivercoleman.github.io/hivis/reference/hivis/data/reader/SpreadSheetReader.Config.html
+    // You can call as many of the configuration option methods as necessary, in any order.
+	// Note that the various 'index' options start counting at 0, not 1.
+		
 	// Data can be loaded from a spreadsheet file with something like (uncomment and set the file location to a real file to try it out):
 	//   DataTable ssData = HV.loadSpreadSheet(new File("myspreadsheet.xlsx"));
 	// The above will try to figure out where the header row is and where the data starts.

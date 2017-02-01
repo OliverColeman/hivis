@@ -25,17 +25,33 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.supercsv.io.CsvListReader;
+import org.supercsv.prefs.CsvPreference;
 
 import hivis.common.HV;
-import hivis.data.DataEvent;
-import hivis.data.DataListener;
+import hivis.common.Util;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesDouble;
@@ -47,44 +63,49 @@ import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
 
 /**
  * Class to read data from a spreadsheet file. The data is presented as a {@link DataTable}. 
  * The DataTable is automatically updated when the file changes.
- * Currently only Excel files are supported (xlsx format).
+ * Currently Excel (xlsx) and CSV-like files are supported.
  * 
- * TODO Support other file formats.
  * TODO Currently columns in the sheet are read as DataSeries. Add support for row-based format.
- * TODO Support specifying a range of cells to read from (rather than to the end of the sheet).
  * 
  * @author O. J. Coleman
  */
 public class SpreadSheetReader implements DataSetSource<DataTable> {
 	private DataTableDefault dataset;
 	
-	private File sourceFile;
+	private Config conf;
 	
-	private int sheetIndex;
-	private int rowCount;
-	private int colCount;
+	Sheet excelSheet; // Excel sheet, if applicable.
+	List<List<String>> textSheet;
 	
-	private int headerRowIndex = -1;
+	private Map<Integer, DateTimeFormatter> columnDateFormatMap;
 	
-	private int firstDataRowIndex;
-	private int firstDataColumnIndex;
+	private int lastRowIndex;
+	private int lastColumnIndex;
+	private boolean hasHeaderRow;
+	private int lastRowIndexDesired;
+	private int lastColumnIndexDesired;
 	
-	private boolean doublePrecision = false;
-	
-	private List<Integer> currentDataCellTypes = new ArrayList<>();
+	private List<CellType> columnCellTypes = new ArrayList<>();
 	
 	WatchService watcher; // Service to monitor the file for changes.
 	
 	
 	/**
-	 * Create a new SpreadSheetReader that reads data from the specified file. Data is read from sheet 0.
-	 * If the first row contains all strings, except one column at most, then it is used as the header row.
-	 * Numeric series will be created as DataSeries&lt;Double&gt;.
+	 * <p>Load data from the specified file.</p>
+	 * <p>If the first row contains all strings, except one column at most, then it is used as the header row.</p>
+	 * <p>The generated DataTable will be updated in real time as changes are saved to the file.</p>
+	 * <p>DataSeries are created to match the data type for a column (using the first non-empty data element of a column):
+	 * 	<dl>
+	 * 		<dt>Numeric: </td><dd>DataSeries&lt;Double&gt;.</dd>
+	 * 		<dt>Date: </td><dd>DataSeries&lt;TemporalAccessor&gt; (for columns formatted as dates/times (Excel), or text that 
+	 * 			looks like an ISO-like date or time (CSV).</dd>
+	 * 		<dt>String: </td><dd>DataSeries&lt;String&gt; (for everything else).</dd>
+	 * 	</dl>
+	 * </p>
 	 * 
 	 * @param file The spreadsheet file.
 	 */
@@ -98,10 +119,11 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	 * Numeric series will be created as DataSeries&lt;Double&gt;.
 	 * 
 	 * @param file The spreadsheet file.
-	 * @param sheet The index of the sheet in the spreadsheet to read from.
-	 * @param headerRow The index of the row to use as column headers, or -1 for no header row.
-	 * @param firstDataRow The row to start reading data from (to the end of the sheet).
-	 * @param firstDataColumn The column to start creating series from (up to the right-most column).
+	 * @param sheet The zero-based index of the sheet in the spreadsheet to read from (if applicable).
+	 * @param headerRow The zero-based index of the row to use as column headers, or -1 for no header row.
+	 * @param firstDataRow The zero-based index of the row to start reading data from (to the end of the sheet).
+	 * @param firstDataColumn The zero-based index of the column to start creating series from (up to the last column).
+	 * @deprecated Superseded by {@link #SpreadSheetReader(hivis.data.reader.SpreadSheetReader.Config)}. This constructor will be removed in future releases.
 	 */
 	public SpreadSheetReader(File file, int sheet, int headerRow, int firstDataRow, int firstDataColumn) {
 		this(file, sheet, headerRow, firstDataRow, firstDataColumn, true);
@@ -112,70 +134,122 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	 * with data beginning at the specified row and column.
 	 *
 	 * @param file The spreadsheet file.
-	 * @param sheet The index of the sheet in the spreadsheet to read from.
-	 * @param headerRow The index of the row to use as column headers, or -1 for no header row.
-	 * @param firstDataRow The row to start reading data from (to the end of the sheet).
-	 * @param firstDataColumn The column to start creating series from (up to the right-most column).
+	 * @param sheet The zero-based index of the sheet in the spreadsheet to read from (if applicable).
+	 * @param headerRow The zero-based index of the row to use as column headers, or -1 for no header row.
+	 * @param firstDataRow The zero-based index of the row to start reading data from (to the end of the sheet).
+	 * @param firstDataColumn The zero-based index of the column to start creating series from (up to the last column).
 	 * @param doublePrecision If true then numeric series will be created as DataSeries&lt;Double&gt;, otherwise they will be created as DataSeries&lt;Float&gt;.
+	 * @deprecated Superseded by {@link #SpreadSheetReader(hivis.data.reader.SpreadSheetReader.Config)}. This constructor will be removed in future releases.
 	 */
 	public SpreadSheetReader(File file, int sheet, int headerRow, int firstDataRow, int firstDataColumn, boolean doublePrecision) {
-		sheetIndex = sheet;
-		sourceFile = file;
-		//System.out.println("SpreadSheetReader reading from " + sourceFile.getAbsolutePath());
-		firstDataRowIndex = firstDataRow;
-		firstDataColumnIndex = firstDataColumn;
-		headerRowIndex = headerRow;
-		this.doublePrecision = doublePrecision;
+		this(new Config().sourceFile(file).sheetIndex(sheet).headerRowIndex(headerRow).rowIndex(firstDataRow).columnIndex(firstDataColumn).doublePrecision(doublePrecision));
+	}
+	
+	
+	/**
+	 * <p>Load data from a file using the given configuration.</p>
+	 * <p>The generated DataTable will be updated in real time as changes are saved to the file.</p>
+	 * <p>DataSeries are created to match the data type for a column (using the first non-empty data element of a column):
+	 * 	<dl>
+	 * 		<dt>Numeric: </td><dd>DataSeries&lt;Double/Float&gt; (see {@link SpreadSheetReader.Config#doublePrecision(boolean)}.</dd>
+	 * 		<dt>Date: </td><dd>DataSeries&lt;TemporalAccessor/Date&gt; (for columns formatted as dates/times (Excel), 
+	 * 			or text that looks like an ISO-like date or time (CSV). See {@link SpreadSheetReader.Config#useDeprecatedDates(boolean)}).</dd>
+	 * 		<dt>String: </td><dd>DataSeries&lt;String&gt; (for everything else).</dd>
+	 * 	</dl>
+	 *
+	 * @param config The configuration describing how to read and process the spreadsheet.
+	 */
+	public SpreadSheetReader(Config config) {
+		conf = config.copy();
+		
+		if (conf.fileFormat == Config.AUTO) {
+			String sourceFileName = conf.sourceFile.getName();
+			if (sourceFileName.endsWith(".xlsx")) {
+				conf.fileFormat = Config.EXCEL;
+			} else if (sourceFileName.endsWith(".csv")) {
+				conf.fileFormat = Config.CSV;
+			} else if (sourceFileName.endsWith(".tsv")) {
+				conf.fileFormat = Config.CSV;
+				conf.csvSeparator = "\t";
+			}
+			else {
+				throw new IllegalArgumentException("Could not determine file format of " + conf.sourceFile.getAbsolutePath());
+			}
+		}
 		
 		try {
 			watcher = FileSystems.getDefault().newWatchService();
-			Paths.get(sourceFile.getParentFile().getAbsolutePath()).register(watcher, StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
-			(new FileChangeMonitor(sourceFile.getParentFile().toPath())).start();
+			Paths.get(conf.sourceFile.getParentFile().getAbsolutePath()).register(watcher, StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+			(new FileChangeMonitor(conf.sourceFile.getParentFile().toPath())).start();
 		} catch (IOException e) {
 			System.err.println("Unable to monitor file for changes. Error occurred: " + e.getMessage());
 			throw new RuntimeException(e);
 		}
 		
 		dataset = new DataTableDefault();
-		readFromExcel();	
+		readData();	
 	}
 	
 	
 	
-	private synchronized void readFromExcel() {
+	private synchronized void readData() {
 		try {
-			Workbook wb = WorkbookFactory.create(sourceFile);
+			if (conf.fileFormat == Config.EXCEL) {
+				Workbook wb = WorkbookFactory.create(conf.sourceFile);
+				excelSheet = wb.getSheetAt(conf.sheetIndex);
+				lastRowIndex = excelSheet.getLastRowNum();
+				lastColumnIndex = excelSheet.getRow(0).getLastCellNum()-1;
+			} 
+			else {
+				// Create file format preference.
+				CsvPreference.Builder csvb = new CsvPreference.Builder(conf.csvQuote.charAt(0), conf.csvSeparator.charAt(0), "\r\n");
+				// Don't ignore empty lines to make indexing behaviour consistent between excel and csv/tsv files. 
+				csvb.ignoreEmptyLines(false);
+				
+				lastColumnIndex = 0;
+				textSheet = new ArrayList<>();
+				columnDateFormatMap = new HashMap<>();
+				try (CsvListReader listReader = new CsvListReader(new FileReader(conf.sourceFile), csvb.build())) {
+					List<String> row;
+					while ((row = listReader.read()) != null) {
+						textSheet.add(row);
+						lastColumnIndex = Math.max(lastColumnIndex, row.size()-1);
+					}
+				}
+				lastRowIndex = textSheet.size()-1;
+			}
 			
-			Sheet sheet = wb.getSheetAt(sheetIndex);
+			// Determine index of last row and column.
+			if (conf.dataRowCountDesired <= 0) {
+				lastRowIndexDesired = lastRowIndex;
+			} else {
+				lastRowIndexDesired = Math.min(conf.firstDataRowIndex + conf.dataRowCountDesired - 1, lastRowIndex);
+			}
+			if (conf.dataColumnCountDesired <= 0) {
+				lastColumnIndexDesired = lastColumnIndex;
+			} else {
+				lastColumnIndexDesired = Math.min(conf.firstDataColumnIndex + conf.dataColumnCountDesired - 1, lastColumnIndex);
+			}
+			int dataColumnCountActual = (lastColumnIndexDesired-conf.firstDataColumnIndex)+1;
 			
-			rowCount = sheet.getLastRowNum() + 1;
-			colCount = sheet.getRow(0).getLastCellNum();
 			
-			Row headerRow = null;
-			// If we should try to automatically determine if the first row is a header row.
-			if (headerRowIndex == -2) {
-				headerRow = sheet.getRow(0);
+			if (conf.headerRowIndex == Config.AUTO) {
+				// Determine if the first row is a header row.
 				int stringCount = 0;
-				for (Cell cell : headerRow) {
-					if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
+				for (int c = 0; c <= lastColumnIndex; c++) {
+					if (getCellType(0, c) == CellType.STRING) {
 						stringCount++;
 					}
 				}
+			
 				// If the first row contains all strings, except one column at most.
-				if (stringCount >= colCount-1) {
+				if (stringCount >= lastColumnIndexDesired) {
 					// Use it as the header row.
-					headerRowIndex = 0;
-					firstDataRowIndex = Math.max(firstDataRowIndex, headerRowIndex + 1);
-				}
-				else {
-					// Otherwise assume no header row.
-					headerRow = null;
-					headerRowIndex = -1;
+					conf.headerRowIndex = 0;
+					conf.firstDataRowIndex = Math.max(conf.firstDataRowIndex, conf.headerRowIndex + 1);
 				}
 			}
-			else {
-				headerRow = headerRowIndex == -1 ? null : sheet.getRow(headerRowIndex);
-			}
+			hasHeaderRow = conf.headerRowIndex >= 0;
 			
 			// Notify table we're going to make changes to it (to suppress events being fired
 			// every time we add or remove a series.
@@ -183,49 +257,45 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			
 			// Ensure series in data table are consistent with what's in the sheet (or set-up for first read).
 			// We use the first row of data to determine the type of a series.
-			List<String> columnLabels = new ArrayList<>(colCount);
-			List<Integer> columnIndices = new ArrayList<>(colCount);
-			List<DataSeries<?>> series = new ArrayList<>(colCount);
-			List<Integer> newDataCellTypes = new ArrayList<>();
-			for (int c = firstDataColumnIndex, ci = 0; c < colCount; c++, ci++) {
-				// For some reason getStringCellValue() is throwing an exception for blank 
-				// cells instead of returning an empty string like it's supposed to.
-				String label = null;
-				try {
-					label = headerRow == null ? ""+ci : headerRow.getCell(c).getStringCellValue();
-				}
-				catch (Exception ex) {}
+			List<String> columnLabels = new ArrayList<>(dataColumnCountActual);
+			List<Integer> columnIndices = new ArrayList<>(dataColumnCountActual);
+			List<DataSeries<?>> series = new ArrayList<>(dataColumnCountActual);
+			List<CellType> newDataCellTypes = new ArrayList<>();
+			for (int c = conf.firstDataColumnIndex, ci = 0; c <= lastColumnIndexDesired; c++, ci++) {
+				String label = hasHeaderRow ? getStringCellValue(conf.headerRowIndex, c) : ""+ci;
 				
-				// Ignore columns with no header (when a header row is defined).
-				if (label == null || label.length() == 0) {
-					continue;
+				if (label.trim().length() == 0) {
+					// Ignore columns with no header (when a header row is defined and the ignoreColumnsWithNoHeader option is set).
+					if (conf.ignoreColumnsWithNoHeader)
+						continue;
+					label = ""+ci;
 				}
 				
-				Cell sampleCell = findSampleDataCellInColumn(sheet, c, firstDataRowIndex, rowCount);
+				CellType sampleCellType = findSampleDataCellTypeInColumn(c, conf.firstDataRowIndex, lastRowIndexDesired);
 				// Ignore columns for which we cannot determine a valid data type from any cell.
-				if (sampleCell == null) {
+				if (sampleCellType == null) {
 					continue;
 				}
 				
 				columnLabels.add(label);
 				columnIndices.add(c);
 				
-				newDataCellTypes.add(sampleCell.getCellType());
+				newDataCellTypes.add(sampleCellType);
 				
 				// If this is a new column (or the header was renamed).
 				if (!dataset.hasSeries(label)) {
-					dataset.addSeries(label, dataSeriesFromSampleCell(sampleCell));
+					dataset.addSeries(label, dataSeriesFromCellType(sampleCellType));
 				}
 				// If the type/formatting of the data was changed.
-				else if (currentDataCellTypes.size() <= ci || currentDataCellTypes.get(ci) != newDataCellTypes.get(ci)) {
+				else if (columnCellTypes.size() <= ci || columnCellTypes.get(ci) != newDataCellTypes.get(ci)) {
 					dataset.removeSeries(label);
-					dataset.addSeries(label, dataSeriesFromSampleCell(sampleCell));
+					dataset.addSeries(label, dataSeriesFromCellType(sampleCellType));
 				}
 				
 				series.add(dataset.getSeries(label));
 			}
 			
-			currentDataCellTypes = newDataCellTypes;
+			columnCellTypes = newDataCellTypes;
 			
 
 			// Notify series that we're going to make changes to them 
@@ -247,8 +317,8 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 					DataSeries<?> s = dataset.getSeries(currentLabel);
 					
 					// If values have been removed from the sheet, remove them from the series.
-					if (s.length() > rowCount - firstDataRowIndex) {
-						while (s.length() > rowCount - firstDataRowIndex) {
+					if (s.length() > (lastRowIndexDesired - conf.firstDataRowIndex) + 1) {
+						while (s.length() > (lastRowIndexDesired - conf.firstDataRowIndex) + 1) {
 							s.remove(s.length() - 1);
 						}
 					}
@@ -256,23 +326,15 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			}
 			
 			// Read the data and set in Dataset.
-			for (int r = firstDataRowIndex, ri = 0; r < rowCount; r++, ri++) {
-				Row row = sheet.getRow(r);
-				
-				for (int c = 0; c < columnLabels.size(); c++) {
-					int ci = columnIndices.get(c);
-					String label = columnLabels.get(c);
-					// Ignore columns with no header (when a header row is defined).
-					if (label == null || label.length() == 0) {
-						continue;
-					}
+			for (int row = conf.firstDataRowIndex, ri = 0; row <= lastRowIndexDesired; row++, ri++) {
+				for (int colLabelIdx = 0; colLabelIdx < columnLabels.size(); colLabelIdx++) {
+					int column = columnIndices.get(colLabelIdx);
+					String label = columnLabels.get(colLabelIdx);
 					
 					DataSeries<?> s = dataset.getSeries(label);
 					
-					
 					try {
-						Cell cell = row.getCell(ci);
-						Object val = cell == null ? null : getCellValue(cell);
+						Object val = getCellValue(row, column, columnCellTypes.get(column));
 						
 						if (val == null) {
 							val = s.getEmptyValue();
@@ -297,56 +359,122 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			}
 			dataset.finishChanges(this);
 		} catch (EncryptedDocumentException | InvalidFormatException | IOException e) {
-			throw new DataReadException("Unable to read data from " + sourceFile.getPath(), e);
+			throw new DataReadException("Unable to read data from " + conf.sourceFile.getPath(), e);
 		}
 	}
 	
 	
-	/** 
-	 * Attempt to get the value of a cell as a numeric value, handling numeric, formula and string cell types.
-	 * @return The cell value or NaN if the cell does not appear to contain numeric data.
+	/**
+	 * Determines the CellType of the value at the given row and column.
 	 */
-	private Object getCellValue(Cell cell) {
-		int type = cell.getCellType();
-		
-		if (type == Cell.CELL_TYPE_NUMERIC || type == Cell.CELL_TYPE_FORMULA) {
-			if (HSSFDateUtil.isCellDateFormatted(cell)) {
-				return cell.getDateCellValue();
-			}
-			return cell.getNumericCellValue();
+	private CellType getCellType(int row, int column) {
+		if (excelSheet != null) {
+			return CellType.fromExcel(excelSheet.getRow(row).getCell(column), conf);
 		}
 		
-		if (type == Cell.CELL_TYPE_STRING) {
-			return cell.getStringCellValue();
-		}
-		
-		return null;
+		if (column >= textSheet.get(row).size()) return CellType.BLANK;
+		return CellType.fromRaw(textSheet.get(row).get(column), conf);
 	}
 	
 	
-	private Cell findSampleDataCellInColumn(Sheet sheet, int columnIndex, int firstRowIndex, int rowCount) {
-		for (int row = firstRowIndex; row < rowCount; row++) {
-			Cell cell = sheet.getRow(row).getCell(columnIndex);
-			
-			if (cell != null) {
-				int type = cell.getCellType();
-				if (type == Cell.CELL_TYPE_NUMERIC || type == Cell.CELL_TYPE_FORMULA || type == Cell.CELL_TYPE_STRING) {
-					return cell;
+	/**
+	 * Get the value at the given row and column. Returns the appropriate object 
+	 * type (String, Numeric, Date), or null if there is no value present.
+	 */
+	private Object getCellValue(int row, int column, CellType type) {
+		if (type == null) type = getCellType(row, column);
+		
+		if (excelSheet != null) {
+			Cell cell = excelSheet.getRow(row).getCell(column);
+			if (cell == null) return null;
+			switch (type) {
+				case STRING: return cell.getStringCellValue();
+				case BOOLEAN: return cell.getBooleanCellValue();
+				case NUMERIC: return cell.getNumericCellValue();
+				case DATE: return cell.getDateCellValue();
+				default: return null;
+			}
+		}
+		
+		String v = getStringCellValue(row, column);
+		switch (type) {
+			case STRING: 
+				return v;
+			case NUMERIC: 
+				try {
+					return Double.parseDouble(v);
 				}
+				catch (Exception e) { return null; }
+			case DATE:
+				// Try format that worked previously for this column if we found one.
+				if (columnDateFormatMap.containsKey(column)) {
+					try {
+						TemporalAccessor dt = Util.parseDateTime(v, columnDateFormatMap.get(column));
+						//System.out.println("A " + v + "     " + dt + "     " + dt.getClass().getSimpleName());
+						return conf.useDeprecatedDates ? Util.temporalAccessorToDate(dt) : dt;
+					} catch (DateTimeParseException e) {}
+				}
+				// Try to determine the date/time format.
+				DateTimeFormatter format = Util.determineDateTimeFormat(v, conf.dateFormats);
+				if (format != null) {
+					columnDateFormatMap.put(column, format);
+					// Shouldn't get an exception here since Util.determineDateFormat just provided this format because it works.
+					try {
+						TemporalAccessor dt = Util.parseDateTime(v, format);
+						//System.out.println("B " + v + "     " + dt + "     " + dt.getClass().getSimpleName());
+						return conf.useDeprecatedDates ? Util.temporalAccessorToDate(dt) : dt;
+					} catch (DateTimeParseException e) {}
+				}
+				return null;
+			default: return null;
+		}
+	}
+	
+	
+	/**
+	 * Get the value at the given row and column as a String. 
+	 * Returns the empty String if no value is present.
+	 */
+	private String getStringCellValue(int row, int column) {
+		String val = null;
+		if (excelSheet != null) {
+			Cell cell = excelSheet.getRow(row).getCell(column);
+			if (cell != null) val = cell.getStringCellValue();
+		}
+		else {
+			if (column < textSheet.get(row).size()) val = textSheet.get(row).get(column);
+		}
+		if (val == null) return "";
+		return val;
+	}
+	
+	
+	/**
+	 * Finds the first non-empty value in the given column and returns its type.
+	 */
+	private CellType findSampleDataCellTypeInColumn(int columnIndex, int firstRowIndex, int lastRow) {
+		for (int row = firstRowIndex; row <= lastRow; row++) {
+			CellType type = getCellType(row, columnIndex);
+			if (type != CellType.BLANK) {
+				return type;
 			}
 		}
 		return null;
 	}
 	
 	
-	private DataSeries<?> dataSeriesFromSampleCell(Cell cell) {
-		int type = cell.getCellType();
-		
-		if (type == Cell.CELL_TYPE_NUMERIC || type == Cell.CELL_TYPE_FORMULA) {
-			if (HSSFDateUtil.isCellDateFormatted(cell)) {
-				return new DataSeriesGeneric<Date>();
-			}
-			return doublePrecision ? new DataSeriesDouble() : new DataSeriesFloat();
+	/**
+	 * Return a DataSeries suitable for the given CellType.
+	 */
+	private DataSeries<?> dataSeriesFromCellType(CellType type) {
+		if (type == CellType.NUMERIC) {
+			return conf.doublePrecision ? new DataSeriesDouble() : new DataSeriesFloat();
+		}
+		if (type == CellType.DATE) {
+			return conf.useDeprecatedDates ? new DataSeriesGeneric<Date>() : new DataSeriesGeneric<TemporalAccessor>();
+		}
+		if (type == CellType.BOOLEAN) {
+			return new DataSeriesGeneric<Boolean>();
 		}
 		// Default to String.
 		return new DataSeriesGeneric<String>();
@@ -379,16 +507,16 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 						File modifiedFile = dir.resolve((Path) event.context()).toFile();
 						
 						// If the source file has changed.
-						if (modifiedFile.equals(sourceFile)) {
+						if (modifiedFile.equals(conf.sourceFile)) {
 							if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
-								System.err.println("The data source file " + sourceFile.getAbsolutePath() + " was deleted.");
+								System.err.println("The data source file " + conf.sourceFile.getAbsolutePath() + " was deleted.");
 								return;
 							} else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
 								try {
-									readFromExcel();
+									readData();
 								}
 								catch (Exception ex) {
-									System.err.println("Error reading modified source file \"" + sourceFile.getAbsolutePath() + "\". Will try again on next modification. Error was: " + ex.getMessage());
+									System.err.println("Error reading modified source file \"" + conf.sourceFile.getAbsolutePath() + "\". Will try again on next modification. Error was: " + ex.getMessage());
 								}
 							}
 						}
@@ -403,7 +531,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 					// This is expected if the watch service is closed when terminate() is called.
 				}
 				catch (Exception ex) {
-					System.err.println("An error occurred monitoring the file " + sourceFile.getAbsolutePath() + " for changes:");
+					System.err.println("An error occurred monitoring the file " + conf.sourceFile.getAbsolutePath() + " for changes:");
 					ex.printStackTrace();
 					return;
 				}
@@ -411,15 +539,174 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 		}
 	}
 	
-	public static void main(String[] args) {
+	private enum CellType {
+		BLANK,
+		BOOLEAN,
+		NUMERIC,
+		DATE,
+		STRING;
 		
-		  int sheetIndex = 1;
-		  int headerRowIndex = 0;
-		  int firstDataRow = 3;
-		  int firstDataColumn = 0;
-		  DataTable data = HV.loadSpreadSheet(new File("/home/data/processing/sketchbook/libraries/HiVis/examples/examples/HV07_InteractiveSonification/KIB - Oil Well.xlsx"), sheetIndex, headerRowIndex, firstDataRow, firstDataColumn);
-		  /*System.out.println("\ndata:\n" + data);
+		public static CellType fromExcel(Cell c, Config conf) {
+			if (c == null) return BLANK;
+			
+			int type = c.getCellType();
+			
+			if (type == Cell.CELL_TYPE_BOOLEAN) return BOOLEAN;
+			if (type == Cell.CELL_TYPE_STRING) return STRING;
+		
+			if (type == Cell.CELL_TYPE_FORMULA || type == Cell.CELL_TYPE_NUMERIC) {
+				if (HSSFDateUtil.isCellDateFormatted(c)) {
+					return DATE;
+				}
+				return NUMERIC;
+			}
+			
+			return BLANK;
+		}
+		
+		public static CellType fromRaw(String v, Config conf) {
+			if (v == null || v.trim().length() == 0)
+				return BLANK;
+			
+			try {
+				Double.parseDouble(v);
+				return NUMERIC;
+			}
+			catch (Exception e) {}
+			
+			DateTimeFormatter format = Util.determineDateTimeFormat(v, conf.dateFormats);
+			if (format != null) return DATE;
+			
+			return STRING;
+		}
+	}
+	
+	/**
+	 * Defines the configuration for a SpreadSheetReader.
+	 */
+	public static class Config implements Cloneable {
+		public static final int AUTO = -2;
+		public static final int NONE = -1;
+		public static final int EXCEL = 0;
+		public static final int CSV = 1;
+		
+		protected File sourceFile;
+		/**
+		 * Set the file to read data from.
+		 */
+		public Config sourceFile(File sourceFile) { this.sourceFile = sourceFile; return this; }
+		/**
+		 * Set the file to read data from.
+		 */
+		public Config sourceFile(String sourceFile) { this.sourceFile = new File(sourceFile); return this; }
+		
+		protected int fileFormat = AUTO;
+		/**
+		 * Set the format of the data, options are {@link #AUTO}, {@link #EXCEL}, {@link #CSV}.
+		 * @see #csvSeparator
+		 * @see #csvQuote
+		 */
+		public Config fileFormat(int fileFormat) { this.fileFormat = fileFormat; return this; }
+		
+		protected int sheetIndex = 0;
+		/**
+		 * Set the (zero-based) index of the sheet in the spreadsheet to read from (if applicable). 
+		 */
+		public Config sheetIndex(int sheetIndex) { this.sheetIndex = sheetIndex; return this; }
+		
+		protected int headerRowIndex = AUTO;
+		/**
+		 * Set the (zero-based) index of the row to use as column headers, or {@link #AUTO} or {@link #NONE}. Default is AUTO.
+		 */
+		public Config headerRowIndex(int headerRowIndex) { this.headerRowIndex = headerRowIndex; return this; }
+		
+		protected int firstDataRowIndex = 0;
+		/**
+		 * Set the zero-based index of the row to start reading data from. Default is 0.
+		 */
+		public Config rowIndex(int rowIndex) { this.firstDataRowIndex = rowIndex; return this; }
+		
+		protected int dataRowCountDesired = AUTO;
+		/**
+		 * Set the number of rows to extract (not including header), or {@link #AUTO} to read to the end of the sheet.
+		 */
+		public Config rowCount(int rowCount) { this.dataRowCountDesired = rowCount; return this; }
+
+		protected int firstDataColumnIndex = 0;
+		/**
+		 * Set the (zero-based) index of the column to start creating series from. Default is 0.
+		 */
+		public Config columnIndex(int columnIndex) { this.firstDataColumnIndex = columnIndex; return this; }
+		
+		protected int dataColumnCountDesired = AUTO;
+		/**
+		 * Set the number of columns to extract, or {@link #AUTO} to read up to the last column.
+		 */
+		public Config columnCount(int columnCount) { this.dataColumnCountDesired = columnCount; return this; }
+		
+		protected boolean doublePrecision = false;
+		/**
+		 * Set whether numeric series should be created as DataSeries&lt;Double&gt; (true), or as DataSeries&lt;Float&gt; (false).
+		 */
+		public Config doublePrecision(boolean doublePrecision) { this.doublePrecision = doublePrecision; return this; }
+		
+		protected boolean ignoreColumnsWithNoHeader = false;
+		/**
+		 * Set whether to ignore columns that have an empty header value. Only applicable when a header row has been set (manually or automatically detected).
+		 */
+		public Config ignoreColumnsWithNoHeader(boolean ignoreColumnsWithNoHeader) { this.ignoreColumnsWithNoHeader = ignoreColumnsWithNoHeader; return this; }
+		
+		protected String csvSeparator = ",";
+		/**
+		 * Set the value separator character, only applicable for {@link #CSV} format. Use "\t" for tab-separated (TSV). Default is "," (CSV).
+		 */
+		public Config csvSeparator(String csvSeparator) { this.csvSeparator = csvSeparator; return this; }
+		
+		protected String csvQuote = "\"";
+		/**
+		 * Set the value quote character, only applicable for {@link #CSV} format. Default is ".
+		 */
+		public Config csvQuote(String csvQuote) { this.csvQuote = csvQuote; return this; }
+		
+		protected String[] dateFormats = new String[0];
+		/**
+		 * Set custom date/time formats for parsing dates, only applicable for {@link #CSV} format.  See https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html
+		 */
+		public Config dateFormats(String... formats) { this.dateFormats = formats; return this; }
+		
+		protected boolean useDeprecatedDates = false;
+		/**
+		 * Set whether to use the (now deprecated) java.util.Date objects to represent dates/times (true), instead of java.time.temporal.TemporalAccessor (false). Default is false.
+		 */
+		public Config useDeprecatedDates(boolean useDeprecatedDates) { this.useDeprecatedDates = useDeprecatedDates; return this; }
+		
+		/**
+		 * Creates a copy of this Config.
+		 */
+		public Config copy() { 
+			try {
+				// Most fields can be (shallow) copied by value.
+				Config copy = (Config) clone();
+				// Just not the date format array.
+				copy.dateFormats = Arrays.copyOf(dateFormats, dateFormats.length);
+				return copy;
+			} catch (CloneNotSupportedException e) {}
+			return null;
+		}
+	}
+	
+	public static void main(String[] args) {
+		DataTable data = HV.loadSpreadSheet(new File("/home/data/processing/data/test.csv"));
 		  
+		//DataTable data = HV.loadSpreadSheet(new SpreadSheetReader.Config().sourceFile("/home/data/processing/data/test.csv").rowIndex(1).columnIndex(2).rowCount(5).columnCount(4));
+		
+		System.out.println("\ndata:\n" + data);
+
+//		DataTable data2 = HV.loadSpreadSheet(new SpreadSheetReader.Config().sourceFile("/home/data/processing/data/test.csv").useDeprecatedDates(true));
+//		System.out.println("\ndata2:\n" + data2);
+
+		  
+		  /*
 		  // Get the series/columns we're interested in.
 		  // Transform some to unit range [0, 1] to make them easier to work with.
 		  DataSeries<Float> retailMarkup = data.getSeries(7).toUnitRange().asFloat();
@@ -431,11 +718,10 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 		  System.out.println("\nhealthRating:\n" + healthRating);
 		  System.out.println("\nretailCost:\n" + retailCost);
 		  System.out.println("\ntasteStrength:\n" + tasteStrength);
-		  */
 		  
 		  System.out.println(data.getSeries(7).minValue());
 		  System.out.println(data.getSeries(7).maxValue());
-		  
+		  */
 		  /*
 		SpreadSheetReader reader = new SpreadSheetReader(args[0], 0, 0, 1, 0);
 		DataTable data = reader.getData();

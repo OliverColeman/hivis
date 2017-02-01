@@ -52,11 +52,19 @@ public class HV {
 	
 	
 	/**
-	 * Load data from the specified spreadsheet.
-	 * If the first row contains all strings, except one column at most, then it is used as the header row.
-	 * The returned DataTable will be updated in real time as changes are saved to the file.
+	 * <p>Load data from the specified file.</p>
+	 * <p>If the first row contains all strings, except one column at most, then it is used as the header row.</p>
+	 * <p>The returned DataTable will be updated in real time as changes are saved to the file.</p>
+	 * <p>DataSeries are created to match the data type for a column (using the first non-empty data element of a column):
+	 * 	<dl>
+	 * 		<dt>Numeric: </td><dd>DataSeries&lt;Double&gt;.</dd>
+	 * 		<dt>Date: </td><dd>DataSeries&lt;TemporalAccessor&gt; (for columns formatted as dates/times (Excel), or text that 
+	 * 			looks like an ISO-like date or time (CSV).</dd>
+	 * 		<dt>String: </td><dd>DataSeries&lt;String&gt; (for everything else).</dd>
+	 * 	</dl>
+	 * </p>
 	 * 
-	 * @param String Path to the spreadsheet file. Only XLSX files are currently supported.
+	 * @param file The spreadsheet file. Excel (xlsx) and CSV-like files are supported. The file type is detected from the file extension.
 	 * @return The loaded data.
 	 */
 	public static DataTable loadSpreadSheet(File file) {
@@ -66,21 +74,56 @@ public class HV {
 	
 	
 	/**
-	 * Load data from the specified spreadsheet, reading data from the 
-	 * specified sheet starting at the specified row and column.
-	 * The returned DataTable will be updated in real time as changes are saved to the file.
+	 * <p>Load data from the specified file, sheet number (Excel only), with the specified (optional) 
+	 * 	header row and starting at the specified row and column.</p>
+	 * <p>If the first row contains all strings, except one column at most, then it is used as the header row.</p>
+	 * <p>The returned DataTable will be updated in real time as changes are saved to the file.</p>
+	 * <p>DataSeries are created to match the data type for a column (using the first non-empty data element of a column):
+	 * 	<dl>
+	 * 		<dt>Numeric: </td><dd>DataSeries&lt;Double&gt;.</dd>
+	 * 		<dt>Date: </td><dd>DataSeries&lt;TemporalAccessor&gt; (for columns formatted as dates/times (Excel), or text that 
+	 * 			looks like an ISO-like date or time (CSV).</dd>
+	 * 		<dt>String: </td><dd>DataSeries&lt;String&gt; (for everything else).</dd>
+	 * 	</dl>
+	 * </p>
 	 * 
-	 * @param file The spreadsheet file.
-	 * @param sheet The index of the sheet in the spreadsheet to read from.
+	 * @param file The spreadsheet file. Excel (xlsx) and CSV-like files are supported. The file type is detected from the file extension.
+	 * @param sheet The index of the sheet in the spreadsheet to read from (if applicable).
 	 * @param headerRow The index of the row to use as column headers.
 	 * @param firstDataRow The row to start reading data from (to the end of the sheet).
-	 * @param firstDataColumn The column to start creating series from (up to the right-most column).
+	 * @param firstDataColumn The column to start creating series from (up to the last column).
+	 * @deprecated Superseded by {@link #loadSpreadSheet(hivis.data.reader.SpreadSheetReader.Config)}. This method will be removed in future releases.
 	 */
 	public static DataTable loadSpreadSheet(File file, int sheet, int headerRow, int firstDataRow, int firstDataColumn) {
 		SpreadSheetReader reader = new SpreadSheetReader(file, sheet, headerRow, firstDataRow, firstDataColumn, false);
 		return reader.getData();
 	}
 	
+	/**
+	 * <p>Load data from a file using the given configuration.</p>
+	 * <p>The returned DataTable will be updated in real time as changes are saved to the file.</p>
+	 * <p>DataSeries are created to match the data type for a column (using the first non-empty data element of a column):
+	 * 	<dl>
+	 * 		<dt>Numeric: </td><dd>DataSeries&lt;Double/Float&gt; (see {@link SpreadSheetReader.Config#doublePrecision(boolean)}.</dd>
+	 * 		<dt>Date: </td><dd>DataSeries&lt;TemporalAccessor/Date&gt; (for columns formatted as dates/times (Excel), 
+	 * 			or text that looks like an ISO-like date or time (CSV). See {@link SpreadSheetReader.Config#useDeprecatedDates(boolean)}).</dd>
+	 * 		<dt>String: </td><dd>DataSeries&lt;String&gt; (for everything else).</dd>
+	 * 	</dl>
+	 * 
+	 * @param config The configuration for the {@link SpreadSheetReader}.
+	 */
+	public static DataTable loadSpreadSheet(SpreadSheetReader.Config config) {
+		SpreadSheetReader reader = new SpreadSheetReader(config);
+		return reader.getData();
+	}
+	
+	/**
+	 * Convenience method to create a new configuration object for 
+	 * {@link #loadSpreadSheet(hivis.data.reader.SpreadSheetReader.Config)}.
+	 */
+	public static SpreadSheetReader.Config loadSSConfig() {
+		return new SpreadSheetReader.Config();
+	}
 	
 	/**
 	 * Create a new DataSeries storing real (double) numbers.

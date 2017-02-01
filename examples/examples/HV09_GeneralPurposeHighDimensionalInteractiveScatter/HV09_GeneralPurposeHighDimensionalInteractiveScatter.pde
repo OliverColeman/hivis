@@ -59,7 +59,10 @@ void fileSelected(File selection) {
   } 
   else {
     // Get data from spread sheet. The SpreadSheetReader will automatically update the DataTable it provides.
-    data = HV.loadSpreadSheet(selection, 0, 0, 1, 0);
+    data = HV.loadSpreadSheet(
+	  HV.loadSSConfig().sourceFile(selection)
+	);
+  
     println("\nLoaded data:\n" + data);
     
     int selectIndex = 0;

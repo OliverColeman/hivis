@@ -30,11 +30,9 @@ void setup() {
   
   // Get data from spread sheet. 
   // The SpreadSheetReader will automatically update the DataTable it provides if the source file is changed.
-  int sheetIndex = 1;
-  int headerRowIndex = 0;
-  int firstDataRow = 3;
-  int firstDataColumn = 0;
-  data = HV.loadSpreadSheet(sketchFile("KIB - Oil Well.xlsx"), sheetIndex, headerRowIndex, firstDataRow, firstDataColumn);
+  data = HV.loadSpreadSheet(
+    HV.loadSSConfig().sourceFile("KIB - Oil Well.xlsx").sheetIndex(1).rowIndex(3)
+  );
   
   // Get the series/columns we're interested in.
   // Transform some to unit range [0, 1] to make them easier to work with.

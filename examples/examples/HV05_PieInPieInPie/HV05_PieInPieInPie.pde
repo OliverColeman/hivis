@@ -26,11 +26,11 @@ void setup() {
   textSize(14);
   
   // Get data from spread sheet. 
-  int sheet = 0;
-  int headerRow = 1;
-  int firstDataRow = 2;
-  int firstDataColumn = 0;
-  data = HV.loadSpreadSheet(sketchFile("Employee Diversity in tech.xlsx"), sheet, headerRow, firstDataRow, firstDataColumn);
+  SpreadSheetReader.Config config = new SpreadSheetReader.Config();
+  config.sourceFile("Employee Diversity in tech.xlsx").headerRowIndex(1).rowIndex(2);
+  data = HV.loadSpreadSheet(
+    HV.loadSSConfig().sourceFile("Employee Diversity in tech.xlsx").headerRowIndex(1).rowIndex(2)
+  );
   
   // Get male/female data (with names as first series).
   DataTable mf = HV.newTable().addSeries(data.selectSeries(0)).addSeries(data.selectSeriesRange(1, 2));

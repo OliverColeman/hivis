@@ -17,8 +17,23 @@
 package hivis.common;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import hivis.data.AbstractDataSeries;
@@ -146,4 +161,125 @@ public class Util {
 		
 		return sb.toString();
 	}
+
+	
+	/**
+	 * Try to determine the date format of the given String.
+	 * @param input The String containing a date and optional time.
+	 * @param customDateFormats One or more date formats to use instead of the standard date formats. Time elements may also be included. See https://docs.oracle.com/javase/8/docs/api/index.html?java/time/format/DateTimeFormatter.html
+	 * @return A DateTimeFormatter object able to parse the given date/time, or null if the format could not be determined.
+	 */
+	public static DateTimeFormatter determineDateTimeFormat(String input, String... customDateFormats) {
+		input = input.trim();
+		
+		List<DateTimeFormatter> formats;
+		if (customDateFormats != null && customDateFormats.length > 0) {
+			formats = new ArrayList<>();
+			for (String cdf : customDateFormats) {
+				try {
+					formats.add(DateTimeFormatter.ofPattern(cdf));
+				}
+				catch (Exception ex) {
+					throw new IllegalArgumentException("Invalid date/time format: \"" + cdf + "\". For formatting info see https://docs.oracle.com/javase/8/docs/api/index.html?java/time/format/DateTimeFormatter.html", ex);
+				}
+			}
+		}
+		else {
+			formats = dateTimeFormatsStandard;
+		}
+		
+		// Try each date format in turn.
+		for (DateTimeFormatter f : formats) {
+			try {
+				parseDateTime(input, f);
+				return f;
+			}
+			catch (Exception ex) {
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Utility method to parse a date/time string with a formatter, attempting 
+	 * to get the most applicable type of TemporalAccessor object via 
+	 * format.parseBest. The TemporalAccessor subclasses tried in order are 
+	 * ZonedDateTime, OffsetDateTime, LocalDateTime, LocalDate, OffsetTime, LocalTime.
+	 */
+	public static TemporalAccessor parseDateTime(String input, DateTimeFormatter format) throws DateTimeParseException {
+		return format.parseBest(input, ZonedDateTime::from, OffsetDateTime::from, LocalDateTime::from, LocalDate::from, OffsetTime::from, LocalTime::from);
+	}
+	
+	
+	/**
+	 * Attempt to convert the given TemporalAccessor to the equivalent Date.
+	 */
+	public static Date temporalAccessorToDate(TemporalAccessor ta) {
+	    if (ta instanceof LocalDateTime) {
+	    	return Date.from(((LocalDateTime) ta).atZone(ZoneId.systemDefault()).toInstant());
+	    }
+	    if (ta instanceof LocalDate) {
+	    	return Date.from(((LocalDate) ta).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+	    }
+	    if (ta instanceof LocalTime) {
+	    	return Date.from(((LocalTime) ta).atDate(LocalDate.now()).atZone(ZoneId.systemDefault()).toInstant());
+	    }
+	    if (ta instanceof ZonedDateTime) {
+	    	return Date.from(((ZonedDateTime) ta).toInstant());
+	    }
+	    if (ta instanceof OffsetDateTime) {
+	    	return Date.from(((OffsetDateTime) ta).toInstant());
+	    }
+	    if (ta instanceof OffsetTime) {
+	    	return Date.from(((OffsetTime) ta).atDate(LocalDate.now()).toInstant());
+	    }
+	    
+	    return null;
+	}
+// 
+//    /**
+//     * Convert from LocalDate to Date
+//     *
+//     * @param ld the {@link LocalDate} to convert
+//     *
+//     * @return Date at {@link ZoneId#systemDefault()} whereas the time of the date is at start of the day
+//     */
+//    public static Date LocalDateToDate(LocalDate ld) {
+//        Instant instant = ld.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+//        return Date.from(instant);
+//    }
+// 
+//    /**
+//     * Convert from LocalTime to Date
+//     *
+//     * @param lt the {@link LocalTime} to convert
+//     *
+//     * @return Date at {@link ZoneId#systemDefault()} on todays date
+//     */
+//    public static Date LocalTimeToDate(LocalTime lt) {
+//        LocalDate now = LocalDate.now();
+//        Instant instant = lt.atDate(now).atZone(ZoneId.systemDefault()).toInstant();
+//        return Date.from(instant);
+//    }
+	
+	// Build date/time formatters for use with determineDateTimeFormat()
+	private static final DateTimeFormatter dateTimeZoneBracketed = new DateTimeFormatterBuilder().appendLiteral('[').appendZoneId().appendLiteral(']').toFormatter();	
+	private static final List<DateTimeFormatter> dateTimeFormatsStandard = new ArrayList<>(Arrays.asList(new DateTimeFormatter[] { 
+			DateTimeFormatter.ISO_LOCAL_DATE,
+			DateTimeFormatter.BASIC_ISO_DATE,
+			
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral('T').append(DateTimeFormatter.ISO_LOCAL_TIME).appendZoneOrOffsetId().toFormatter(),
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral('T').append(DateTimeFormatter.ISO_LOCAL_TIME).appendLiteral(' ').appendZoneOrOffsetId().toFormatter(),
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral(' ').append(DateTimeFormatter.ISO_LOCAL_TIME).appendZoneOrOffsetId().toFormatter(),
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral(' ').append(DateTimeFormatter.ISO_LOCAL_TIME).appendLiteral(' ').appendZoneOrOffsetId().toFormatter(),
+			
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral('T').append(DateTimeFormatter.ISO_TIME).appendOptional(dateTimeZoneBracketed).toFormatter(),
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral('T').append(DateTimeFormatter.ISO_TIME).appendLiteral(' ').appendOptional(dateTimeZoneBracketed).toFormatter(),
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral(' ').append(DateTimeFormatter.ISO_TIME).appendOptional(dateTimeZoneBracketed).toFormatter(),
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral(' ').append(DateTimeFormatter.ISO_TIME).appendLiteral(' ').appendOptional(dateTimeZoneBracketed).toFormatter(),
+			
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_TIME).appendZoneOrOffsetId().toFormatter(),
+			new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_TIME).appendOptional(dateTimeZoneBracketed).toFormatter()
+			
+		}));
 }
