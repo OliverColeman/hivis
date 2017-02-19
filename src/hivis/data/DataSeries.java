@@ -142,6 +142,15 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	 */
 	double getDouble(int index);
 	
+	/**
+	 * Get the element at the specified index as a DataValue. The returned 
+	 * DataValue is a view of the specified element value: DataValue's value 
+	 * will reflect changes made to the referenced element in this series.
+	 * If the given index becomes out of range of the length of the series
+	 * The empty value will be returned by DataValue ({@link DataSeries#getEmptyValue()}).
+	 */
+	DataValue<V> getDataValue(int index);
+	
 	
 	/**
 	 * Get a view of this series representing the values as single-precision floating point numbers.
@@ -267,6 +276,11 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	 */
 	public DataSeries<V> getNewSeries();
 	
+	/**
+	 * Get a {@link DataValue} storing the same type as this series.
+	 */
+	public DataValue<V> getNewDataValue();
+	
 	
 	/**
 	 * Get the values in this series as an (unmodifiable) List.
@@ -281,17 +295,53 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	
 	/**
 	 * Returns the minimum value contained in this series, 
-	 * or {@link #getEmptyValue()} if the series is empty.
+	 * or {@link #getEmptyValue()} if the series is empty,
+	 * as a DataValue.
 	 */
-	public V minValue();
+	public DataValue<V> min();
 
 	/**
 	 * Returns the maximum value contained in this series.
-	 * or {@link #getEmptyValue()} if the series is empty.
+	 * or {@link #getEmptyValue()} if the series is empty,
+	 * as a DataValue.
 	 */
-	public V maxValue();
+	public DataValue<V> max();
 
+	/**
+	 * Returns the sum of the values contained in this series, 
+	 * or 0 if the series is empty,
+	 * as a DataValue.
+	 */
+	public DataValue<V> sum();
+
+	/**
+	 * Returns the product of the values contained in this series, 
+	 * or {@link #getEmptyValue()} if the series is empty,
+	 * as a DataValue.
+	 */
+	public DataValue<V> product();
+
+	/**
+	 * Returns the arithmetic mean of the values contained in this series, 
+	 * or {@link #getEmptyValue()} if the series is empty,
+	 * as a DataValue.
+	 */
+	public DataValue<Double> mean();
+
+	/**
+	 * Returns the variance of the values contained in this series, 
+	 * or {@link #getEmptyValue()} if the series is empty,
+	 * as a DataValue.
+	 */
+	public DataValue<Double> variance();
 	
+	/**
+	 * Returns the standard deviation of the values contained in this series, 
+	 * or {@link #getEmptyValue()} if the series is empty,
+	 * as a DataValue.
+	 */
+	public DataValue<Double> stdDev();
+
 	// View/functional operations. 
 	
 	
@@ -334,19 +384,23 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	public SeriesView<V> add(double value);
 	public SeriesView<V> add(long value);
 	public SeriesView<V> add(DataSeries<?> series);
+	public SeriesView<V> add(DataValue<?> value);
 	
 	public SeriesView<V> subtract(V value);
 	public SeriesView<V> subtract(double value);
 	public SeriesView<V> subtract(long value);
 	public SeriesView<V> subtract(DataSeries<?> series);
+	public SeriesView<V> subtract(DataValue<?> value);
 	
 	public SeriesView<V> multiply(V value);
 	public SeriesView<V> multiply(double value);
 	public SeriesView<V> multiply(long value);
 	public SeriesView<V> multiply(DataSeries<?> series);
+	public SeriesView<V> multiply(DataValue<?> value);
 	
 	public SeriesView<V> divide(V value);
 	public SeriesView<V> divide(double value);
 	public SeriesView<V> divide(long value);
 	public SeriesView<V> divide(DataSeries<?> series);
+	public SeriesView<V> divide(DataValue<?> value);
 }

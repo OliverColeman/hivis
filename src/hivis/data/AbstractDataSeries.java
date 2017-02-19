@@ -19,14 +19,21 @@ package hivis.data;
 import java.math.BigDecimal;
 import java.util.AbstractList;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.reflect.TypeToken;
 
 import hivis.data.view.CalcSeries;
+import hivis.data.view.CalcSeries.Op;
+import hivis.data.view.CalcValue;
+import hivis.data.view.CalcValue.SeriesOp;
 import hivis.data.view.Function;
 import hivis.data.view.SeriesView;
+import hivis.data.view.AbstractValueView;
+import hivis.common.Util;
 import hivis.data.view.AbstractSeriesView;
 import hivis.data.view.SeriesViewRow;
 import hivis.data.view.SeriesViewAppend;
@@ -40,24 +47,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	private TypeToken<V> typeToken = new TypeToken<V>(getClass()) {};
 	private Class<?> type = typeToken.getRawType();
 	
-	private boolean recalcMinValue = true;
-	private boolean recalcMaxValue = true;
-	V minValue;
-	V maxValue;
-	
-	
-	public AbstractDataSeries() {
-		super();
-		
-		// Recalculate minimum and maximum values if the data is changed.
-		this.addChangeListener(new DataListener() {
-			@Override
-			public void dataChanged(DataEvent event) {
-				recalcMinValue = true;
-				recalcMaxValue = true;
-			}
-		});
-	}
+	Map<SeriesOp, DataValue<V>> dataValueOp;
 	
 	
 	@Override
@@ -194,6 +184,37 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	@Override
 	public double getDouble(int index) {
 		return ((Number) get(index)).doubleValue();
+	}
+	
+	
+	@Override
+	public DataValue<V> getDataValue(int index) {
+		return new DataValueView(index);
+	}
+	private class DataValueView extends AbstractDataValue<V> implements DataListener {
+		int index;
+		// We keep track of the current value via dataChanged, so we only fire a change event if the data actually changes.
+		V currentValue;
+		public DataValueView(int index) {
+			AbstractDataSeries.this.addChangeListener(this);
+			this.index = index;
+			currentValue = AbstractDataSeries.this.get(index);
+		}
+		@Override
+		public V get() {
+			return currentValue;
+		}
+		@Override
+		public void setValue(V value) {
+			throw new UnsupportedOperationException("Can not set value of DataValue that is a view of an element in a DataSeries.");
+		}
+		@Override
+		public void dataChanged(DataEvent event) {
+			if (!Util.equalsIncNull(currentValue, AbstractDataSeries.this.get(index))) {
+				currentValue = AbstractDataSeries.this.get(index);
+				this.fireChangeEvent(new DataEvent(this, event));
+			}
+		}
 	}
 	
 
@@ -497,45 +518,96 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	
 	@Override
+	public DataValue<V> getNewDataValue() {
+		return (DataValue<V>) getNewDataValue(getType());
+	}
+	
+	
+	public static <V> DataValue<V> getNewDataValue(Class<V> type) {
+		if (type.equals(Float.class) || type.equals(float.class)) {
+			return (DataValue<V>) new DataValueFloat();
+		}
+		if (type.equals(Double.class) || type.equals(double.class)) {
+			return (DataValue<V>) new DataValueDouble();
+		}
+		if (type.equals(Integer.class) || type.equals(int.class)) {
+			return (DataValue<V>) new DataValueInteger();
+		}
+		if (type.equals(Long.class) || type.equals(long.class)) {
+			return (DataValue<V>) new DataValueLong();
+		}
+		throw new UnsupportedOperationException("Don't know how to create a DataSeries containing type " + type);
+	}
+	
+	
+	@Override
 	public boolean isNumeric() {
 		return Number.class.isAssignableFrom(getType());
 	}
 	
-
-	@Override
-	public V minValue() {
-		if (recalcMinValue) {
-			if (length() == 0) {
-				return getEmptyValue();
+	
+	private DataValue<?> op(SeriesOp op) {
+		if (dataValueOp == null || !dataValueOp.containsKey(op)) {
+			if (dataValueOp == null) dataValueOp = new EnumMap<>(SeriesOp.class);
+			if (op.realOutput) {
+				if (getType().equals(Float.class)) {
+					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+				}
+				if (getType().equals(Double.class)) {
+					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+				}
+				if (getType().equals(Integer.class)) {
+					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+				}
+				if (getType().equals(Long.class)) {
+					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+				}
 			}
-			minValue = getEmptyValue();
-			for (V el : this) {
-				if ((!(el instanceof Double) || (!Double.isNaN((Double) el))) && ((!(el instanceof Float) || (!Float.isNaN((Float) el))))) {
-					if (minValue == null || minValue.equals(getEmptyValue()) || (el instanceof Comparable && ((Comparable<V>) el).compareTo(minValue) < 0)) {
-						minValue = el;
-					}
+			else {
+				if (getType().equals(Float.class)) {
+					dataValueOp.put(op, new CalcValue.FloatValue.SeriesFunc(this, op));
+				}
+				if (getType().equals(Double.class)) {
+					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+				}
+				if (getType().equals(Integer.class)) {
+					dataValueOp.put(op, new CalcValue.IntValue.SeriesFunc(this, op));
+				}
+				if (getType().equals(Long.class)) {
+					dataValueOp.put(op, new CalcValue.LongValue.SeriesFunc(this, op));
 				}
 			}
 		}
-		return minValue;
+		return dataValueOp.get(op);
 	}
-
+	
 	@Override
-	public V maxValue() {
-		if (recalcMaxValue) {
-			if (length() == 0) {
-				return getEmptyValue();
-			}
-			maxValue = getEmptyValue();
-			for (V el : this) {
-				if ((!(el instanceof Double) || (!Double.isNaN((Double) el))) && ((!(el instanceof Float) || (!Float.isNaN((Float) el))))) {
-					if (maxValue == null || maxValue.equals(getEmptyValue()) || (el instanceof Comparable && ((Comparable<V>) el).compareTo(maxValue) > 0)) {
-						maxValue = el;
-					}
-				}
-			}
-		}
-		return maxValue;
+	public DataValue<V> min() {
+		return (DataValue<V>) op(SeriesOp.MIN);
+	}
+	@Override
+	public DataValue<V> max() {
+		return (DataValue<V>) op(SeriesOp.MAX);
+	}
+	@Override
+	public DataValue<V> sum() {
+		return (DataValue<V>) op(SeriesOp.SUM);
+	}
+	@Override
+	public DataValue<V> product() {
+		return (DataValue<V>) op(SeriesOp.PRODUCT);
+	}
+	@Override
+	public DataValue<Double> mean() {
+		return (DataValue<Double>) op(SeriesOp.MEAN);
+	}
+	@Override
+	public DataValue<Double> variance() {
+		return (DataValue<Double>) op(SeriesOp.VARIANCE);
+	}
+	@Override
+	public DataValue<Double> stdDev() {
+		return (DataValue<Double>) op(SeriesOp.STD_DEV);
 	}
 	
 	@Override
@@ -568,195 +640,141 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	}
 	
 	
-	@Override
-	public SeriesView<V> add(final V value) {
+	
+	private SeriesView<V> op(Op op, final V value) {
 		if (getType().equals(Float.class)) {
-			return (SeriesView<V>) new CalcSeries.FloatSeries.Add(this, (Float) castToNumericType(value));
+			return new CalcSeries.FloatSeries.FuncValue(op, this, (Float) castToNumericType(value));
 		}
 		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.DoubleSeries.Add(this, (Double) castToNumericType(value));
+			return new CalcSeries.DoubleSeries.FuncValue(op, this, (Double) castToNumericType(value));
 		}
 		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.IntSeries.Add(this, (Integer) castToNumericType(value));
+			return new CalcSeries.IntSeries.FuncValue(op, this, (Integer) castToNumericType(value));
 		}
 		if (getType().equals(Long.class)) {
-			return (SeriesView<V>) new CalcSeries.LongSeries.Add(this, (Long) castToNumericType(value));
+			return new CalcSeries.LongSeries.FuncValue(op, this, (Long) castToNumericType(value));
 		}
 		throw new UnsupportedOperationException();
 	}
 	
+	private SeriesView<V> op(Op op, DataValue value) {
+		if (getType().equals(Float.class)) {
+			return new CalcSeries.FloatSeries.FuncValue(op, this, value);
+		}
+		if (getType().equals(Double.class)) {
+			return new CalcSeries.DoubleSeries.FuncValue(op, this, value);
+		}
+		if (getType().equals(Integer.class)) {
+			return new CalcSeries.IntSeries.FuncValue(op, this, value);
+		}
+		if (getType().equals(Long.class)) {
+			return new CalcSeries.LongSeries.FuncValue(op, this, value);
+		}
+		throw new UnsupportedOperationException();
+	}
+	
+	private SeriesView<V> op(Op op, DataSeries series) {
+		if (this.length() != series.length()) {
+			throw new IllegalArgumentException("Can not " + op.toString().toLowerCase() + " two DataSeries with differing lengths.");
+		}
+		if (getType().equals(Float.class)) {
+			return new CalcSeries.FloatSeries.FuncSeries(op, this, series);
+		}
+		if (getType().equals(Double.class)) {
+			return new CalcSeries.DoubleSeries.FuncSeries(op, this, series);
+		}
+		if (getType().equals(Integer.class)) {
+			return new CalcSeries.IntSeries.FuncSeries(op, this, series);
+		}
+		if (getType().equals(Long.class)) {
+			return new CalcSeries.LongSeries.FuncSeries(op, this, series);
+		}
+		throw new UnsupportedOperationException();
+	}
+	
+	
+	@Override
+	public SeriesView<V> add(V value) {
+		return op(Op.ADD, value);
+	}
 	@Override
 	public SeriesView<V> add(double value) {
 		return add(castToType(value));
 	}
-	
 	@Override
 	public SeriesView<V> add(long value) {
 		return add(castToType(value));
 	}
-	
 	@Override
-	public SeriesView<V> add(final DataSeries<?> series) {
-		if (this.length() != series.length()) {
-			throw new IllegalArgumentException("Can not add two DataSeries with differing lengths.");
-		}
-		if (getType().equals(Float.class)) {
-			return (SeriesView<V>) new CalcSeries.FloatSeries.AddSeries(this, series);
-		}
-		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.DoubleSeries.AddSeries(this, series);
-		}
-		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.IntSeries.AddSeries(this, series);
-		}
-		if (getType().equals(Long.class)) {
-			return (SeriesView<V>) new CalcSeries.LongSeries.AddSeries(this, series);
-		}
-		throw new UnsupportedOperationException();
+	public SeriesView<V> add(DataSeries<?> series) {
+		return op(Op.ADD, series);
+	}
+	@Override
+	public SeriesView<V> add(DataValue<?> value) {
+		return op(Op.ADD, value);
 	}
 	
-
 	@Override
 	public SeriesView<V> subtract(V value) {
-		if (getType().equals(Float.class)) {
-			return (SeriesView<V>) new CalcSeries.FloatSeries.Subtract(this, (Float) castToNumericType(value));
-		}
-		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.DoubleSeries.Subtract(this, (Double) castToNumericType(value));
-		}
-		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.IntSeries.Subtract(this, (Integer) castToNumericType(value));
-		}
-		if (getType().equals(Long.class)) {
-			return (SeriesView<V>) new CalcSeries.LongSeries.Subtract(this, (Long) castToNumericType(value));
-		}
-		throw new UnsupportedOperationException();
+		return op(Op.SUBTRACT, value);
 	}
-	
 	@Override
 	public SeriesView<V> subtract(double value) {
-		return subtract(castToType(value));
+		return add(castToType(value));
 	}
-	
 	@Override
 	public SeriesView<V> subtract(long value) {
-		return subtract(castToType(value));
+		return add(castToType(value));
 	}
-	
 	@Override
 	public SeriesView<V> subtract(DataSeries<?> series) {
-		if (this.length() != series.length()) {
-			throw new IllegalArgumentException("Can not subtract two DataSeries with differing lengths.");
-		}
-		if (getType().equals(Float.class)) {
-			return (SeriesView<V>) new CalcSeries.FloatSeries.SubtractSeries(this, series);
-		}
-		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.DoubleSeries.SubtractSeries(this, series);
-		}
-		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.IntSeries.SubtractSeries(this, series);
-		}
-		if (getType().equals(Long.class)) {
-			return (SeriesView<V>) new CalcSeries.LongSeries.SubtractSeries(this, series);
-		}
-		throw new UnsupportedOperationException();
+		return op(Op.SUBTRACT, series);
 	}
-	
+	@Override
+	public SeriesView<V> subtract(DataValue<?> value) {
+		return op(Op.SUBTRACT, value);
+	}
 	
 	@Override
 	public SeriesView<V> multiply(V value) {
-		if (getType().equals(Float.class)) {
-			return (SeriesView<V>) new CalcSeries.FloatSeries.Multiply(this, (Float) castToNumericType(value));
-		}
-		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.DoubleSeries.Multiply(this, (Double) castToNumericType(value));
-		}
-		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.IntSeries.Multiply(this, (Integer) castToNumericType(value));
-		}
-		if (getType().equals(Long.class)) {
-			return (SeriesView<V>) new CalcSeries.LongSeries.Multiply(this, (Long) castToNumericType(value));
-		}
-		throw new UnsupportedOperationException();
+		return op(Op.MULTIPLY, value);
 	}
-	
 	@Override
 	public SeriesView<V> multiply(double value) {
-		return multiply(castToType(value));
+		return add(castToType(value));
 	}
-	
 	@Override
 	public SeriesView<V> multiply(long value) {
-		return multiply(castToType(value));
+		return add(castToType(value));
 	}
-	
 	@Override
 	public SeriesView<V> multiply(DataSeries<?> series) {
-		if (this.length() != series.length()) {
-			throw new IllegalArgumentException("Can not multiply two DataSeries with differing lengths.");
-		}
-		if (getType().equals(Float.class)) {
-			return (SeriesView<V>) new CalcSeries.FloatSeries.MultiplySeries(this, series);
-		}
-		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.DoubleSeries.MultiplySeries(this, series);
-		}
-		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.IntSeries.MultiplySeries(this, series);
-		}
-		if (getType().equals(Long.class)) {
-			return (SeriesView<V>) new CalcSeries.LongSeries.MultiplySeries(this, series);
-		}
-		throw new UnsupportedOperationException();
+		return op(Op.MULTIPLY, series);
 	}
-	
+	@Override
+	public SeriesView<V> multiply(DataValue<?> value) {
+		return op(Op.MULTIPLY, value);
+	}
 	
 	@Override
 	public SeriesView<V> divide(V value) {
-		if (getType().equals(Float.class)) {
-			return (SeriesView<V>) new CalcSeries.FloatSeries.Divide(this, (Float) castToNumericType(value));
-		}
-		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.DoubleSeries.Divide(this, (Double) castToNumericType(value));
-		}
-		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.IntSeries.Divide(this, (Integer) castToNumericType(value));
-		}
-		if (getType().equals(Long.class)) {
-			return (SeriesView<V>) new CalcSeries.LongSeries.Divide(this, (Long) castToNumericType(value));
-		}
-		throw new UnsupportedOperationException();
+		return op(Op.DIVIDE, value);
 	}
-	
 	@Override
 	public SeriesView<V> divide(double value) {
-		return divide(castToType(value));
+		return add(castToType(value));
 	}
-	
 	@Override
 	public SeriesView<V> divide(long value) {
-		return divide(castToType(value));
+		return add(castToType(value));
 	}
-
 	@Override
 	public SeriesView<V> divide(DataSeries<?> series) {
-		if (this.length() != series.length()) {
-			throw new IllegalArgumentException("Can not divide two DataSeries with differing lengths.");
-		}
-		if (getType().equals(Float.class)) {
-			return (SeriesView<V>) new CalcSeries.FloatSeries.DivideSeries(this, series);
-		}
-		if (getType().equals(Double.class)) {
-			return (SeriesView<V>) new CalcSeries.DoubleSeries.DivideSeries(this, series);
-		}
-		if (getType().equals(Integer.class)) {
-			return (SeriesView<V>) new CalcSeries.IntSeries.DivideSeries(this, series);
-		}
-		if (getType().equals(Long.class)) {
-			return (SeriesView<V>) new CalcSeries.LongSeries.DivideSeries(this, series);
-		}
-		throw new UnsupportedOperationException();
+		return op(Op.DIVIDE, series);
+	}
+	@Override
+	public SeriesView<V> divide(DataValue<?> value) {
+		return op(Op.DIVIDE, value);
 	}
 	
 	
@@ -988,8 +1006,8 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 			cache.resize(length());
 
 			DataSeries<?> input = inputSeries.get(0);
-			Number minObj = (Number) input.minValue();
-			Number maxObj = (Number) input.maxValue();
+			Number minObj = (Number) input.min().get();
+			Number maxObj = (Number) input.max().get();
 
 			if (minObj instanceof Float || minObj instanceof Double) {
 				double min = ((Number) minObj).doubleValue();

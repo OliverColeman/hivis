@@ -17,6 +17,8 @@
 package hivis.data;
 
 /**
+ * Represents a change to a {@link DataSeries}.
+ * 
  * @author O. J. Coleman
  */
 public enum DataSeriesChange {

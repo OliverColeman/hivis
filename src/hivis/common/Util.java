@@ -161,7 +161,47 @@ public class Util {
 		
 		return sb.toString();
 	}
-
+	
+	
+	/**
+	 * Given two numeric class types, return the most generic.
+	 * @param c1 Numeric type 1
+	 * @param c2 Numeric type 2.
+	 * @param dataLossWarnMessage Whether to show a warning if data loss might occur (when one class is floating-point and the other long).
+	 */
+	public static Class<? extends Number> getEnvelopeNumberType(Class<Number> c1, Class<Number> c2, boolean dataLossWarnMessage) {
+		// If either of them is double then we need double.
+		if (c1.equals(Double.class) || c2.equals(Double.class)) {
+			if (c1.equals(Long.class) || c2.equals(Long.class)) {
+				if (dataLossWarnMessage) {
+					System.err.println("Warning: conversion from long integers to real numbers, possible data loss on long integer data.");
+					throw new RuntimeException();
+				}
+			}
+			return Double.class;
+		}
+		
+		// If one is float and the other long we need double (double can't store the entire range of long, but can store most).
+		if (c1.equals(Float.class) || c2.equals(Float.class)) {
+			if (c1.equals(Long.class) || c2.equals(Long.class)) {
+				if (dataLossWarnMessage) {
+					System.err.println("Warning: conversion from long integers to real numbers, possible data loss on long integer data.");
+					throw new RuntimeException();
+				}
+				return Double.class;
+			}
+			
+			if (c1.equals(Integer.class) || c2.equals(Integer.class)) return Double.class;
+			
+			return Float.class;				
+		}
+		
+		if (c1.equals(Long.class) || c2.equals(Long.class)) return Long.class;
+		if (c1.equals(Integer.class) || c2.equals(Integer.class)) return Integer.class;
+		if (c1.equals(Short.class) || c2.equals(Short.class)) return Short.class;
+		return Byte.class;
+	}
+	
 	
 	/**
 	 * Try to determine the date format of the given String.

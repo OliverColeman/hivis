@@ -27,6 +27,11 @@ import hivis.data.DataSeriesInteger;
 import hivis.data.DataSeriesDouble;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
+import hivis.data.DataValue;
+import hivis.data.DataValueDouble;
+import hivis.data.DataValueFloat;
+import hivis.data.DataValueInteger;
+import hivis.data.DataValueLong;
 import hivis.data.reader.SpreadSheetReader;
 import hivis.data.view.CalcSeries;
 import processing.core.PApplet;
@@ -42,6 +47,33 @@ public class HV {
 	public static final int DOUBLE = 1;
 	
 	public static int defaultFloatingPointPrecision = FLOAT;
+	
+	
+	/**
+	 * Create a new DataValue with the specified value.
+	 */
+	public static DataValue<Integer> newIntegerValue(int v) {
+		return new DataValueInteger(v);
+	}
+	/**
+	 * Create a new DataValue with the specified value.
+	 */
+	public static DataValue<Long> newValue(long v) {
+		return new DataValueLong(v);
+	}
+	/**
+	 * Create a new DataValue with the specified value.
+	 */
+	public static DataValue<Float> newValue(float v) {
+		return new DataValueFloat(v);
+	}
+	/**
+	 * Create a new DataValue with the specified value.
+	 */
+	public static DataValue<Double> newRealValue(double v) {
+		return new DataValueDouble(v);
+	}
+	
 	
 	/**
 	 * Create a new DataTable.

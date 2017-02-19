@@ -17,12 +17,47 @@
 package hivis.data;
 
 /**
- * Represents a change to a {@link DataTable}.
+ * Data series storing single-precision floating-point numbers (represented as primitive float for efficiency).
  * 
  * @author O. J. Coleman
  */
-public enum DataTableChange {
-	SeriesAdded,
-	SeriesRemoved,
-	SeriesReordered
+public class DataValueFloat extends AbstractDataValue<Float> {
+	protected float value;
+	
+	
+	public DataValueFloat() {
+	}
+	
+	public DataValueFloat(float value) {
+		this.value = value;
+	}
+	
+	
+	@Override
+	public Float get() {
+		return getFloat();
+	}
+	
+	@Override
+	public float getFloat() {
+		return value;
+	}
+	
+	@Override
+	public synchronized void setValue(Float value) {
+		if (this.value != value) {
+			this.value = value;
+			this.setDataChanged(null);
+		}
+	}
+
+	@Override
+	public Float getEmptyValue() {
+		return Float.NaN;
+	}
+	
+	@Override
+	public DataValueFloat getNewDataValue() {
+		return new DataValueFloat();
+	}
 }

@@ -17,12 +17,47 @@
 package hivis.data;
 
 /**
- * Represents a change to a {@link DataTable}.
+ * Data series storing double-precision floating-point numbers (represented as primitive double for efficiency).
  * 
  * @author O. J. Coleman
  */
-public enum DataTableChange {
-	SeriesAdded,
-	SeriesRemoved,
-	SeriesReordered
+public class DataValueDouble extends AbstractDataValue<Double> {
+	protected double value;
+	
+	
+	public DataValueDouble() {
+	}
+	
+	public DataValueDouble(double value) {
+		this.value = value;
+	}
+	
+	
+	@Override
+	public Double get() {
+		return getDouble();
+	}
+	
+	@Override
+	public double getDouble() {
+		return value;
+	}
+	
+	@Override
+	public synchronized void setValue(Double value) {
+		if (this.value != value) {
+			this.value = value;
+			this.setDataChanged(null);
+		}
+	}
+
+	@Override
+	public Double getEmptyValue() {
+		return Double.NaN;
+	}
+	
+	@Override
+	public DataValueDouble getNewDataValue() {
+		return new DataValueDouble();
+	}
 }

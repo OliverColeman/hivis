@@ -16,15 +16,13 @@
 
 package hivis.data.view;
 
-import java.util.List;
 
-import hivis.common.HV;
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataSeries;
-import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesInteger;
 import hivis.data.DataSeriesLong;
+import hivis.data.DataValue;
 import hivis.data.DataSeriesDouble;
 import hivis.data.DataSeriesFloat;
 
@@ -45,7 +43,7 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	 * {@link #get(int)}, {@link #getBoolean(int)} etc.
 	 */
 	protected DataSeries<O> cache;
-
+	
 
 	/**
 	 * Create a DataSeries function of the given input series, with length equal
@@ -53,6 +51,15 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	 */
 	public CalcSeries(DataSeries<I>... input) {
 		super(input);
+		setupCache();
+	}
+
+	/**
+	 * Create a DataSeries function of the given input value and series, with length equal
+	 * to the (first) input series.
+	 */
+	public CalcSeries(DataValue<?> dv, DataSeries<I>... input) {
+		super(dv, input);
 		setupCache();
 	}
 
@@ -224,7 +231,9 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		public FloatSeries(int length) {
 			super(length);
 		}
-		
+		public FloatSeries(DataValue<?> dv, DataSeries<I>... input) {
+			super(dv, input);
+		}
 		public FloatSeries(DataSeries<I>... input) {
 			super(input);
 		}
@@ -253,89 +262,84 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		}
 		
 		
-		protected static class Func extends FloatSeries {
-			protected final DataSeries<?> series;
-			protected final DataSeries<?> seriesOther;
+		public static class FuncValue<I> extends FloatSeries<I> {
+			protected final Op op;
 			protected final float value;
-			public Func(DataSeries<?> series, float value) {
-				super(series);
-				this.series = series;
-				this.seriesOther = null;
-				this.value = value;
-			}
-			public Func(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-				this.series = series;
-				this.seriesOther = seriesOther;
+			public FuncValue(Op op, DataSeries<I> series, DataValue<I> dv) {
+				super(dv, series);
+				this.op = op;
 				this.value = 0;
 			}
-			public int length() {
-				return ((DataSeries<?>) inputSeries.get(0)).length();
+			public FuncValue(Op op, DataSeries<I> series, float value) {
+				super(series);
+				this.op = op;
+				this.value = value;
+			}
+			@Override
+			public void updateView(Object cause) {
+				cache.resize(length());
+				DataSeries<I> series = getInputSeries(0);
+				float v = inputValue != null ? inputValue.getFloat() : this.value;
+				switch (op) {
+				case ADD:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getFloat(i) + v);
+					}
+					return; 
+				case SUBTRACT:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getFloat(i) - v);
+					}
+					return; 
+				case MULTIPLY:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getFloat(i) * v);
+					}
+					return; 
+				case DIVIDE:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getFloat(i) / v);
+					}
+					return; 
+				}
+				throw new UnsupportedOperationException(op + " is not supported by " + this.getClass().getCanonicalName());
 			}
 		}
 		
-		public static class Add extends Func {
-			public Add(DataSeries<?> series, float value) {
-				super(series, value);
+		public static class FuncSeries<I> extends FloatSeries<I> {
+			protected final Op op;
+			public FuncSeries(Op op, DataSeries<I> series1, DataSeries<I> series2) {
+				super(series1, series2);
+				this.op = op;
 			}
-			public float calcFloat(int index) {
-				return series.getFloat(index) + value;
-			}
-		}
-		public static class AddSeries extends Func {
-			public AddSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public float calcFloat(int index) {
-				return series.getFloat(index) + seriesOther.getFloat(index);
-			}
-		}
-		public static class Subtract extends Func {
-			public Subtract(DataSeries<?> series, float value) {
-				super(series, value);
-			}
-			public float calcFloat(int index) {
-				return series.getFloat(index) - value;
-			}
-		}
-		public static class SubtractSeries extends Func {
-			public SubtractSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public float calcFloat(int index) {
-				return series.getFloat(index) - seriesOther.getFloat(index);
-			}
-		}
-		public static class Multiply extends Func {
-			public Multiply(DataSeries<?> series, float value) {
-				super(series, value);
-			}
-			public float calcFloat(int index) {
-				return series.getFloat(index) * value;
-			}
-		}
-		public static class MultiplySeries extends Func {
-			public MultiplySeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public float calcFloat(int index) {
-				return series.getFloat(index) * seriesOther.getFloat(index);
-			}
-		}
-		public static class Divide extends Func {
-			public Divide(DataSeries<?> series, float value) {
-				super(series, value);
-			}
-			public float calcFloat(int index) {
-				return series.getFloat(index) / value;
-			}
-		}
-		public static class DivideSeries extends Func {
-			public DivideSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public float calcFloat(int index) {
-				return series.getFloat(index) / seriesOther.getFloat(index);
+			@Override
+			public void updateView(Object cause) {
+				cache.resize(length());
+				DataSeries<I> series1 = getInputSeries(0);
+				DataSeries<I> series2 = getInputSeries(1);
+				switch (op) {
+				case ADD:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getFloat(i) + series2.getFloat(i));
+					}
+					return; 
+				case SUBTRACT:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getFloat(i) - series2.getFloat(i));
+					}
+					return; 
+				case MULTIPLY:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getFloat(i) * series2.getFloat(i));
+					}
+					return; 
+				case DIVIDE:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getFloat(i) / series2.getFloat(i));
+					}
+					return; 
+				}
+				throw new UnsupportedOperationException(op + " is not supported by " + this.getClass().getCanonicalName());
 			}
 		}
 	}
@@ -347,7 +351,9 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		public DoubleSeries(int length) {
 			super(length);
 		}
-		
+		public DoubleSeries(DataValue<?> dv, DataSeries<I>... input) {
+			super(dv, input);
+		}
 		public DoubleSeries(DataSeries<I>... input) {
 			super(input);
 		}
@@ -376,89 +382,84 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		}
 		
 		
-		protected static class Func extends DoubleSeries {
-			protected final DataSeries<?> series;
-			protected final DataSeries<?> seriesOther;
+		public static class FuncValue<I> extends DoubleSeries<I> {
+			protected final Op op;
 			protected final double value;
-			public Func(DataSeries<?> series, double value) {
-				super(series);
-				this.series = series;
-				this.seriesOther = null;
-				this.value = value;
-			}
-			public Func(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-				this.series = series;
-				this.seriesOther = seriesOther;
+			public FuncValue(Op op, DataSeries<I> series, DataValue<I> dv) {
+				super(dv, series);
+				this.op = op;
 				this.value = 0;
 			}
-			public int length() {
-				return ((DataSeries<?>) inputSeries.get(0)).length();
+			public FuncValue(Op op, DataSeries<I> series, double value) {
+				super(series);
+				this.op = op;
+				this.value = value;
+			}
+			@Override
+			public void updateView(Object cause) {
+				cache.resize(length());
+				DataSeries<I> series = getInputSeries(0);
+				double v = inputValue != null ? inputValue.getDouble() : this.value;
+				switch (op) {
+				case ADD:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getDouble(i) + v);
+					}
+					return; 
+				case SUBTRACT:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getDouble(i) - v);
+					}
+					return; 
+				case MULTIPLY:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getDouble(i) * v);
+					}
+					return; 
+				case DIVIDE:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getDouble(i) / v);
+					}
+					return; 
+				}
+				throw new UnsupportedOperationException(op + " is not supported by " + this.getClass().getCanonicalName());
 			}
 		}
 		
-		public static class Add extends Func {
-			public Add(DataSeries<?> series, double value) {
-				super(series, value);
+		public static class FuncSeries<I> extends DoubleSeries<I> {
+			protected final Op op;
+			public FuncSeries(Op op, DataSeries<I> series1, DataSeries<I> series2) {
+				super(series1, series2);
+				this.op = op;
 			}
-			public double calcDouble(int index) {
-				return series.getDouble(index) + value;
-			}
-		}
-		public static class AddSeries extends Func {
-			public AddSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public double calcDouble(int index) {
-				return series.getDouble(index) + seriesOther.getDouble(index);
-			}
-		}
-		public static class Subtract extends Func {
-			public Subtract(DataSeries<?> series, double value) {
-				super(series, value);
-			}
-			public double calcDouble(int index) {
-				return series.getDouble(index) - value;
-			}
-		}
-		public static class SubtractSeries extends Func {
-			public SubtractSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public double calcDouble(int index) {
-				return series.getDouble(index) - seriesOther.getDouble(index);
-			}
-		}
-		public static class Multiply extends Func {
-			public Multiply(DataSeries<?> series, double value) {
-				super(series, value);
-			}
-			public double calcDouble(int index) {
-				return series.getDouble(index) * value;
-			}
-		}
-		public static class MultiplySeries extends Func {
-			public MultiplySeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public double calcDouble(int index) {
-				return series.getDouble(index) * seriesOther.getDouble(index);
-			}
-		}
-		public static class Divide extends Func {
-			public Divide(DataSeries<?> series, double value) {
-				super(series, value);
-			}
-			public double calcDouble(int index) {
-				return series.getDouble(index) / value;
-			}
-		}
-		public static class DivideSeries extends Func {
-			public DivideSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public double calcDouble(int index) {
-				return series.getDouble(index) / seriesOther.getDouble(index);
+			@Override
+			public void updateView(Object cause) {
+				cache.resize(length());
+				DataSeries<I> series1 = getInputSeries(0);
+				DataSeries<I> series2 = getInputSeries(1);
+				switch (op) {
+				case ADD:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getDouble(i) + series2.getDouble(i));
+					}
+					return; 
+				case SUBTRACT:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getDouble(i) - series2.getDouble(i));
+					}
+					return; 
+				case MULTIPLY:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getDouble(i) * series2.getDouble(i));
+					}
+					return; 
+				case DIVIDE:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getDouble(i) / series2.getDouble(i));
+					}
+					return; 
+				}
+				throw new UnsupportedOperationException(op + " is not supported by " + this.getClass().getCanonicalName());
 			}
 		}
 	}
@@ -470,7 +471,9 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		public IntSeries(int length) {
 			super(length);
 		}
-		
+		public IntSeries(DataValue<?> dv, DataSeries<I>... input) {
+			super(dv, input);
+		}
 		public IntSeries(DataSeries<I>... input) {
 			super(input);
 		}
@@ -499,89 +502,84 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		}
 		
 		
-		protected static class Func extends IntSeries {
-			protected final DataSeries<?> series;
-			protected final DataSeries<?> seriesOther;
+		public static class FuncValue<I> extends IntSeries<I> {
+			protected final Op op;
 			protected final int value;
-			public Func(DataSeries<?> series, int value) {
-				super(series);
-				this.series = series;
-				this.seriesOther = null;
-				this.value = value;
-			}
-			public Func(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-				this.series = series;
-				this.seriesOther = seriesOther;
+			public FuncValue(Op op, DataSeries<I> series, DataValue<I> dv) {
+				super(dv, series);
+				this.op = op;
 				this.value = 0;
 			}
-			public int length() {
-				return series.length();
+			public FuncValue(Op op, DataSeries<I> series, int value) {
+				super(series);
+				this.op = op;
+				this.value = value;
+			}
+			@Override
+			public void updateView(Object cause) {
+				cache.resize(length());
+				DataSeries<I> series = getInputSeries(0);
+				int v = inputValue != null ? inputValue.getInt() : this.value;
+				switch (op) {
+				case ADD:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getInt(i) + v);
+					}
+					return; 
+				case SUBTRACT:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getInt(i) - v);
+					}
+					return; 
+				case MULTIPLY:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getInt(i) * v);
+					}
+					return; 
+				case DIVIDE:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getInt(i) / v);
+					}
+					return; 
+				}
+				throw new UnsupportedOperationException(op + " is not supported by " + this.getClass().getCanonicalName());
 			}
 		}
 		
-		public static class Add extends Func {
-			public Add(DataSeries<?> series, int value) {
-				super(series, value);
+		public static class FuncSeries<I> extends IntSeries<I> {
+			protected final Op op;
+			public FuncSeries(Op op, DataSeries<I> series1, DataSeries<I> series2) {
+				super(series1, series2);
+				this.op = op;
 			}
-			public int calcInteger(int index) {
-				return series.getInt(index) + value;
-			}
-		}
-		public static class AddSeries extends Func {
-			public AddSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public int calcInteger(int index) {
-				return series.getInt(index) + seriesOther.getInt(index);
-			}
-		}
-		public static class Subtract extends Func {
-			public Subtract(DataSeries<?> series, int value) {
-				super(series, value);
-			}
-			public int calcInteger(int index) {
-				return series.getInt(index) - value;
-			}
-		}
-		public static class SubtractSeries extends Func {
-			public SubtractSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public int calcInteger(int index) {
-				return series.getInt(index) - seriesOther.getInt(index);
-			}
-		}
-		public static class Multiply extends Func {
-			public Multiply(DataSeries<?> series, int value) {
-				super(series, value);
-			}
-			public int calcInteger(int index) {
-				return series.getInt(index) * value;
-			}
-		}
-		public static class MultiplySeries extends Func {
-			public MultiplySeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public int calcInteger(int index) {
-				return series.getInt(index) * seriesOther.getInt(index);
-			}
-		}
-		public static class Divide extends Func {
-			public Divide(DataSeries<?> series, int value) {
-				super(series, value);
-			}
-			public int calcInteger(int index) {
-				return series.getInt(index) / value;
-			}
-		}
-		public static class DivideSeries extends Func {
-			public DivideSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public int calcInteger(int index) {
-				return series.getInt(index) / seriesOther.getInt(index);
+			@Override
+			public void updateView(Object cause) {
+				cache.resize(length());
+				DataSeries<I> series1 = getInputSeries(0);
+				DataSeries<I> series2 = getInputSeries(1);
+				switch (op) {
+				case ADD:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getInt(i) + series2.getInt(i));
+					}
+					return; 
+				case SUBTRACT:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getInt(i) - series2.getInt(i));
+					}
+					return; 
+				case MULTIPLY:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getInt(i) * series2.getInt(i));
+					}
+					return; 
+				case DIVIDE:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getInt(i) / series2.getInt(i));
+					}
+					return; 
+				}
+				throw new UnsupportedOperationException(op + " is not supported by " + this.getClass().getCanonicalName());
 			}
 		}
 	}
@@ -592,7 +590,9 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		public LongSeries(int length) {
 			super(length);
 		}
-		
+		public LongSeries(DataValue<?> dv, DataSeries<I>... input) {
+			super(dv, input);
+		}
 		public LongSeries(DataSeries<I>... input) {
 			super(input);
 		}
@@ -620,116 +620,90 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 			throw new RuntimeException("Implementations of CalcSeries.Long must override calcLong(long).");
 		}
 		
-		
-		protected static class Func extends LongSeries {
-			protected final DataSeries<?> series;
-			protected final DataSeries<?> seriesOther;
+
+		public static class FuncValue<I> extends LongSeries<I> {
+			protected final Op op;
 			protected final long value;
-			public Func(DataSeries<?> series, long value) {
-				super(series);
-				this.series = series;
-				this.seriesOther = null;
-				this.value = value;
-			}
-			public Func(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-				this.series = series;
-				this.seriesOther = seriesOther;
+			public FuncValue(Op op, DataSeries<I> series, DataValue<I> dv) {
+				super(dv, series);
+				this.op = op;
 				this.value = 0;
 			}
-			public int length() {
-				return series.length();
+			public FuncValue(Op op, DataSeries<I> series, long value) {
+				super(series);
+				this.op = op;
+				this.value = value;
+			}
+			@Override
+			public void updateView(Object cause) {
+				cache.resize(length());
+				DataSeries<I> series = getInputSeries(0);
+				long v = inputValue != null ? inputValue.getLong() : this.value;
+				switch (op) {
+				case ADD:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getLong(i) + v);
+					}
+					return; 
+				case SUBTRACT:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getLong(i) - v);
+					}
+					return; 
+				case MULTIPLY:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getLong(i) * v);
+					}
+					return; 
+				case DIVIDE:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series.getLong(i) / v);
+					}
+					return; 
+				}
+				throw new UnsupportedOperationException(op + " is not supported by " + this.getClass().getCanonicalName());
 			}
 		}
 		
-		public static class Add extends Func {
-			public Add(DataSeries<?> series, long value) {
-				super(series, value);
+		public static class FuncSeries<I> extends LongSeries<I> {
+			protected final Op op;
+			public FuncSeries(Op op, DataSeries<I> series1, DataSeries<I> series2) {
+				super(series1, series2);
+				this.op = op;
 			}
-			public long calcLong(int index) {
-				return series.getLong(index) + value;
-			}
-		}
-		public static class AddSeries extends Func {
-			public AddSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public long calcLong(int index) {
-				return series.getLong(index) + seriesOther.getLong(index);
-			}
-		}
-		public static class Subtract extends Func {
-			public Subtract(DataSeries<?> series, long value) {
-				super(series, value);
-			}
-			public long calcLong(int index) {
-				return series.getLong(index) - value;
-			}
-		}
-		public static class SubtractSeries extends Func {
-			public SubtractSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public long calcLong(int index) {
-				return series.getLong(index) - seriesOther.getLong(index);
-			}
-		}
-		public static class Multiply extends Func {
-			public Multiply(DataSeries<?> series, long value) {
-				super(series, value);
-			}
-			public long calcLong(int index) {
-				return series.getLong(index) * value;
-			}
-		}
-		public static class MultiplySeries extends Func {
-			public MultiplySeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public long calcLong(int index) {
-				return series.getLong(index) * seriesOther.getLong(index);
-			}
-		}
-		public static class Divide extends Func {
-			public Divide(DataSeries<?> series, long value) {
-				super(series, value);
-			}
-			public long calcLong(int index) {
-				return series.getLong(index) / value;
-			}
-		}
-		public static class DivideSeries extends Func {
-			public DivideSeries(DataSeries<?> series, DataSeries<?> seriesOther) {
-				super(series, seriesOther);
-			}
-			public long calcLong(int index) {
-				return series.getLong(index) / seriesOther.getLong(index);
+			@Override
+			public void updateView(Object cause) {
+				cache.resize(length());
+				DataSeries<I> series1 = getInputSeries(0);
+				DataSeries<I> series2 = getInputSeries(1);
+				switch (op) {
+				case ADD:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getLong(i) + series2.getLong(i));
+					}
+					return; 
+				case SUBTRACT:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getLong(i) - series2.getLong(i));
+					}
+					return; 
+				case MULTIPLY:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getLong(i) * series2.getLong(i));
+					}
+					return; 
+				case DIVIDE:
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, series1.getLong(i) / series2.getLong(i));
+					}
+					return; 
+				}
+				throw new UnsupportedOperationException(op + " is not supported by " + this.getClass().getCanonicalName());
 			}
 		}
 	}
+	
+	public enum Op {
+		ADD, SUBTRACT, MULTIPLY, DIVIDE
+	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

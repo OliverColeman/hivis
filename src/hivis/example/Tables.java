@@ -25,7 +25,7 @@ import hivis.data.view.RowFilter;
 import hivis.data.view.TableViewTranspose;
 
 /**
- * Examples of working with DataTables.
+ * Examples of working with {@link DataTable}s.
  * 
  * @author O. J. Coleman
  */

@@ -27,6 +27,7 @@ import hivis.data.AbstractDataSeries;
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataSeries;
+import hivis.data.DataValue;
 
 /**
  * Base class for creating {@link DataSeries} that are optionally based on one or more other DataSeries.
@@ -42,28 +43,54 @@ public abstract class AbstractSeriesView<I, O> extends AbstractDataSeries<O> imp
 	 * The (optional) input series on which this view is based. Null if no input series are used.
 	 */
 	protected List<DataSeries<I>> inputSeries;
+	
+	/**
+	 * The (optional) input value on which this view is based. Null if no input value is used.
+	 */
+	public final DataValue<?> inputValue;
 
 	/**
-	 * Create a ViewSeries for the given input series, with length equal to the (first) input series.
+	 * Create a ViewSeries for the given value (may be null) and input series, with length equal to the (first) input series.
 	 */
 	public AbstractSeriesView(DataSeries<I>... input) {
-		inputSeries = Arrays.asList(Arrays.copyOf(input, input.length));
+		inputSeries = Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(input, input.length)));
 		for (DataSeries<I> s : inputSeries) {
 			s.addChangeListener(this);
 		}
+		inputValue = null;
+	}
+	
+	/**
+	 * Create a ViewSeries for the given value (may be null) and input series, with length equal to the (first) input series.
+	 */
+	public AbstractSeriesView(DataValue<?> value, DataSeries<I>... input) {
+		inputSeries = Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(input, input.length)));
+		for (DataSeries<I> s : inputSeries) {
+			s.addChangeListener(this);
+		}
+		inputValue = value;
+		value.addChangeListener(this);
 	}
 	
 	/**
 	 * Create a ViewSeries that is not based in input series.
 	 */
 	public AbstractSeriesView() {
+		inputValue = null;
 	}
 	
 	/**
 	 * Get the list of input series for this view.
 	 */
 	public List<DataSeries<I>> getInputSeries() {
-		return Collections.unmodifiableList(inputSeries);
+		return inputSeries;
+	}
+	
+	/**
+	 * Get the specified input series for this view.
+	 */
+	public DataSeries<I> getInputSeries(int index) {
+		return inputSeries.get(index);
 	}
 	
 	@Override

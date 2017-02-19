@@ -423,7 +423,7 @@ public class LSListMap<K, V> implements ListMap<K, V> {
 					if (s1.containsKey(c*2) != s2.containsKey(c*2)) throw new RuntimeException("containsKey");
 					break;
 				case 2: 
-					valD = r.nextBoolean() ? r.nextDouble() : (s1.isEmpty() ? 0 : s1.values().iterator().next());
+					valD = r.nextBoolean() ? r.nextDouble() : (s1.isEmpty() ? 0.0 : s1.values().iterator().next());
 					if (s1.containsValue(valD) != s2.containsValue(valD)) throw new RuntimeException("containsValue");
 					break;
 				case 3: 
@@ -432,7 +432,7 @@ public class LSListMap<K, V> implements ListMap<K, V> {
 					if (!s2.asMap().equals(s1)) throw new RuntimeException("equals\n" + s1.toString() + "\n" + s2.toString());
 					break;
 				case 5:
-					valL = r.nextBoolean() ? r.nextInt() : (s1.isEmpty() ? 0 : s1.keySet().iterator().next());
+					valL = (long) (r.nextBoolean() ? (double) r.nextInt() : (s1.isEmpty() ? 0L : s1.keySet().iterator().next()));
 					if (!Util.equalsIncNull(s1.get(valL), s2.get(valL))) throw new RuntimeException("get");
 				case 6: 
 					if (s1.isEmpty() != s2.isEmpty()) throw new RuntimeException("isEmpty");

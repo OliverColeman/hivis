@@ -17,12 +17,47 @@
 package hivis.data;
 
 /**
- * Represents a change to a {@link DataTable}.
+ * Data series storing longeger numbers (represented as primitive long for efficiency).
  * 
  * @author O. J. Coleman
  */
-public enum DataTableChange {
-	SeriesAdded,
-	SeriesRemoved,
-	SeriesReordered
+public class DataValueLong extends AbstractDataValue<Long> {
+	protected long value;
+	
+	
+	public DataValueLong() {
+	}
+	
+	public DataValueLong(long value) {
+		this.value = value;
+	}
+	
+	
+	@Override
+	public Long get() {
+		return getLong();
+	}
+	
+	@Override
+	public long getLong() {
+		return value;
+	}
+	
+	@Override
+	public synchronized void setValue(Long value) {
+		if (this.value != value) {
+			this.value = value;
+			this.setDataChanged(null);
+		}
+	}
+
+	@Override
+	public Long getEmptyValue() {
+		return Long.MIN_VALUE;
+	}
+	
+	@Override
+	public DataValueLong getNewDataValue() {
+		return new DataValueLong();
+	}
 }

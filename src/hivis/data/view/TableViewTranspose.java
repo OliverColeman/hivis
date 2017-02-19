@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import hivis.common.Util;
 import hivis.data.AbstractDataSeries;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
@@ -110,37 +111,13 @@ public class TableViewTranspose extends AbstractTableView<DataSeries<?>> {
 	
 	private Class<?> getType(Class<?> current, DataSeries<?> series) {
 		Class<?> other = series.getType();
-		
 		if (current == null) return other;
 		
 		if (other.isAssignableFrom(current)) return other;
 		if (current.isAssignableFrom(other)) return current;
 		
 		if (Number.class.isAssignableFrom(current) && Number.class.isAssignableFrom(other)) {
-			// The series don't store the same type. If either of them is double then we need double.
-			if (current.equals(Double.class) || other.equals(Double.class)) {
-				if (current.equals(Long.class) || other.equals(Long.class)) {
-					System.err.println("Warning: transposing a table with long integers and real numbers, possible data loss on long data.");
-				}
-				return Double.class;
-			}
-			
-			// If one is float and the other long we need double (double can't store the entire range of long, but can store most).
-			if (current.equals(Float.class) || other.equals(Float.class)) {
-				if (current.equals(Long.class) || other.equals(Long.class)) {
-					System.err.println("Warning: transposing a table with long integers and real numbers, possible data loss on long data.");
-					return Double.class;
-				}
-				
-				if (current.equals(Integer.class) || other.equals(Integer.class)) return Double.class;
-				
-				return Float.class;				
-			}
-			
-			if (current.equals(Long.class) || other.equals(Long.class)) return Double.class;
-			if (current.equals(Integer.class) || other.equals(Integer.class)) return Integer.class;
-			if (current.equals(Short.class) || other.equals(Short.class)) return Short.class;
-			return Byte.class;
+			return Util.getEnvelopeNumberType((Class<Number>) current, (Class<Number>) other, true);
 		}
 				
 		throw new IllegalArgumentException("Cannot transpose a table with incompatible series types.");

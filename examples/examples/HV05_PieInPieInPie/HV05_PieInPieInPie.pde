@@ -26,10 +26,8 @@ void setup() {
   textSize(14);
   
   // Get data from spread sheet. 
-  SpreadSheetReader.Config config = new SpreadSheetReader.Config();
-  config.sourceFile("Employee Diversity in tech.xlsx").headerRowIndex(1).rowIndex(2);
   data = HV.loadSpreadSheet(
-    HV.loadSSConfig().sourceFile("Employee Diversity in tech.xlsx").headerRowIndex(1).rowIndex(2)
+    HV.loadSSConfig().sourceFile(sketchFile("Employee Diversity in tech.xlsx")).headerRowIndex(1).rowIndex(2)
   );
   
   // Get male/female data (with names as first series).

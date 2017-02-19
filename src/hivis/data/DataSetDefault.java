@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Default base class for any object representing a set of data. For example a vector, table or graph.
+ * Default base class for any object representing data via a {@link DataSet}. For example a series, table or graph.
  * It provides some basic data storage (name, container DataSet) as well as a framework for handling
  * changes to DataSets (see {@link #beginChanges(Object)}, {@link #setDataChanged(Object)} and 
  * {@link #finishChanges(Object)}.
@@ -116,8 +116,6 @@ public class DataSetDefault implements DataSet {
 		changeTypes.add(changeType);
 		
 		for (DataSet c : containers) {
-			if (c == null) System.out.println("null");
-
 			c.setDataChanged(changeType);
 		}
 		

@@ -17,12 +17,47 @@
 package hivis.data;
 
 /**
- * Represents a change to a {@link DataTable}.
+ * Data series storing integer numbers (represented as primitive int for efficiency).
  * 
  * @author O. J. Coleman
  */
-public enum DataTableChange {
-	SeriesAdded,
-	SeriesRemoved,
-	SeriesReordered
+public class DataValueInteger extends AbstractDataValue<Integer> {
+	protected int value;
+	
+	
+	public DataValueInteger() {
+	}
+	
+	public DataValueInteger(int value) {
+		this.value = value;
+	}
+	
+	
+	@Override
+	public Integer get() {
+		return getInt();
+	}
+	
+	@Override
+	public int getInt() {
+		return value;
+	}
+	
+	@Override
+	public synchronized void setValue(Integer value) {
+		if (this.value != value) {
+			this.value = value;
+			this.setDataChanged(null);
+		}
+	}
+
+	@Override
+	public Integer getEmptyValue() {
+		return Integer.MIN_VALUE;
+	}
+	
+	@Override
+	public DataValueInteger getNewDataValue() {
+		return new DataValueInteger();
+	}
 }

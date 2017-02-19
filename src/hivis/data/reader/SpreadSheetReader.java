@@ -334,7 +334,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 					DataSeries<?> s = dataset.getSeries(label);
 					
 					try {
-						Object val = getCellValue(row, column, columnCellTypes.get(column));
+						Object val = getCellValue(row, column, columnCellTypes.get(colLabelIdx));
 						
 						if (val == null) {
 							val = s.getEmptyValue();
@@ -387,13 +387,17 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 		if (excelSheet != null) {
 			Cell cell = excelSheet.getRow(row).getCell(column);
 			if (cell == null) return null;
-			switch (type) {
-				case STRING: return cell.getStringCellValue();
-				case BOOLEAN: return cell.getBooleanCellValue();
-				case NUMERIC: return cell.getNumericCellValue();
-				case DATE: return cell.getDateCellValue();
-				default: return null;
+			try {
+				switch (type) {
+					case STRING: return cell.getStringCellValue();
+					case BOOLEAN: return cell.getBooleanCellValue();
+					case NUMERIC: return cell.getNumericCellValue();
+					case DATE: return cell.getDateCellValue();
+					default: return null;
+				}
 			}
+			catch (Exception e) {}
+			return null;
 		}
 		
 		String v = getStringCellValue(row, column);
@@ -598,7 +602,8 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 		/**
 		 * Set the file to read data from.
 		 */
-		public Config sourceFile(String sourceFile) { this.sourceFile = new File(sourceFile); return this; }
+		public Config sourceFile(String sourceFile) { 
+			this.sourceFile = new File(sourceFile); return this; }
 		
 		protected int fileFormat = AUTO;
 		/**
@@ -696,7 +701,11 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	}
 	
 	public static void main(String[] args) {
-		DataTable data = HV.loadSpreadSheet(new File("/home/data/processing/data/test.csv"));
+		DataTable data = HV.loadSpreadSheet(
+			    HV.loadSSConfig().sourceFile("/home/data/processing/sketchbook/libraries/HiVis/examples/examples/HV05_PieInPieInPie/Employee Diversity in tech.xlsx").headerRowIndex(1).rowIndex(2)
+			  );
+		
+		//DataTable data = HV.loadSpreadSheet(new File("/home/data/processing/data/test.csv"));
 		  
 		//DataTable data = HV.loadSpreadSheet(new SpreadSheetReader.Config().sourceFile("/home/data/processing/data/test.csv").rowIndex(1).columnIndex(2).rowCount(5).columnCount(4));
 		

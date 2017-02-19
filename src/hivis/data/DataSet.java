@@ -34,7 +34,7 @@ public interface DataSet {
 	Set<DataSet> getContainers();
 
 	/**
-	 * Adds the given DataSet as a container for this DataSet, or it has already been added makes no changes.
+	 * Adds the given DataSet as a container for this DataSet, or if it has already been added makes no changes.
 	 */
 	void addContainer(DataSet container);
 	

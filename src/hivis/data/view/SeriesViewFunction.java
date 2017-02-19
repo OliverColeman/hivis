@@ -17,6 +17,7 @@
 package hivis.data.view;
 
 import hivis.data.DataSeries;
+import hivis.data.DataValue;
 
 /**
  * Base class for creating {@link DataSeries} that are calculated from zero, one or more other DataSeries.
@@ -30,14 +31,22 @@ public abstract class SeriesViewFunction<I, O> extends AbstractSeriesView<I, O> 
 	
 	
 	/**
-	 * Create a DataSeries function of the given input series, with length equal to the (first) input series.
+	 * Create a SeriesViewFunction function of the given input series, with length equal to the (first) input series.
 	 */
 	public SeriesViewFunction(DataSeries<I>... input) {
 		super(input);
 	}
 	
 	/**
-	 * Create a DataSeries function with the given length.
+	 * Create a SeriesViewFunction function of the given input value and series, with length equal
+	 * to the (first) input series.
+	 */
+	public SeriesViewFunction(DataValue<?> dv, DataSeries<I>... input) {
+		super(dv, input);
+	}
+	
+	/**
+	 * Create a SeriesViewFunction function with the given length.
 	 */
 	public SeriesViewFunction(int length) {
 		super();
