@@ -704,6 +704,18 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	}
 	
 	public enum Op {
-		ADD, SUBTRACT, MULTIPLY, DIVIDE
+		ADD(false), 
+		SUBTRACT(false), 
+		MULTIPLY(false), 
+		DIVIDE(true);
+		
+		Op(boolean ro) {
+			realOutput = ro;
+		}
+		
+		/**
+		 * Indicates that the output of this operation should be assumed to be a real value.
+		 */
+		public final boolean realOutput;
 	}
 }

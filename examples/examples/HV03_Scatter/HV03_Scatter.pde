@@ -18,10 +18,9 @@ int ySeriesIndex = 1;
 int hueSeriesIndex = 4;
 
 // The series containing the data we want to plot.
-// <Float> indicates that the series stores floating point (real) values.
-DataSeries<Float> xSeries;
-DataSeries<Float> ySeries;
-DataSeries<Float> hueSeries;
+DataSeries xSeries;
+DataSeries ySeries;
+DataSeries hueSeries;
 
 
 // Method containing one-off setup code.
@@ -40,13 +39,12 @@ void setup() {
   println(data);
   
   // Get the series containing the data we want to plot. 
-  // The asFloat() method converts (if necessary) and returns the series as a series representing floating point values.
-  xSeries = data.getSeries(xSeriesIndex).asFloat();
-  ySeries = data.getSeries(ySeriesIndex).asFloat();
+  xSeries = data.getSeries(xSeriesIndex);
+  ySeries = data.getSeries(ySeriesIndex);
   
   // For the series used for hue we scale the values in the series to be in the unit range [0, 1] with the method toUnitRange().
   // This will make it easier to work with (note that we set the colour space to accept unit range values).
-  hueSeries = data.getSeries(hueSeriesIndex).toUnitRange().asFloat();
+  hueSeries = data.getSeries(hueSeriesIndex).toUnitRange();
 }
 
 
@@ -58,10 +56,11 @@ void draw() {
   // Draw a dot for each data point.
   for (int row = 0; row < data.length(); row++) {
     // Get values from series. Multiply x and y by constant factors to scale to canvas size.
-    // (We could also have converted the series to unit ranges and multiplied with canvas width and height.) 
-    float x = xSeries.get(row) * 2.4;
-    float y = ySeries.get(row) * 9;
-    float hue = hueSeries.get(row);
+    // (We could also have converted the series to unit ranges and multiplied with canvas width and height.)
+    // The getFloat method gets the value at the given index as a "float" number, which is what Processing likes to work with.
+    float x = xSeries.getFloat(row) * 2.4;
+    float y = ySeries.getFloat(row) * 9;
+    float hue = hueSeries.getFloat(row);
     
     // Draw a dot. 
     fill(hue, 1, 0.5, 0.6);

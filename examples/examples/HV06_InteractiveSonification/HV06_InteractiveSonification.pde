@@ -14,10 +14,10 @@ import beads.*;
 DataTable data;
 
 // The series/columns we're interested in.
-DataSeries<Float> retailMarkup;
-DataSeries<Float> healthRating;
-DataSeries<Float> retailCost;
-DataSeries<Integer> tasteStrength;
+DataSeries retailMarkup;
+DataSeries healthRating;
+DataSeries retailCost;
+DataSeries tasteStrength;
 
 // Used to control the frequency of the audio when hovering over a data point.
 Envelope freqEnv;
@@ -28,18 +28,22 @@ Gain gainControl;
 void setup() {
   size(1000, 1000);
   
+  println(sketchFile("KIB - Oil Well.xlsx"));
+  
   // Get data from spread sheet. 
   // The SpreadSheetReader will automatically update the DataTable it provides if the source file is changed.
   data = HV.loadSpreadSheet(
-    HV.loadSSConfig().sourceFile(sketchFile("KIB - Oil Well.xlsx")).sheetIndex(1).rowIndex(3)
+    HV.loadSSConfig().sourceFile(sketchFile("KIB - Oil Well.xlsx")).sheetIndex(1).headerRowIndex(0).rowIndex(3)
   );
+  
+  println(data);
   
   // Get the series/columns we're interested in.
   // Transform some to unit range [0, 1] to make them easier to work with.
-  retailMarkup = data.getSeries("retail markup").toUnitRange().asFloat();
-  healthRating = data.getSeries("health rating").toUnitRange().asFloat();
-  retailCost = data.getSeries("UK retail cost per 100ml ($)").asFloat();
-  tasteStrength = data.getSeries("taste strength index").asInt();
+  retailMarkup = data.getSeries("retail markup").toUnitRange();
+  healthRating = data.getSeries("health rating").toUnitRange();
+  retailCost = data.getSeries("UK retail cost per 100ml ($)");
+  tasteStrength = data.getSeries("taste strength index");
   
   // Set-up audio.
   AudioContext ac = new AudioContext();
@@ -88,8 +92,8 @@ void draw() {
     // If data exists for this row.
     if (data.getSeries(0).get(row) != null) {
       // Get values from series. Multiply x and y by a constant factor to scale to canvas size. See exercise 2.
-      float x = retailMarkup.get(row) * widthScaled + marginLeft;
-      float y = healthRating.get(row) * heightScaled + marginTop;
+      float x = retailMarkup.getFloat(row) * widthScaled + marginLeft;
+      float y = healthRating.getFloat(row) * heightScaled + marginTop;
       
       fill(0, 0, 0, 127);
       ellipse(x, y, 10, 10);
@@ -110,7 +114,7 @@ void draw() {
         silenceAudio = false;
         // Take log of cost to account for logarithmic tone sensitivity of human hearing (?). Multiply by 1000 to get frequencies into khz range.
         // Add 100 hertz so even the lowest data values will produce audible tone on speakers that don't reproduce low frequencies very well. 
-        float freq = log(retailCost.get(row)) * 1000 + 100;
+        float freq = log(retailCost.getFloat(row)) * 1000 + 100;
         // Scale gain from 2/5 to 4/5 (data range is [0, 2]).
         float gain = (tasteStrength.getInt(row) + 2) / 5.0;
         freqEnv.addSegment(freq, 200);

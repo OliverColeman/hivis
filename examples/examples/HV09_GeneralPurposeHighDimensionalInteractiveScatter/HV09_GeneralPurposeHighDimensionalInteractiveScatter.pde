@@ -11,6 +11,7 @@ import java.util.*;
 String[] plotDims = new String[] {"label", "x", "y", "hue", "brightness", "shape size", "shape edges", "shape type"};
 
 // The list of selectors to select a table column/series for each plot dimension.
+// <ScrollableList> indicates that the list stores 'ScrollableList's
 List<ScrollableList> selectors;
 
 // The source data
@@ -94,12 +95,12 @@ void updatePlotTable() {
     DataSeries series;
     // First dimension is label, we just convert values to strings in draw method.
     // 7th dimension is edges, just use raw value rounded to int.
-    if (d == 0 || d == 6) {
+    if (seriesIndex == 0 || seriesIndex == 6) {
       series = data.getSeries(seriesIndex);
     }
     else {
       // For all other plot dimensions get a view of the series that converts the values to a unit range [0, 1] as this is easier to work with in the draw method.
-      series = new UnitSeries(data.getSeries(seriesIndex));
+      series = data.getSeries(seriesIndex).toUnitRange();
     }
    
     // Just use dimension index as the label to ensure the labels are unique.
@@ -178,52 +179,4 @@ void spiky(float x, float y, float radius, int npoints) {
     vertex(x, y);
   }
   endShape(CLOSE);
-}
-
-
-// A custom DataSeries that scales the values in a given input series to unit values [0, 1].
-// When the input series changes the scaled values are also updated.
-class UnitSeries extends CalcSeries<Object, Double> {
-  public UnitSeries(DataSeries input) {
-    super(input);
-  }
-  
-  // Updates the cache field in CalcSeries. This gets called whenever a change to the input DataSeries occurs.
-  // We override this rather than calc() because we need to know the min and max over the series before we can convert values to unit range.
-  public void updateView(Object cause) {
-    // Suppress change events occuring until we've finished updating the values.
-    this.beginChanges(this);
-    
-    // Make sure cache series is the right length.
-    cache.resize(length());
-    
-    DataSeries input = inputSeries.get(0);
-    
-    if (input.get(0) instanceof Number) {
-      // Get min and max values from input series.
-      double min = Double.MAX_VALUE, max = -Double.MAX_VALUE;
-      for (int i = 0; i < length(); i++) {
-        min = Math.min(min, input.getDouble(i));
-        max = Math.max(max, input.getDouble(i));
-      }
-      double range = max - min;
-      
-      // Then set values.
-      for (int i = 0; i < length(); i++) {
-        // Convert to unit range.
-        double value = (input.getDouble(i) - min) / range;
-        cache.setValue(i, value);
-      }
-    }
-    else {
-      println("Can not convert string series to numeric unit values");
-    }
-    
-    this.finishChanges(this);
-  }
-  
-  // Not used but must implement from abstract class.
-  public Double calc(int index) {
-    return 0.0d;
-  }
 }

@@ -17,9 +17,6 @@ import org.gicentre.utils.stat.*;
 // The source data from which to select series to plot.
 DataTable cars; 
 
-// Table containing basic stats over the cars table.
-DataTable labelledStats;
-
 // The plot.
 ChartGI scatterPlot;
 
@@ -43,45 +40,29 @@ void setup() {
   textSize(15);
  
   // Get the "MT Cars" dataset.
-  cars = HV.mtCars();
+  cars = HV.mtCars().removeSeries(0);
   
   // Add an "index" series to it so we can plot against it if desired.
   cars.addSeries("index", HV.integerSequence(cars.length(), 0, 1));
   
   println(cars);
   
-  // Get a transposed view of the cars table.
-  DataTable carsT = cars.transpose();
-  
-  // Get stats (min, max, mean, median, std. dev.) over each series in the cars table.
-  DataTable stats = carsT.apply(new SeriesStats(), false);
-  
-  // Make a table containing a series containing the variables labels from the cars table
-  // and the stats series.
-  labelledStats = HV.newTable()
-      .addSeries("Variable", carsT.getSeries(0))
-      .addSeries(stats);
-  
-  println("stats:\n" + labelledStats);
-  
   ControlP5 cp5 = new ControlP5(this);
   
-  // Get the list of series that may be plotted as an array of strings.
-  // the first series in carsT contains the series to plot.
-  String[] series = carsT.getSeries(0).asStringArray();
+  String[] seriesLabels = cars.getSeriesLabels().toArray(new String[0]);
   
   selectX = cp5.addScrollableList("selectSeriesX")
       .setPosition(width-210, 5)
       .setSize(100, 100)
       .setBarHeight(15)
       .setItemHeight(15)
-      .addItems(series);
+      .addItems(seriesLabels);
   selectY = cp5.addScrollableList("selectSeriesY")
       .setPosition(width-105, 5)
       .setSize(100, 100)
       .setBarHeight(15)
       .setItemHeight(15)
-      .addItems(series);
+      .addItems(seriesLabels);
   
   sliderX = cp5.addSlider("sliderX")
       .setRange(0.5, 2)
@@ -108,26 +89,25 @@ void selectSeriesY(int series) {
 
 // Update the series to plot.
 void selectSeries() {
-  // Plus 1 because we ignore the "model" series in the cars table.
-  int seriesXIndex = (int) selectX.getValue() + 1;
-  int seriesYIndex = (int) selectY.getValue() + 1;
+  int seriesXIndex = (int) selectX.getValue();
+  int seriesYIndex = (int) selectY.getValue();
   
   // Reset min and max values for threshold Y slider.
-  double minY = labelledStats.getSeries("min").getDouble(seriesYIndex-1);
-  double maxY = labelledStats.getSeries("max").getDouble(seriesYIndex-1);
-  thresholdY.setRange((float) minY + 0.0001, (float) maxY);
-  thresholdY.setValue((float) maxY);
+  float minY = cars.getSeries(seriesYIndex).min().getFloat();
+  float maxY = cars.getSeries(seriesYIndex).max().getFloat();
+  thresholdY.setRange(minY + 0.0001, maxY);
+  thresholdY.setValue(maxY);
   
   // Get the series for the x values, with values represented as real (double) numbers.
-  DataSeries seriesX = cars.getSeries(seriesXIndex);
+  // Must be final so we can access it in the anonymous inner class below.
+  final DataSeries seriesX = cars.getSeries(seriesXIndex);
   
   // Make a series that raises the values in the x series to the exponent given by the x slider.
-  // CalcSeries.DoubleSeries produces a DataSeries<Double> from one or more input series. CalcSeries.DoubleSeries<Double> indicates that the CalcSeries.DoubleSeries takes DataSeries<Double> as the input series. 
-  calcSeriesX = new CalcSeries.DoubleSeries<Double>(seriesX) {
-    public double calcDouble(int index) {
-      // A CalcSeries may be calculated from one or more input series. We've just supplied one series (seriesX). inputSeries.get(0) gets a reference to this series.
-      double value = inputSeries.get(0).getDouble(index);
-      return Math.pow(value, sliderX.getValue());
+  // CalcSeries.DoubleSeries produces a DataSeries<Double> from one or more input series.
+  calcSeriesX = new CalcSeries.FloatSeries(seriesX) {
+    public float calcFloat(int index) {
+      // Math.pow returns a 'double' float, have to cast back to float.
+      return (float) Math.pow(seriesX.getFloat(index), sliderX.getValue());
     }
   };
   
@@ -138,6 +118,7 @@ void selectSeries() {
   if (yLabel.equals(xLabel)) {
     yLabel = yLabel + ".";
   }
+  
   DataTable toPlotUnfiltered = HV.newTable()
       .addSeries(xLabel, calcSeriesX)
       .addSeries(yLabel, cars.getSeries(seriesYIndex));
@@ -145,7 +126,7 @@ void selectSeries() {
   // Get a view of the table to plot which filters out rows which contain a Y value outside the threshold value set by the Y slider.
   toPlot = toPlotUnfiltered.selectRows(new RowFilter() {
     public boolean excludeRow(DataTable input, int index) {
-      return input.getSeries(1).getDouble(index) > thresholdY.getValue();
+      return input.getSeries(1).getFloat(index) > thresholdY.getValue();
     }
   });
   
@@ -153,7 +134,7 @@ void selectSeries() {
   scatterPlot = new ChartGI(this, toPlot);
   
   // Get the maximum value for the x series.
-  double maxX = labelledStats.getSeries("max").getDouble(seriesXIndex-1);
+  float maxX = cars.getSeries(seriesXIndex).max().getFloat();
   // Set the max possible value for the x series after applying exponential function.
   scatterPlot.chart.setMaxX((float) Math.pow(maxX, sliderX.getMax()));
   

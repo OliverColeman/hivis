@@ -67,7 +67,7 @@ public class ChartGI implements DataListener {
 			
 			for (int i = 0; i < size; i++) {
 				xData[i] = i;
-				yData[i] = (float) ySeries.getDouble(i);
+				yData[i] = ySeries.getFloat(i);
 			}
 			
 			chart.setYAxisLabel(data.getSeriesLabel(0));
@@ -77,8 +77,8 @@ public class ChartGI implements DataListener {
 			DataSeries<?> ySeries = data.getSeries(1);
 			
 			for (int i = 0; i < size; i++) {
-				xData[i] = (float) xSeries.getDouble(i);
-				yData[i] = (float) ySeries.getDouble(i);
+				xData[i] = xSeries.getFloat(i);
+				yData[i] = ySeries.getFloat(i);
 			}
 			
 			chart.setXAxisLabel(data.getSeriesLabel(0));

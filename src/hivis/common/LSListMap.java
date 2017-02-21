@@ -141,9 +141,8 @@ public class LSListMap<K, V> implements ListMap<K, V> {
 	@Override
 	public Map.Entry<K, V> remove(int index) {
 		keys.remove(index);
-		list.remove(index);
 		values = null;
-		return null;
+		return list.remove(index);
 	}
 
 	@Override

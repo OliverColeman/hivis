@@ -24,7 +24,7 @@ import java.util.Random;
  * 
  * @author O. J. Coleman
  */
-public class DataSeriesInteger extends AbstractDataSeries<Integer> {
+public class DataSeriesInteger extends AbstractDataSeries<Integer> implements DataSeries.IntSeries {
 	protected int[] elements;
 	int size;
 	

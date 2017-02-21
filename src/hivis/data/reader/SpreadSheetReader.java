@@ -241,7 +241,10 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 						stringCount++;
 					}
 				}
-			
+				
+				System.out.println(stringCount);
+				System.out.println(lastColumnIndexDesired);
+				
 				// If the first row contains all strings, except one column at most.
 				if (stringCount >= lastColumnIndexDesired) {
 					// Use it as the header row.
@@ -348,7 +351,10 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 						}
 					}
 					catch (IllegalArgumentException ex) {
-						System.err.println("Warning: data type/format mismatch" + ex.getMessage());
+						// Only emit warning if cell is not empty.
+						if (getStringCellValue(row, column).trim().length() > 0) {
+							System.err.println("Warning: value in column '" + label + "', row " + row + ", does not match expected column data type/format: " + ex.getMessage());
+						}
 					}
 				}
 			}
@@ -701,15 +707,17 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	}
 	
 	public static void main(String[] args) {
+		HV.mtCars().removeSeries(0);
+		
 		DataTable data = HV.loadSpreadSheet(
-			    HV.loadSSConfig().sourceFile("/home/data/processing/sketchbook/libraries/HiVis/examples/examples/HV05_PieInPieInPie/Employee Diversity in tech.xlsx").headerRowIndex(1).rowIndex(2)
+			    HV.loadSSConfig().sourceFile("/home/data/processing/hivis/examples/examples/HV06_InteractiveSonification/KIB - Oil Well.xlsx").sheetIndex(1).headerRowIndex(0).rowIndex(3)
 			  );
 		
 		//DataTable data = HV.loadSpreadSheet(new File("/home/data/processing/data/test.csv"));
 		  
 		//DataTable data = HV.loadSpreadSheet(new SpreadSheetReader.Config().sourceFile("/home/data/processing/data/test.csv").rowIndex(1).columnIndex(2).rowCount(5).columnCount(4));
 		
-		System.out.println("\ndata:\n" + data);
+		System.out.println("\ndata:\n" + data.selectRowRange(0,  5));
 
 //		DataTable data2 = HV.loadSpreadSheet(new SpreadSheetReader.Config().sourceFile("/home/data/processing/data/test.csv").useDeprecatedDates(true));
 //		System.out.println("\ndata2:\n" + data2);

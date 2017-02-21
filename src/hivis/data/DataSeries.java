@@ -155,22 +155,22 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	/**
 	 * Get a view of this series representing the values as single-precision floating point numbers.
 	 */
-	DataSeries<Float> asFloat();
+	FloatSeries asFloat();
 	
 	/**
 	 * Get a view of this series representing the values as double-precision floating point numbers.
 	 */
-	DataSeries<Double> asDouble();
+	DoubleSeries asDouble();
 
 	/**
 	 * Get a view of this series representing the values as integers.
 	 */
-	DataSeries<Integer> asInt();
+	IntSeries asInt();
 
 	/**
 	 * Get a view of this series representing the values as long integers.
 	 */
-	DataSeries<Long> asLong();
+	LongSeries asLong();
 
 	/**
 	 * Get the values in this series as an array of values.
@@ -341,7 +341,20 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	 * as a DataValue.
 	 */
 	public DataValue<Double> stdDev();
-
+	
+	/**
+	 * Returns the maximum value contained in this series, or getEmptyValue() if the series is empty.
+	 * @Deprecated Superseded by {@link #max()}. 
+	 */
+	public V maxValue();
+	
+	/**
+	 * Returns the minimum value contained in this series, or getEmptyValue() if the series is empty.
+	 * @Deprecated Superseded by {@link #min()}.
+	 */
+	public V minValue();
+	
+	
 	// View/functional operations. 
 	
 	
@@ -380,27 +393,41 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	SeriesView<V> select(int... indices);
 	
 	
-	public SeriesView<V> add(V value);
-	public SeriesView<V> add(double value);
-	public SeriesView<V> add(long value);
-	public SeriesView<V> add(DataSeries<?> series);
-	public SeriesView<V> add(DataValue<?> value);
+	public SeriesView<?> add(Number value);
+	public SeriesView<?> add(DataSeries<?> series);
+	public SeriesView<?> add(DataValue<?> value);
 	
-	public SeriesView<V> subtract(V value);
-	public SeriesView<V> subtract(double value);
-	public SeriesView<V> subtract(long value);
-	public SeriesView<V> subtract(DataSeries<?> series);
-	public SeriesView<V> subtract(DataValue<?> value);
+	public SeriesView<?> subtract(Number value);
+	public SeriesView<?> subtract(DataSeries<?> series);
+	public SeriesView<?> subtract(DataValue<?> value);
 	
-	public SeriesView<V> multiply(V value);
-	public SeriesView<V> multiply(double value);
-	public SeriesView<V> multiply(long value);
-	public SeriesView<V> multiply(DataSeries<?> series);
-	public SeriesView<V> multiply(DataValue<?> value);
+	public SeriesView<?> multiply(Number value);
+	public SeriesView<?> multiply(DataSeries<?> series);
+	public SeriesView<?> multiply(DataValue<?> value);
 	
-	public SeriesView<V> divide(V value);
-	public SeriesView<V> divide(double value);
-	public SeriesView<V> divide(long value);
-	public SeriesView<V> divide(DataSeries<?> series);
-	public SeriesView<V> divide(DataValue<?> value);
+	public SeriesView<?> divide(Number value);
+	public SeriesView<?> divide(DataSeries<?> series);
+	public SeriesView<?> divide(DataValue<?> value);
+	
+	
+	/**
+	 * Interface for DataSeries representing float values.
+	 * Allows {@link #asFloat()} to return series that do not lose their generic type due to type erasure.
+	 */
+	public interface FloatSeries extends DataSeries<Float> {}
+	/**
+	 * Interface for DataSeries representing double values.
+	 * Allows {@link #asDouble()} to return series that do not lose their generic type due to type erasure.
+	 */
+	public interface DoubleSeries extends DataSeries<Double> {}
+	/**
+	 * Interface for DataSeries representing integer values.
+	 * Allows {@link #asInt()} to return series that do not lose their generic type due to type erasure.
+	 */
+	public interface IntSeries extends DataSeries<Integer> {}
+	/**
+	 * Interface for DataSeries representing long integer values.
+	 * Allows {@link #asLong()} to return series that do not lose their generic type due to type erasure.
+	 */
+	public interface LongSeries extends DataSeries<Long> {}
 }

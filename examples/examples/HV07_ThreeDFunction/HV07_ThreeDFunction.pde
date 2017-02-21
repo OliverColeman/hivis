@@ -14,8 +14,8 @@ import java.util.*;
 
 
 // Data series associated with x and y coordinates and a series to contain values based on the x and y series.
-DataSeries<Double> x;
-DataSeries<Double> y; 
+DataSeries xSeries;
+DataSeries ySeries; 
 CalcSeries.DoubleSeries func; 
 
 // Minimum and maximum values for the x and y series.
@@ -48,17 +48,15 @@ void setup() {
       .setLabelVisible(false);
 
   // Populate the x and y series with some random "data".
-  x = HV.randomUniformSeries(dataLength, minValueX, maxValueX);
-  y = HV.randomUniformSeries(dataLength, minValueY, maxValueY);
+  xSeries = HV.randomUniformSeries(dataLength, minValueX, maxValueX);
+  ySeries = HV.randomUniformSeries(dataLength, minValueY, maxValueY);
   
-  // Make a series that is a function of the x and y series.
-  // CalcSeries.DoubleSeries produces a DataSeries<Double> from one or more input series. CalcSeries.DoubleSeries<Double> indicates that the CalcSeries.DoubleSeries takes DataSeries<Double> as the input series. 
-  func = new CalcSeries.DoubleSeries<Double>(x, y) {
+  // Make a series that is a function of the x and y series. By supplying the series to the 
+  // constructor we ensure the calculated series is updated if the underlying series change. 
+  func = new CalcSeries.DoubleSeries(xSeries, ySeries) {
     public double calcDouble(int index) {
-      // A CalcSeries may be calculated from one or more input series. We've supplied two series (x and y). 
-      // inputSeries.get(0) and inputSeries.get(1) gets a reference to these series respectively.
-      double x = inputSeries.get(0).get(index);
-      double y = inputSeries.get(1).get(index);
+      double x = xSeries.getDouble(index);
+      double y = ySeries.getDouble(index);
       
       // A function that will make for pretty patterns.
       double xPow = Math.pow(x, sliderParam.getValue());
@@ -104,8 +102,8 @@ void draw() {
 
   // Plot each data point.
   for (int row = 0; row < dataLength; row++) {
-    float xCoord = x.getFloat(row);
-    float yCoord = y.getFloat(row);
+    float xCoord = xSeries.getFloat(row);
+    float yCoord = ySeries.getFloat(row);
     float value = func.getFloat(row);
     
     // Color is associated with function value

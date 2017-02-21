@@ -91,7 +91,6 @@ public class DataTableDefault extends AbstractDataTable {
 		DataSeries<?> s = series.remove(label);
 		s.removeContainer(this);
 		this.setDataChanged(DataTableChange.SeriesRemoved);
-		
 		return this;
 	}
 	
@@ -100,7 +99,6 @@ public class DataTableDefault extends AbstractDataTable {
 		DataSeries<?> s = series.remove(index).getValue();
 		s.removeContainer(this);
 		this.setDataChanged(DataTableChange.SeriesRemoved);
-		
 		return this;
 	}
 

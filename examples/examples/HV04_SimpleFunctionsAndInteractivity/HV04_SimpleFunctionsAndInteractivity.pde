@@ -19,10 +19,10 @@ import hivis.data.view.*;
 DataTable data;
 
 // Series containing data we want to plot.
-DataSeries<Integer> cyl; // number of cylinders
-DataSeries<Float> disp; // displacement (engine capacity)
-DataSeries<Float> hp; // horse power
-DataSeries<Float> hpOnDisp; //hp divided by the corresponding values in disp.
+DataSeries cyl; // // Number of cylinders.
+DataSeries disp; // // Displacement.
+DataSeries hp; // Horse Power. Because that's still a sensible unit of power. Neigh!
+DataSeries hpOnDisp; // hp divided by the corresponding values in disp.
 
 
 void setup() {
@@ -32,21 +32,18 @@ void setup() {
   
   // Get a data set.
   data = HV.mtCars();
-  // Get series from the data table.
-  cyl = data.getSeries("cyl").asInt(); // number of cylinders
-  // For the displacement and horse-power series we get the double (note the <Double> and asDouble()) 
-  // precision floating-point numbers so that numeric operations performed on them have higher accuracy.
-  DataSeries<Double> dispOrig = data.getSeries("disp").asDouble();
-  DataSeries<Double> hpOrig = data.getSeries("hp").asDouble();
   
-  // Get a series containing the values in hp divided by the corresponding 
-  // values in disp (and then convert to float values).
-  hpOnDisp = hpOrig.divide(dispOrig).asFloat();
+  // Get some series from the data table.
+  cyl = data.getSeries("cyl");
+  DataSeries dispOrig = data.getSeries("disp");
+  DataSeries hpOrig = data.getSeries("hp");
   
-  // Scale the series used for x and y coorindates (disp and hp) to unit range 
-  // (and convert to float) to make them easier to work with when plotting.
-  disp = dispOrig.toUnitRange().asFloat();
-  hp = hpOrig.toUnitRange().asFloat();
+  // Get a series containing the values in hp divided by the corresponding values in disp.
+  hpOnDisp = hpOrig.divide(dispOrig);
+  
+  // Scale the series used for x and y coorindates (disp and hp) to unit range [0, 1].
+  disp = dispOrig.toUnitRange();
+  hp = hpOrig.toUnitRange();
 }
 
 
@@ -67,13 +64,13 @@ void draw() {
   }
   
   for (int row = 0; row < data.length(); row++) {
-    int c = cyl.get(row);
+    int c = cyl.getInt(row);
     
     int y = (c - 4) * yScale + yOffset;
-    float x = (hpOnDisp.get(row) - hpOnDisp.minValue()) * xScale + xOffset;
+    float x = (hpOnDisp.getFloat(row) - hpOnDisp.min().getFloat()) * xScale + xOffset;
     
-    float w = disp.get(row) * 100;
-    float h = hp.get(row) * 100;
+    float w = disp.getFloat(row) * 100;
+    float h = hp.getFloat(row) * 100;
     
     // Determine if we're hovering over a data point by testing if the distance from 
     // the centre of it to the mouse is less than the average/approximate radius of the point. 

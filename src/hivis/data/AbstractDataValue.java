@@ -311,7 +311,7 @@ public abstract class AbstractDataValue<V> extends DataSetDefault implements Dat
 	}
 	
 	
-	private DataValue<V> op(Op op, final Number value) {
+	private DataValue<V> op(Op op, Number value) {
 		if (!isNumeric()) {
 			throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation on non-numeric DataValue");
 		}
