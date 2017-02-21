@@ -1,3 +1,8 @@
+---
+layout: post
+title: Changes introduced in HiVis 2
+---
+
 HiVis 2 is coming. This page is a work-in-progress that describes the changes and how to update your code. You probably shouldn't pay any attention to it until we've officially released the new version (but feel free to get excited).
 
 We've made a number of changes to make HiVis even simpler to use, and add some exciting new functionality. We've tried to minimise the changes so that for the most part your existing code won't need to change very much, if at all.
