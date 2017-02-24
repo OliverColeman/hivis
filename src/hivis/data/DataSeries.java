@@ -379,12 +379,21 @@ public interface DataSeries<V> extends DataSet, Iterable<V> {
 	public SeriesView<V> append(DataSeries<V> series);
 	
 	/**
-	 * Get a view of this series that is calculated using the given function over each element in this series.
+	 * Get a view of this series that is calculated by applying the given function to each element in this series.
 	 * 
 	 * @param function
 	 *            The function to generate calculate the new values from the original values.
 	 */
-	public <O> SeriesView<O> apply(Function<V, O> function);
+	public <O> SeriesView<O> apply(final Function<V, O> function);
+	
+	/**
+	 * Get a view of this series that is calculated by applying the given method from the java.lang.Math class to each 
+	 * element in this series. Only methods accepting a single argument/parameter may be used.
+	 * 
+	 * @param mathMethod The name of the method in the Math class to be used to calculate the new values from the 
+	 * original values.
+	 */
+	public SeriesView<?> applyMathMethod(String mathMethod);
 	
 	/**
 	 * Get a view of this series that filters and/or rearranges the elements.

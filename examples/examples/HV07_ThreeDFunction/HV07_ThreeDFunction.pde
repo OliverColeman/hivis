@@ -53,6 +53,9 @@ void setup() {
   
   // Make a series that is a function of the x and y series. By supplying the series to the 
   // constructor we ensure the calculated series is updated if the underlying series change. 
+  // A CalcSeries.DoubleSeries is a generic class for creating a DataSeries, representing
+  // double values, derived from zero, one or more other series. You just have to override 
+  // the calcDouble method. There is also CalcSeries.FloatSeries, CalcSeries.IntSeries and CalcSeries.LongSeries.
   func = new CalcSeries.DoubleSeries(xSeries, ySeries) {
     public double calcDouble(int index) {
       double x = xSeries.getDouble(index);

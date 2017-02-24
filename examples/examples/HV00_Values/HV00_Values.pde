@@ -5,6 +5,9 @@ import hivis.data.view.*;
 // Examples of working with HiVis DataValues.
 
 void setup() {
+	// A DataValue represents a single data item. The data represented  
+	// may be numeric, strings, dates/times or any other type of object.
+	
 	// Create some DataValues with specific initial values.
 	// Integer values.
 	DataValue int2 = HV.newIntegerValue(2);
@@ -41,8 +44,7 @@ void setup() {
 	
 	
 	// Another thing to note is that the new DataValues are actually "Views" of the original
-	// DataValue(s). Changes to the original DataValue(s) will be reflected in the new
-	// DataValue.
+	// DataValue(s). Changes to the original DataValue(s) will be reflected in the new DataValue.
 	// For example if we change the value of DataValue int5 to 10:
 	int5.set(10);
 	// It will be reflected in DataValue int5PlusInt2:
@@ -59,11 +61,26 @@ void setup() {
 	//piAgain.set(2);
 	
 	
-	// We can also create view DataValues by performing custom operations on existing DataValues:
-	DataValue customFunc = int2.apply(new Function<Integer, Double>() {
-		public Double apply(Integer input) {
+	
+	// We can derive new series by applying a custom function to each element of a series.
+	// You define the function via an implementation of the Function class:
+	
+	// Note: The type of the argument for the apply method should match the type of the data represented by the series.
+	// (Advanced Java developers: the return type of the apply method should be Object unless you've specified, via 
+	//    generics, the input and output type of the function: for example new Function<MyInputType, MyOutputType>()...)
+	
+	
+	
+	// We can also derive a View DataValue by applying a custom function to it.
+	// You define the function via an implementation of the Function class:
+	DataValue customFunc = int2.apply(new Function() {
+		public Object apply(int input) {
 			return Math.sqrt(input);
 		}
 	});
 	println("customFunc = sqrt(int2) => " + customFunc);
+	// Note: The type of the argument for the apply method should match the type of the data represented by the DataValue.
+	// 		In the above example the source DataValue stores an int, so the input value for the function has type int. 
+	// (Advanced Java developers: the return type of the apply method should be Object unless you've specified, via 
+	//		generics, the input and output type of the function: for example new Function<MyInputType, MyOutputType>()...)
 }

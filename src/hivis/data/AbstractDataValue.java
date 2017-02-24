@@ -283,7 +283,7 @@ public abstract class AbstractDataValue<V> extends DataSetDefault implements Dat
 		if (type.equals(Long.class) || type.equals(long.class)) {
 			return (DataValue<V>) new DataValueLong();
 		}
-		throw new UnsupportedOperationException("Don't know how to create a DataValue containing type " + type);
+		return (DataValue<V>) new DataValueGeneric();
 	}
 	
 	
@@ -297,15 +297,22 @@ public abstract class AbstractDataValue<V> extends DataSetDefault implements Dat
 	public <O> DataValue<O> apply(final Function<V, O> function) {
 		final DataValue<V> me = this;
 		
+		// Determine function output type. This is used to set that data type of the CalcValue.
+		Class<?> outputType = (new TypeToken<O>(getClass()) {}).getRawType();
+		// If the type doesn't appear to have been provided via generics, then get the type from an example.
+		if (outputType == null || outputType.equals(Object.class)) {
+			outputType = function.apply(get()).getClass();
+		}
+		final Class<?> outputTypeFinal = outputType;
+		
 		return new CalcValue<V,O> (this) {
 			@Override
 			public O calc() {
 				return function.apply(me.get());
 			}
-			
 			@Override
-			public DataValue<O> getNewDataValue() {
-				return (DataValue<O>) getNewDataValue(function.outputTypeToken.getRawType());
+			public Class<?> getType() {
+				return outputTypeFinal;
 			}
 		};
 	}

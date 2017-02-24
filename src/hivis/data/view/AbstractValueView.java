@@ -35,9 +35,6 @@ import hivis.data.DataValue;
  * @author O. J. Coleman
  */
 public abstract class AbstractValueView<I, O> extends AbstractDataValue<O> implements DataListener {
-	private TypeToken<O> typeToken = new TypeToken<O>(getClass()) {};
-	private Class<?> type = typeToken.getRawType();
-	
 	/**
 	 * The (optional) input values on which this view is based. Null if no input values are used.
 	 */

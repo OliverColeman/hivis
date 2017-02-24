@@ -17,6 +17,7 @@
 package hivis.data;
 
 import java.math.BigDecimal;
+import java.time.temporal.TemporalAccessor;
 import java.util.AbstractList;
 import java.util.Date;
 import java.util.EnumMap;
@@ -509,7 +510,8 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 		if (type.equals(Long.class) || type.equals(long.class)) {
 			return (DataSeries<V>) new DataSeriesLong();
 		}
-		throw new UnsupportedOperationException("Don't know how to create a DataSeries containing type " + type);
+		return (DataSeries<V>) new DataSeriesGeneric<V>();
+		//throw new UnsupportedOperationException("Don't know how to create a DataSeries containing type " + type);
 	}
 	
 	
@@ -538,6 +540,8 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	@Override
 	public boolean isNumeric() {
+		Class<?> type = getType();
+		if (type == null) return false;
 		return Number.class.isAssignableFrom(getType());
 	}
 	
@@ -625,17 +629,123 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	public <O> SeriesView<O> apply(final Function<V, O> function) {
 		final DataSeries<V> me = this;
 		
-		return new CalcSeries<V,O> (this) {
+		// Determine function output type. This is used to create the cache series in CalcSeries.
+		Class<?> outputType = (new TypeToken<O>(getClass()) {}).getRawType();
+		// If the type doesn't appear to have been provided via generics (and if the length is 0),
+		// then get the type from an example.
+		if (length() > 0 && (outputType == null || outputType.equals(Object.class))) {
+			outputType = function.apply(get(0)).getClass();
+		}
+		final Class<?> outputTypeFinal = outputType;
+		
+		// See if we can determine the (numeric) input type for the function,
+		// in which case we can use a CalcSeries sub-class that calls the method
+		// accepting the relevant primitive type.
+		Class<?> type = getType();
+		if (type != null) {
+			if (type.equals(Float.class)) {
+				return new CalcSeries<V, O>(me) {
+					@Override
+					public O calc(int index) {
+						return function.apply(me.getFloat(index));
+					}
+					@Override
+					public DataSeries<O> getNewSeries() {
+						return (DataSeries<O>) getNewSeries(outputTypeFinal);
+					}
+				};
+			}
+			if (type.equals(Double.class)) {
+				return new CalcSeries<V, O>(me) {
+					@Override
+					public O calc(int index) {
+						return function.apply(me.getDouble(index));
+					}
+					@Override
+					public DataSeries<O> getNewSeries() {
+						return (DataSeries<O>) getNewSeries(outputTypeFinal);
+					}
+				};
+			}
+			if (type.equals(Integer.class)) {
+				return new CalcSeries<V, O>(me) {
+					@Override
+					public O calc(int index) {
+						return function.apply(me.getInt(index));
+					}
+					@Override
+					public DataSeries<O> getNewSeries() {
+						return (DataSeries<O>) getNewSeries(outputTypeFinal);
+					}
+				};
+			}
+			if (type.equals(Long.class)) {
+				return new CalcSeries<V, O>(me) {
+					@Override
+					public O calc(int index) {
+						return function.apply(me.getLong(index));
+					}
+					@Override
+					public DataSeries<O> getNewSeries() {
+						return (DataSeries<O>) getNewSeries(outputTypeFinal);
+					}
+				};
+			}
+			if (type.equals(String.class)) {
+				return new CalcSeries<V, O>(me) {
+					@Override
+					public O calc(int index) {
+						return function.apply((String) me.get(index));
+					}
+					@Override
+					public DataSeries<O> getNewSeries() {
+						return (DataSeries<O>) getNewSeries(outputTypeFinal);
+					}
+				};
+			}
+			if (type.equals(Date.class)) {
+				return new CalcSeries<V, O>(me) {
+					@Override
+					public O calc(int index) {
+						return function.apply((Date) me.get(index));
+					}
+					@Override
+					public DataSeries<O> getNewSeries() {
+						return (DataSeries<O>) getNewSeries(outputTypeFinal);
+					}
+				};
+			}
+			if (type.equals(TemporalAccessor.class)) {
+				return new CalcSeries<V, O>(me) {
+					@Override
+					public O calc(int index) {
+						return function.apply((TemporalAccessor) me.get(index));
+					}
+					@Override
+					public DataSeries<O> getNewSeries() {
+						return (DataSeries<O>) getNewSeries(outputTypeFinal);
+					}
+				};
+			}
+		}
+		// Fallback to creating a CalcSeries that uses the 
+		// (possibly typed) object-based apply method.
+		return new CalcSeries<V, O>(me) {
 			@Override
 			public O calc(int index) {
 				return function.apply(me.get(index));
 			}
-			
 			@Override
 			public DataSeries<O> getNewSeries() {
-				return (DataSeries<O>) getNewSeries(function.outputTypeToken.getRawType());
+				return (DataSeries<O>) getNewSeries(outputTypeFinal);
 			}
 		};
+	}
+	
+	
+	@Override
+	public SeriesView<?> applyMathMethod(String mathMethod) {
+		return new CalcSeries.Maths<V>(mathMethod, this);
 	}
 	
 	
@@ -645,13 +755,8 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	}
 	
 	
-	
 	private SeriesView<?> op(Op op, Number value) {
-		if (!isNumeric()) {
-			throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation on non-numeric DataSeries.");
-		}
-		
-		Class<?> envelopeClass = op.realOutput ? Double.class : Util.getEnvelopeNumberType((Class<Number>) getType(), (Class<Number>) value.getClass(), true);
+		Class<?> envelopeClass = envelopeClassForOp(op, value);
 		
 		if (envelopeClass.equals(Float.class)) {
 			return new CalcSeries.FloatSeries.FuncValue(op, this, value.floatValue());
@@ -669,14 +774,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	}
 	
 	private SeriesView<?> op(Op op, DataValue<?> value) {
-		if (!isNumeric()) {
-			throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation on non-numeric DataSeries.");
-		}
-		if (!value.isNumeric()) {
-			throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation with non-numeric DataValue argument.");
-		}
-		
-		Class<?> envelopeClass = op.realOutput ? Double.class : Util.getEnvelopeNumberType((Class<Number>) getType(), (Class<Number>) value.getType(), true);
+		Class<?> envelopeClass = envelopeClassForOp(op, value);
 		
 		if (envelopeClass.equals(Float.class)) {
 			return new CalcSeries.FloatSeries.FuncValue(op, this, value);
@@ -698,14 +796,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 			throw new IllegalArgumentException("Can not " + op.toString().toLowerCase() + " two DataSeries with differing lengths.");
 		}
 		
-		if (!isNumeric()) {
-			throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation on non-numeric DataSeries.");
-		}
-		if (!series.isNumeric()) {
-			throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation with non-numeric DataSeries argument.");
-		}
-		
-		Class<?> envelopeClass = op.realOutput ? Double.class : Util.getEnvelopeNumberType((Class<Number>) getType(), (Class<Number>) series.getType(), true);
+		Class<?> envelopeClass = envelopeClassForOp(op, series);
 		
 		if (envelopeClass.equals(Float.class)) {
 			return new CalcSeries.FloatSeries.FuncSeries(op, this, series);
@@ -720,6 +811,41 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 			return new CalcSeries.LongSeries.FuncSeries(op, this, series);
 		}
 		throw new UnsupportedOperationException();
+	}
+	
+	private Class<?> envelopeClassForOp(Op op, Object arg) {
+		Class<?> type = getType();
+		// Only check for numeric type if we can determine the type or if the series is not empty.
+		if ((type != null || length() > 0) && !isNumeric()) {
+			throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation on non-numeric DataSeries (type is " + type + ").");
+		}
+		if (type == null) {
+			System.err.println("Warning: cannot determine type of source series for " + op.toString().toLowerCase() + " operation, assuming real (double) numbers.");
+		}
+		
+		Class<Number> numericType = null;
+		if (arg instanceof Number) {
+			numericType = (Class<Number>) arg.getClass();
+		}
+		else if (arg instanceof DataValue) {
+			numericType = (Class<Number>) ((DataValue<?>) arg).getType();
+		}
+		else { //series
+			DataSeries<?> s = (DataSeries<?>) arg;
+			Class<?> sType = s.getType();
+			if ((sType != null || s.length() > 0) && !s.isNumeric()) {
+				throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation with provided non-numeric DataSeries (type is " + sType + ").");
+			}
+			
+			if (sType == null) {
+				System.err.println("Warning: cannot determine type of series provided to " + op.toString().toLowerCase() + " operation, assuming real (double) numbers.");
+			}
+			else {
+				numericType = (Class<Number>) sType;
+			}
+		}
+		
+		return (op.realOutput || type == null || numericType == null) ? Double.class : Util.getEnvelopeNumberType((Class<Number>) type, numericType, true);
 	}
 	
 	

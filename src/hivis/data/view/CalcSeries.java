@@ -17,6 +17,13 @@
 package hivis.data.view;
 
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+import com.google.common.primitives.Primitives;
+
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataSeries;
@@ -72,9 +79,9 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	}
 	
 	
-	private void setupCache() {
+	protected void setupCache() {
 		cache = getNewSeries();
-		
+	
 		// Collect change events that originate as a result of modifying the cache.
 		// This way we can detect when the cache values are actually changed.
 		final CalcSeries<I, O> me = this;
@@ -96,6 +103,9 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 	 * autoboxing if a primitive type is stored.
 	 */
 	public void updateView(Object cause) {
+		if (cache == null) {
+			setupCache();
+		}
 		this.beginChanges(this);
 		// Make sure cache series is the right length.
 		int length = length();
@@ -717,5 +727,97 @@ public abstract class CalcSeries<I, O> extends SeriesViewFunction<I, O> {
 		 * Indicates that the output of this operation should be assumed to be a real value.
 		 */
 		public final boolean realOutput;
+	}
+	
+	
+	public static class Maths<I> extends CalcSeries<I, Object> {
+		protected Method method;
+		
+		public Maths(String func, DataSeries<I> input) {
+			super (input);
+			
+			Class<?> primType = Primitives.unwrap(input.getType());
+			
+			try {
+				method = Math.class.getMethod(func, primType);
+				method.setAccessible(true);
+			} catch (NoSuchMethodException | SecurityException e) {
+				if (primType.equals(int.class) || primType.equals(long.class) || primType.equals(float.class)) {
+					try {
+						method = Math.class.getMethod(func, double.class);
+						method.setAccessible(true);
+					} catch (NoSuchMethodException | SecurityException e2) {
+						throw new IllegalArgumentException("Could not find the specified Math method, " + func + ", accepting argument type " + input.getType().getSimpleName() + " or double.", e2);
+					}
+				}
+				else {
+					throw new IllegalArgumentException("Could not find the specified Math method, " + func + ", accepting argument type " + input.getType().getSimpleName() + ".", e);
+				}
+			}
+		}
+		
+		@Override
+		public Class<?> getType() {
+			return method == null ? null : method.getReturnType();
+		}
+		
+		public void updateView(Object cause) {
+			if (cache == null) {
+				setupCache();
+			}
+			this.beginChanges(this);
+			cache.resize(length());
+			DataSeries<I> series = getInputSeries(0);
+			
+			try {
+				if (method.getParameterTypes()[0].equals(float.class)) {
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, method.invoke(null, series.getFloat(i)));
+					}
+				}
+				else if (method.getParameterTypes()[0].equals(double.class)) {
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, method.invoke(null, series.getDouble(i)));
+					}
+				}
+				else if (method.getParameterTypes()[0].equals(int.class)) {
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, method.invoke(null, series.getInt(i)));
+					}
+				}
+				else if (method.getParameterTypes()[0].equals(long.class)) {
+					for (int i = 0; i < length(); i++) {
+						cache.setValue(i, method.invoke(null, series.getLong(i)));
+					}
+				}
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				throw new RuntimeException("Error calling " + method, e);
+			}
+		}
+		
+		@Override 
+		protected void setupCache() {
+			// Create cache if we know the type to create at this point.
+			if (getType() != null) {
+				cache = getNewSeries();
+			
+				// Collect change events that originate as a result of modifying the cache.
+				// This way we can detect when the cache values are actually changed.
+				final Maths<I> me = this;
+				cache.addChangeListener(new DataListener() {
+					@Override
+					public void dataChanged(DataEvent event) {
+						for (Object changeType : event.getTypes()) {
+							me.setDataChanged(changeType);
+						}
+					}
+				});
+			}
+		}
+	
+		@Override
+		public Object calc(int index) {
+			return null;
+		}
 	}
 }

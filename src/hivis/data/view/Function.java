@@ -16,6 +16,11 @@
 
 package hivis.data.view;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
+
 import com.google.common.reflect.TypeToken;
 
 /**
@@ -24,30 +29,74 @@ import com.google.common.reflect.TypeToken;
  * @author O. J. Coleman
  */
 public abstract class Function<I, O> {
+	public final Class<?> inputType = (new TypeToken<I>(getClass()) {}).getRawType();
+	public final Class<?> outputType = (new TypeToken<O>(getClass()) {}).getRawType();
+	
+	Method method;
+	
 	public O apply(I input) {
-		if (input instanceof Double) {
-			return (O) (Double) apply(((Number) input).doubleValue());
+		try {
+			// If we've previously determined the method to use.
+			if (method != null) {
+				return (O) method.invoke(this, input);
+			}
+			if (input instanceof Float) {
+				return apply((Float) input);
+			}
+			if (input instanceof Double) {
+				return apply((Double) input);
+			}
+			if (input instanceof Integer) {
+				return apply((Integer) input);
+			}
+			if (input instanceof Long) {
+				return apply((Long) input);
+			}
+			// If we weren't given a type at run time (and the input 
+			// isn't a type for which we supply a method to override),
+			// see if there's a method matching the given input type.
+			if (!inputType.equals(Object.class) || !input.getClass().equals(Object.class)) {
+				Class<?> type = inputType.equals(Object.class) ? input.getClass() : inputType;
+				try {
+					method = this.getClass().getMethod("apply", type);
+					method.setAccessible(true);
+					return (O) method.invoke(this, input);
+				} catch (NoSuchMethodException | SecurityException e) {}
+			}
 		}
-		if (input instanceof Integer) {
-			return (O) (Integer) apply(((Number) input).intValue());
+		catch (StackOverflowError ex) {
+			
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			throw new RuntimeException("Something went terribly wrong: ", e);
 		}
-		if (input instanceof Double) {
-			return (O) (Long) apply(((Number) input).longValue());
-		}
-		throw new IllegalStateException("Please implement the method '" + outputTypeToken.getRawType().getSimpleName() + " apply(" + input.getClass().getSimpleName() + ").");
+		throw new IllegalStateException("Please implement the method '" + outputType.getSimpleName() + " apply(" + inputType.getSimpleName() + ")' in your Function.");
 	}
 	
-	public double apply(double input) {
-		return ((Number) apply(input)).doubleValue();
+	public O apply(float input) {
+		return apply(input);
 	}
 	
-	public int apply(int input) {
-		return ((Number) apply(input)).intValue();
+	public O apply(double input) {
+		return apply(input);
 	}
 	
-	public long apply(long input) {
-		return ((Number) apply(input)).longValue();
+	public O apply(int input) {
+		return apply(input);
 	}
 	
-	public final TypeToken<O> outputTypeToken = new TypeToken<O>(getClass()) {};
+	public O apply(long input) {
+		return apply(input);
+	}
+	
+	public O apply(String input) {
+		return apply(input);
+	}
+	
+	public O apply(Date input) {
+		return apply(input);
+	}
+	
+	public O apply(TemporalAccessor input) {
+		return apply(input);
+	}
 }

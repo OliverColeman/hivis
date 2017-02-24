@@ -36,7 +36,10 @@ import hivis.data.DataValue;
  */
 public abstract class AbstractSeriesView<I, O> extends AbstractDataSeries<O> implements DataListener, SeriesView<O> {
 	private TypeToken<O> typeToken = new TypeToken<O>(getClass()) {};
-	private Class<?> type = typeToken.getRawType();
+	/**
+	 * The output type of this series. In rare cases it may be necessary for sub-classes to set this manually. 
+	 */
+	protected Class<?> type = typeToken.getRawType();
 	
 	/**
 	 * The (optional) input series on which this view is based. Null if no input series are used.
