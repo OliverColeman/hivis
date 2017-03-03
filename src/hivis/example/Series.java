@@ -94,31 +94,35 @@ public class Series {
 		DataSeries cosineIntNumbers = intNumbers.applyMathMethod("cos");
 		System.out.println("\ncosineIntNumbers = intNumbers.applyMathMethod(\"cos\") =>\n\t" + cosineIntNumbers);
 		
+		
 		// A useful built-in series method is toUnitRange(), which creates a series containing the
 		// values in the original series scaled to the unit range [0, 1]:	
 		DataSeries realNumbersUnitRange = realNumbers.toUnitRange();
 		System.out.println("\nrealNumbersUnitRange = realNumbers.toUnitRange() =>\n\t" + realNumbersUnitRange);
-				
+		
 		
 		// We can derive new series by applying a custom function to each element of a series.
-		// You define the function via an implementation of the Function class:
+		// You define the function via an implementation of the Function class.
+		// The type of the argument for the apply method should match the type of the data represented by the series.
 		DataSeries customFunc = plus1.apply(new Function() {
 			public Object apply(double input) {
 				return Math.pow(input, 3);
 			}
 		});
 		System.out.println("\ncustomFunc = plus1^3 =>\n\t" + customFunc);
-		// Note: The type of the argument for the apply method should match the type of the data represented by the series.
 		// (Advanced Java developers: the return type of the apply method should be Object unless you've specified, via 
 		//    generics, the input and output type of the function: for example new Function<MyInputType, MyOutputType>()...)
-		
+
 		// A function doesn't have to be numeric, for the input or the return value, 
 		// nor does the input and output type have to be the same.
 		// Here we create a function that accepts Strings and returns Points.
-		DataSeries myStrings = HV.newSeries("1791-12-26", "1815-11-02", "1815-12-10", "1910-06-22", "1912-06-23"); // Some pivotal peoples' birth dates.
+		// Some pivotal peoples' birth dates.
+		DataSeries myStrings = HV.newSeries("1791-12-26", "1815-11-02", "1815-12-10", "1910-06-22", "1912-06-23");
 		DataSeries customFunc2 = myStrings.apply(new Function() {
 			public Object apply(String input) {
-				LocalDate date =  LocalDate.parse(input);
+				// Parse the date using a class from Java's date/time API. 
+				LocalDate date = LocalDate.parse(input);
+				// Make a Point with the X coordinate set to the year and the Y set to the month.
 				return new Point(date.getYear(), date.getMonthValue());
 			}
 		});

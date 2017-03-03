@@ -17,6 +17,10 @@
 package hivis.data;
 
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import hivis.common.ListMap;
@@ -187,5 +191,157 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 	@Override
 	public String toString() {
 		return Util.dataTableToString(this);
+	}
+	
+	/**
+	 * Returns an iterator that presents a row-based ({@link DataRow}) view of the table.
+	 * The iterator will throw a ConcurrentModificationException if the table 
+	 * is structurally modified while iteration is in progress. 
+	 */
+	@Override
+	public Iterator<DataRow> iterator() {
+		final AbstractDataTable me = this;
+		
+		// Ensure the table isn't modified structurally between iterations.
+		AtomicBoolean modified = new AtomicBoolean(false);
+		final DataListener listener = new DataListener() {
+			@Override
+			public void dataChanged(DataEvent event) {
+				// If the affected DataSet is this table, then series were added, removed or reordered.
+				if (event.affected == me) {
+					modified.set(true);
+				}
+				else if (event.isType(DataSeriesChange.ValuesAdded) || event.isType(DataSeriesChange.ValuesRemoved)) {
+					modified.set(true);
+				}
+			}
+		};
+		this.addChangeListener(listener);
+		for (DataSeries<?> s : getAll()) {
+			s.addChangeListener(listener);
+		}
+		
+		// If the table is empty then we've already finished.
+		AtomicBoolean finished = new AtomicBoolean(me.length() == 0);
+		
+		// Current index into table.
+		AtomicInteger rowIndex = new AtomicInteger(0);
+		
+		return new Iterator<DataRow>() {
+			@Override
+			public boolean hasNext() {
+				synchronized (me) {
+					if (modified.get()) {
+						throw new ConcurrentModificationException("The table has been structurally modified, cannot continue iteration.");
+					}
+					return !finished.get();
+				}
+			}
+
+			@Override
+			public DataRow next() {
+				synchronized (me) {
+					if (modified.get()) {
+						throw new ConcurrentModificationException("The table has been structurally modified, cannot continue iteration.");
+					}
+					if (finished.get()) {
+						return null;
+					}
+					Row row = new Row(rowIndex.getAndIncrement());
+					if (rowIndex.get() == me.length()) {
+						finished.set(true);
+					}
+					return row;
+				}
+			}
+		};
+	}
+	
+	private class Row implements DataRow {
+		int rowIndex;
+		
+		public Row(int index) {
+			rowIndex = index;
+		}
+
+		@Override
+		public int size() {
+			return seriesCount();
+		}
+
+		@Override
+		public int getRowIndex() {
+			return rowIndex;
+		}
+
+		@Override
+		public Class<?> getType(int index) {
+			return getSeries(index).getType();
+		}
+
+		@Override
+		public Class<?> getType(String label) {
+			return getSeries(label).getType();
+		}
+		
+		@Override
+		public Object get(String label) {
+			return getSeries(label).get(rowIndex);
+		}
+
+		@Override
+		public boolean getBoolean(String label) {
+			return getSeries(label).getBoolean(rowIndex);
+		}
+
+		@Override
+		public int getInt(String label) {
+			return getSeries(label).getInt(rowIndex);
+		}
+
+		@Override
+		public long getLong(String label) {
+			return getSeries(label).getLong(rowIndex);
+		}
+
+		@Override
+		public float getFloat(String label) {
+			return getSeries(label).getFloat(rowIndex);
+		}
+
+		@Override
+		public double getDouble(String label) {
+			return getSeries(label).getDouble(rowIndex);
+		}
+
+		@Override
+		public Object get(int index) {
+			return getSeries(index).get(rowIndex);
+		}
+
+		@Override
+		public boolean getBoolean(int index) {
+			return getSeries(index).getBoolean(rowIndex);
+		}
+
+		@Override
+		public int getInt(int index) {
+			return getSeries(index).getInt(rowIndex);
+		}
+
+		@Override
+		public long getLong(int index) {
+			return getSeries(index).getLong(rowIndex);
+		}
+
+		@Override
+		public float getFloat(int index) {
+			return getSeries(index).getFloat(rowIndex);
+		}
+
+		@Override
+		public double getDouble(int index) {
+			return getSeries(index).getDouble(rowIndex);
+		}
 	}
 }

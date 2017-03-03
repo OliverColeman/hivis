@@ -18,11 +18,10 @@ package hivis.example;
 
 
 import hivis.common.HV;
+import hivis.data.DataRow;
 import hivis.data.DataSeries;
 import hivis.data.DataTable;
-import hivis.data.view.Function;
 import hivis.data.view.RowFilter;
-import hivis.data.view.TableViewTranspose;
 
 /**
  * Examples of working with {@link DataTable}s.
@@ -81,6 +80,23 @@ public class Tables {
 		reals.set(0, -5);
 		System.out.println("\nmyTable reflecting changed value in 'reals' series:\n" + myTable);
 		
+
+		// Iterate over each row in a table.
+		System.out.println("\nSome selected values from myTable retrieved via row iterator:");
+		for (DataRow row : myTable) {
+			// We can get the value for a column by specifying the column index or label,
+			// and we can get the value as one of the primitive types boolean, int, long, 
+			// float or double, or as a generic Object:
+			int myInt = row.getInt("ints");
+			Object myObject = row.get(3);
+			
+			// The requested type doesn't have to match the type stored by the column/series, 
+			// as long as the stored type can be converted to the requested type:
+			float myFloat = row.getFloat("reals");
+			
+			System.out.println("row " + row.getRowIndex() + ":\t" + myInt + ",\t" + myFloat + ",\t\t" + myObject);
+		}
+		
 		
 		// Get some "views" of our table. A view in HiVis is a selection, rearrangement or processing 
 		// of an underlying data source that will reflect changes in the data source.
@@ -89,7 +105,7 @@ public class Tables {
 		
 		// Relabeling the series.
 		DataTable relabelled = myTable.relabelSeries("Integers", "Reals", "Normal distribution", "Dates");
-		System.out.println("\nrelabelled = myTable.relabel(\"Integers\", \"Reals\", \"Normal distribution\", \"Dates\")\n" + relabelled);
+		System.out.println("\n\nrelabelled = myTable.relabel(\"Integers\", \"Reals\", \"Normal distribution\", \"Dates\")\n" + relabelled);
 		
 		// Relabeling the series by adding a prefix and/or postfix.
 		// If the prefix or postfix contain '\\oi' this will be replaced by the index of the series. 

@@ -31,7 +31,7 @@ import hivis.data.view.TableViewFilterRows;
  * 
  * @author O. J. Coleman
  */
-public interface DataTable extends DataSet {
+public interface DataTable extends DataSet, Iterable<DataRow> {
 
 	/**
 	 * Get the number of series.

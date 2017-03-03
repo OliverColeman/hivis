@@ -18,10 +18,8 @@ package hivis.data;
 
 import java.util.Map.Entry;
 
-import hivis.common.BMListSet;
 import hivis.common.LSListMap;
 import hivis.common.ListMap;
-import hivis.common.ListSet;
 
 
 /**
@@ -30,12 +28,15 @@ import hivis.common.ListSet;
  * @author O. J. Coleman
  */
 public class DataTableDefault extends AbstractDataTable {
-	protected ListMap<String, DataSeries<?>> series;
-	protected int rowKeySeries = Integer.MIN_VALUE;
+	private int length; // Cached length, -1 indicates it needs recalculating.
+	private ListMap<String, DataSeries<?>> series;
+	private int rowKeySeries = Integer.MIN_VALUE;
+	private LengthChangeListener lengthChangeListener;
 	
 	public DataTableDefault() {
 		super();
 		series = new LSListMap<>();
+		lengthChangeListener = new LengthChangeListener();
 	}
 	
 	@Override
@@ -55,16 +56,22 @@ public class DataTableDefault extends AbstractDataTable {
 			rowKeySeries = series.size() - 1;
 		}
 		
+		newSeries.addChangeListener(lengthChangeListener);
+		
+		length = -1;
+		
 		this.setDataChanged(DataTableChange.SeriesAdded);
 		
 		return this;
 	}
 	
+
 	@Override
 	public synchronized DataTable addSeries(DataTable table) {
 		if (table.seriesCount() == 0) {
 			return this;
 		}
+		
 		for (Entry<String, DataSeries<?>> s : table.getLabelledSeries().entrySet()) {
 			String label = s.getKey();
 			if (hasSeries(s.getKey())) {
@@ -77,7 +84,12 @@ public class DataTableDefault extends AbstractDataTable {
 			if (rowKeySeries == Integer.MIN_VALUE && newSeries.length() > 0 && newSeries.get(0) instanceof String) {
 				rowKeySeries = series.size() - 1;
 			}
+			
+			newSeries.addChangeListener(lengthChangeListener);
 		}
+		
+		length = -1;
+		
 		this.setDataChanged(DataTableChange.SeriesAdded);
 		
 		return this;
@@ -90,6 +102,8 @@ public class DataTableDefault extends AbstractDataTable {
 		}
 		DataSeries<?> s = series.remove(label);
 		s.removeContainer(this);
+		s.removeChangeListener(lengthChangeListener);
+		length = -1;
 		this.setDataChanged(DataTableChange.SeriesRemoved);
 		return this;
 	}
@@ -98,17 +112,41 @@ public class DataTableDefault extends AbstractDataTable {
 	public synchronized DataTable removeSeries(int index) {
 		DataSeries<?> s = series.remove(index).getValue();
 		s.removeContainer(this);
+		s.removeChangeListener(lengthChangeListener);
+		length = -1;
 		this.setDataChanged(DataTableChange.SeriesRemoved);
 		return this;
 	}
 
 	@Override
-	public void setRowKey(int index) {
+	public synchronized void setRowKey(int index) {
 		rowKeySeries = index;
 	}
 
 	@Override
-	public int getRowKeyIndex() {
+	public synchronized int getRowKeyIndex() {
 		return rowKeySeries;
+	}
+	
+	@Override
+	public synchronized int length() {
+		if (length == -1) {
+			length = 0;
+			for (DataSeries<?> s : getLabelledSeries().values()) {
+				if (s.length() > length) {
+					length = s.length();
+				}
+			}
+		}
+		return length;
+	}
+	
+	private class LengthChangeListener implements DataListener {
+		@Override
+		public void dataChanged(DataEvent event) {
+			if (event.isType(DataSeriesChange.ValuesAdded) || event.isType(DataSeriesChange.ValuesRemoved)) {
+				length = -1;
+			}
+		}
 	}
 }
