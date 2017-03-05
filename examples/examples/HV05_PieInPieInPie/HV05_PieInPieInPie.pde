@@ -127,12 +127,12 @@ void draw() {
 // Draws a double pie chart using the specified row of the two given data tables.
 // diameter, x and y specify the size and center of the pie chart.
 void makePieInPie(DataTable mf, DataTable eth, int row, float diameter, float x, float y) {
-  HVDraw.pie(this, eth, row, diameter, x, y, palette, 2);
+  HVDraw.pie(this, eth.getRow(row), diameter, x, y, palette, 2);
     
   fill(255);
   ellipse(x, y, diameter * 0.6, diameter * 0.6);
 
-  HVDraw.pie(this, mf, row, diameter * 0.5, x, y, palette, 0);
+  HVDraw.pie(this, mf.getRow(row), diameter * 0.5, x, y, palette, 0);
   
   fill(255);
   ellipse(x, y, diameter * 0.2, diameter * 0.2);
@@ -140,5 +140,5 @@ void makePieInPie(DataTable mf, DataTable eth, int row, float diameter, float x,
   // Draw label.
   fill(64);
   textAlign(CENTER, TOP);
-  text(mf.getSeries(0).get(row).toString(), x, y + diameter / 2);
+  text(mf.get(0).get(row).toString(), x, y + diameter / 2);
 }

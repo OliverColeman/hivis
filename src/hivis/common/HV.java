@@ -124,7 +124,7 @@ public class HV {
 	 * @param headerRow The index of the row to use as column headers.
 	 * @param firstDataRow The row to start reading data from (to the end of the sheet).
 	 * @param firstDataColumn The column to start creating series from (up to the last column).
-	 * @deprecated Superseded by {@link #loadSpreadSheet(hivis.data.reader.SpreadSheetReader.Config)}. This method will be removed in future releases.
+	 * @deprecated As of 2.0. Superseded by {@link #loadSpreadSheet(hivis.data.reader.SpreadSheetReader.Config)}. This method will be removed in future releases.
 	 */
 	public static DataTable loadSpreadSheet(File file, int sheet, int headerRow, int firstDataRow, int firstDataColumn) {
 		SpreadSheetReader reader = new SpreadSheetReader(file, sheet, headerRow, firstDataRow, firstDataColumn, false);

@@ -65,7 +65,7 @@ public class DataTableDefault extends AbstractDataTable {
 		return this;
 	}
 	
-
+	
 	@Override
 	public synchronized DataTable addSeries(DataTable table) {
 		if (table.seriesCount() == 0) {

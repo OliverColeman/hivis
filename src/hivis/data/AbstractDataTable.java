@@ -23,7 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import hivis.common.ListMap;
+import com.google.common.base.Objects;
+
 import hivis.common.ListSet;
 import hivis.common.Util;
 import hivis.data.view.RowFilter;
@@ -72,13 +73,28 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 	}
 
 	@Override
-	public DataSeries<?> getSeries(int index) {
+	public DataSeries<?> get(int index) {
 		return getLabelledSeries().get(index).getValue();
 	}
 
 	@Override
-	public DataSeries<?> getSeries(String label) {
+	public DataSeries<?> get(String label) {
 		return getLabelledSeries().get(label);
+	}
+
+	@Override
+	public DataSeries<?> getSeries(int index) {
+		return get(index);
+	}
+
+	@Override
+	public DataSeries<?> getSeries(String label) {
+		return get(label);
+	}
+	
+	@Override
+	public DataRow getRow(int index) {
+		return new Row(index);
 	}
 
 	@Override
@@ -202,18 +218,22 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 	public Iterator<DataRow> iterator() {
 		final AbstractDataTable me = this;
 		
+		// Current length of table.
+		final int originalLength = me.length();
+		
 		// Ensure the table isn't modified structurally between iterations.
 		AtomicBoolean modified = new AtomicBoolean(false);
 		final DataListener listener = new DataListener() {
 			@Override
 			public void dataChanged(DataEvent event) {
-				// If the affected DataSet is this table, then series were added, removed or reordered.
-				if (event.affected == me) {
+				// If series were added, removed or reordered, or the length has changed.
+				if (event.isType(DataTableChange.SeriesAdded) || 
+						event.isType(DataTableChange.SeriesRemoved) || 
+						event.isType(DataTableChange.SeriesReordered) || 
+						me.length() != originalLength) {
 					modified.set(true);
 				}
-				else if (event.isType(DataSeriesChange.ValuesAdded) || event.isType(DataSeriesChange.ValuesRemoved)) {
-					modified.set(true);
-				}
+				
 			}
 		};
 		this.addChangeListener(listener);
@@ -257,16 +277,38 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 		};
 	}
 	
-	private class Row implements DataRow {
+	private class Row extends DataSetDefault implements DataRow, DataListener {
 		int rowIndex;
+		int hash;
 		
 		public Row(int index) {
 			rowIndex = index;
+			updateHash();
+			AbstractDataTable.this.addChangeListener(this);
+		}
+		
+		private void checkValid() {
+			if (rowIndex >= AbstractDataTable.this.length()) {
+				throw new IllegalStateException("The DataRow for index " + rowIndex + " no longer exists in the DataTable. DataTable length is " + AbstractDataTable.this.length() + ".");
+			}
 		}
 
 		@Override
-		public int size() {
+		public int length() {
+			checkValid();
 			return seriesCount();
+		}
+		
+		@Override
+		public boolean isNumeric(int index) {
+			checkValid();
+			return getSeries(index).isNumeric();
+		}
+
+		@Override
+		public boolean isNumeric(String label) {
+			checkValid();
+			return getSeries(label).isNumeric();
 		}
 
 		@Override
@@ -276,72 +318,110 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 
 		@Override
 		public Class<?> getType(int index) {
+			checkValid();
 			return getSeries(index).getType();
 		}
 
 		@Override
 		public Class<?> getType(String label) {
+			checkValid();
 			return getSeries(label).getType();
 		}
 		
 		@Override
 		public Object get(String label) {
+			checkValid();
 			return getSeries(label).get(rowIndex);
 		}
 
 		@Override
 		public boolean getBoolean(String label) {
+			checkValid();
 			return getSeries(label).getBoolean(rowIndex);
 		}
 
 		@Override
 		public int getInt(String label) {
+			checkValid();
 			return getSeries(label).getInt(rowIndex);
 		}
 
 		@Override
 		public long getLong(String label) {
+			checkValid();
 			return getSeries(label).getLong(rowIndex);
 		}
 
 		@Override
 		public float getFloat(String label) {
+			checkValid();
 			return getSeries(label).getFloat(rowIndex);
 		}
 
 		@Override
 		public double getDouble(String label) {
+			checkValid();
 			return getSeries(label).getDouble(rowIndex);
 		}
 
 		@Override
 		public Object get(int index) {
+			checkValid();
 			return getSeries(index).get(rowIndex);
 		}
 
 		@Override
 		public boolean getBoolean(int index) {
+			checkValid();
 			return getSeries(index).getBoolean(rowIndex);
 		}
 
 		@Override
 		public int getInt(int index) {
+			checkValid();
 			return getSeries(index).getInt(rowIndex);
 		}
 
 		@Override
 		public long getLong(int index) {
+			checkValid();
 			return getSeries(index).getLong(rowIndex);
 		}
 
 		@Override
 		public float getFloat(int index) {
+			checkValid();
 			return getSeries(index).getFloat(rowIndex);
 		}
 
 		@Override
 		public double getDouble(int index) {
+			checkValid();
 			return getSeries(index).getDouble(rowIndex);
+		}
+		
+		@Override
+		public void dataChanged(DataEvent event) {
+			if (rowIndex < AbstractDataTable.this.length()) {
+				int oldHash = hash;
+				updateHash();
+				if (oldHash != hash) {
+					this.fireChangeEvent(new DataEvent(this, event));
+				}
+			}
+		}
+		
+		@Override
+		public int hashCode() {
+			return hash;
+		}
+		
+		private void updateHash() {
+			hash = 1;
+			for (int i = 0; i < length(); i++) {
+				Object element = get(i);
+				hash = 31 * hash + (element == null ? 0 : element.hashCode());
+			}
 		}
 	}
 }

@@ -16,6 +16,8 @@
 
 package hivis.data;
 
+import java.util.Collection;
+
 import hivis.common.Event;
 
 /**
@@ -24,12 +26,12 @@ import hivis.common.Event;
  * @author O. J. Coleman
  */
 public class DataEvent extends Event<DataSet, Object, DataEvent> {
-	public DataEvent(DataSet affected, DataEvent sourceEvent, Object... types) {
-		super(affected, sourceEvent, types);
+	public DataEvent(DataSet affected, DataEvent sourceEvent, Object... changeTypes) {
+		super(affected, sourceEvent, changeTypes);
 	}
 	
-	public DataEvent(DataSet affected, Object... types) {
-		super(affected, types);
+	public DataEvent(DataSet affected, Object... changeTypes) {
+		super(affected, changeTypes);
 	}
 	
 	@Override

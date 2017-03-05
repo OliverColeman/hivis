@@ -63,7 +63,7 @@ public class ChartGI implements DataListener {
 		}
 		
 		if (data.seriesCount() == 1) {
-			DataSeries<?> ySeries = data.getSeries(0);
+			DataSeries<?> ySeries = data.get(0);
 			
 			for (int i = 0; i < size; i++) {
 				xData[i] = i;
@@ -73,8 +73,8 @@ public class ChartGI implements DataListener {
 			chart.setYAxisLabel(data.getSeriesLabel(0));
 		}
 		else {
-			DataSeries<?> xSeries = data.getSeries(0);
-			DataSeries<?> ySeries = data.getSeries(1);
+			DataSeries<?> xSeries = data.get(0);
+			DataSeries<?> ySeries = data.get(1);
 			
 			for (int i = 0; i < size; i++) {
 				xData[i] = xSeries.getFloat(i);
@@ -89,7 +89,7 @@ public class ChartGI implements DataListener {
 	}
 	
 	private boolean checkSeries(int s) {
-		if (data.getSeries(s).length() > 0 && !data.getSeries(s).isNumeric()) {
+		if (data.get(s).length() > 0 && !data.get(s).isNumeric()) {
 			System.err.println("Cannot chart series '" + data.getSeriesLabel(s) + "' as it is not numeric.");
 			return false;
 		}

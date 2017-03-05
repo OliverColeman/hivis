@@ -93,14 +93,14 @@ void selectSeries() {
   int seriesYIndex = (int) selectY.getValue();
   
   // Reset min and max values for threshold Y slider.
-  float minY = cars.getSeries(seriesYIndex).min().getFloat();
-  float maxY = cars.getSeries(seriesYIndex).max().getFloat();
+  float minY = cars.get(seriesYIndex).min().getFloat();
+  float maxY = cars.get(seriesYIndex).max().getFloat();
   thresholdY.setRange(minY + 0.0001, maxY);
   thresholdY.setValue(maxY);
   
   // Get the series for the x values, with values represented as real (double) numbers.
   // Must be final so we can access it in the anonymous inner class below.
-  final DataSeries seriesX = cars.getSeries(seriesXIndex);
+  final DataSeries seriesX = cars.get(seriesXIndex);
   
   // Make a series that raises the values in the x series to the exponent given by the x slider.
   // CalcSeries.DoubleSeries produces a DataSeries<Double> from one or more input series.
@@ -121,12 +121,12 @@ void selectSeries() {
   
   DataTable toPlotUnfiltered = HV.newTable()
       .addSeries(xLabel, calcSeriesX)
-      .addSeries(yLabel, cars.getSeries(seriesYIndex));
+      .addSeries(yLabel, cars.get(seriesYIndex));
   
   // Get a view of the table to plot which filters out rows which contain a Y value outside the threshold value set by the Y slider.
   toPlot = toPlotUnfiltered.selectRows(new RowFilter() {
     public boolean excludeRow(DataTable input, int index) {
-      return input.getSeries(1).getFloat(index) > thresholdY.getValue();
+      return input.get(1).getFloat(index) > thresholdY.getValue();
     }
   });
   
@@ -134,7 +134,7 @@ void selectSeries() {
   scatterPlot = new ChartGI(this, toPlot);
   
   // Get the maximum value for the x series.
-  float maxX = cars.getSeries(seriesXIndex).max().getFloat();
+  float maxX = cars.get(seriesXIndex).max().getFloat();
   // Set the max possible value for the x series after applying exponential function.
   scatterPlot.chart.setMaxX((float) Math.pow(maxX, sliderX.getMax()));
   

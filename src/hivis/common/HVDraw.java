@@ -19,6 +19,7 @@ import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
+import hivis.data.DataSequence;
 import hivis.data.DataSeries;
 import hivis.data.DataTable;
 import processing.core.PApplet;
@@ -62,63 +63,43 @@ public class HVDraw {
 
 
 	/**
-	 * Draws a pie chart based on a DataSeries.
+	 * Draws a pie chart based on a sequence of values (for example a {@link DataSeries} or {@link DataRow}). 
+	 * Non-numeric values are ignored.
 	 */
-	public static void pie(PApplet applet, DataSeries<?> series, float diameter, float x, float y, int[] palette, int paletteOffset) {
+	public static void pie(PApplet applet, DataSequence values, float diameter, float x, float y, int[] palette, int paletteOffset) {
 		applet.pushStyle();
 		applet.noStroke();
 		float total = 0;
-		for (int row = 0; row < series.length(); row++) {
-			float value = series.getFloat(row);
-			if (!Float.isNaN(value)) {
-				total += value;
-			}
-		}
-		float lastAngle = 0;
-		for (int row = 0; row < series.length(); row++) {
-			float value = series.getFloat(row);
-			if (!Float.isNaN(value)) {
-				applet.fill(palette[(row + paletteOffset) % palette.length]);
-				float angle = (value / total) * applet.TWO_PI;
-				applet.arc(x, y, diameter, diameter, lastAngle, lastAngle + angle);
-				lastAngle += angle;
-			}
-		}
-		applet.popStyle();
-	}
-	
-
-	/**
-	 * Draws a pie chart based on a row from a DataTable. Non-numeric series are ignored.
-	 */
-	public static void pie(PApplet applet, DataTable data, int row, float diameter, float x, float y, int[] palette, int paletteOffset) {
-		applet.pushStyle();
-		applet.noStroke();
-		int seriesCount = data.seriesCount();
-		float total = 0;
-		for (int s = 0; s < seriesCount; s++) {
-			DataSeries<?> series = data.getSeries(s);
-			if (series.isNumeric()) {
-				float value = data.getSeries(s).getFloat(row);
+		for (int item = 0; item < values.length(); item++) {
+			if (values.isNumeric(item)) {
+				float value = values.getFloat(item);
 				if (!Float.isNaN(value)) {
 					total += value;
 				}
 			}
 		}
 		float lastAngle = 0;
-		for (int s = 0, c = 0; s < seriesCount; s++) {
-			DataSeries<?> series = data.getSeries(s);
-			if (series.isNumeric()) {
-				float value = series.getFloat(row);
+		for (int item = 0; item < values.length(); item++) {
+			if (values.isNumeric(item)) {
+				float value = values.getFloat(item);
 				if (!Float.isNaN(value)) {
-					applet.fill(palette[(c + paletteOffset) % palette.length]);
+					applet.fill(palette[(item + paletteOffset) % palette.length]);
 					float angle = (value / total) * applet.TWO_PI;
 					applet.arc(x, y, diameter, diameter, lastAngle, lastAngle + angle);
 					lastAngle += angle;
 				}
-				c++;
 			}
 		}
 		applet.popStyle();
+	}
+	
+	
+	/**
+	 * Draws a pie chart based on a row from a DataTable. Non-numeric series are ignored.
+	 * @deprecated As of 2.0. Superseded by {@link #pie(PApplet, DataSequence, float, float, float, int[], int)}, 
+	 *     passing {@link DataTable#getRow(int)} as the sequence of values.
+	 */
+	public static void pie(PApplet applet, DataTable data, int row, float diameter, float x, float y, int[] palette, int paletteOffset) {
+		pie(applet, data.getRow(row), diameter, x, y, palette, paletteOffset);
 	}
 }

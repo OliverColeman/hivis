@@ -13,12 +13,6 @@ import beads.*;
 // Stores the data to plot.
 DataTable data;
 
-// The series/columns we're interested in.
-DataSeries retailMarkup;
-DataSeries healthRating;
-DataSeries retailCost;
-DataSeries tasteStrength;
-
 // Used to control the frequency of the audio when hovering over a data point.
 Envelope freqEnv;
 // Used to silence the audio when not hovering over a data point.
@@ -32,18 +26,18 @@ void setup() {
   
   // Get data from spread sheet. 
   // The SpreadSheetReader will automatically update the DataTable it provides if the source file is changed.
-  data = HV.loadSpreadSheet(
+  DataTable dataRaw = HV.loadSpreadSheet(
     HV.loadSSConfig().sourceFile(sketchFile("KIB - Oil Well.xlsx")).sheetIndex(1).headerRowIndex(0).rowIndex(3)
   );
   
-  println(data);
+  println("Raw data:\n" + dataRaw);
   
   // Get the series/columns we're interested in.
+  data = HV.newTable();
+  data.addSeries(dataRaw.selectSeries("oil / fat", "type", "UK retail cost per 100ml ($)", "taste strength index"));
   // Transform some to unit range [0, 1] to make them easier to work with.
-  retailMarkup = data.getSeries("retail markup").toUnitRange();
-  healthRating = data.getSeries("health rating").toUnitRange();
-  retailCost = data.getSeries("UK retail cost per 100ml ($)");
-  tasteStrength = data.getSeries("taste strength index");
+  data.addSeries("retail markup", dataRaw.get("retail markup").toUnitRange());
+  data.addSeries("health rating", dataRaw.get("health rating").toUnitRange());
   
   // Set-up audio.
   AudioContext ac = new AudioContext();
@@ -87,13 +81,12 @@ void draw() {
 
   // Plot data points as scatter plot, using "retail markup" and "health rating" as x and y coordinates respectively.
   noStroke();
-  for (int row = 0; row < data.length(); row++) {
-    
+  for (DataRow row : data) {
     // If data exists for this row.
-    if (data.getSeries(0).get(row) != null) {
+    if (row.get("oil / fat") != null) {
       // Get values from series. Multiply x and y by a constant factor to scale to canvas size. See exercise 2.
-      float x = retailMarkup.getFloat(row) * widthScaled + marginLeft;
-      float y = healthRating.getFloat(row) * heightScaled + marginTop;
+      float x = row.getFloat("retail markup") * widthScaled + marginLeft;
+      float y = row.getFloat("health rating") * heightScaled + marginTop;
       
       fill(0, 0, 0, 127);
       ellipse(x, y, 10, 10);
@@ -101,12 +94,16 @@ void draw() {
       if (isHovering(x, y)) {
         // Text labels.
         textAlign(LEFT, CENTER);
-        String label = data.getSeries(0).get(row).toString();
-        if (data.getSeries(1).get(row) != null) {
-          label += " - " + data.getSeries(1).get(row).toString();
+        String label = row.get("oil / fat").toString();
+        if (row.get("type") != null) {
+          label += " - " + row.get("type").toString();
         }
-        label += "\nretail cost: " + retailCost.get(row);
-        label += "\ntaste strength: " + tasteStrength.get(row);
+        
+        float retailCost = row.getFloat("UK retail cost per 100ml ($)");
+        int tasteStrength = row.getInt("taste strength index");
+        
+        label += "\nretail cost: " + retailCost;
+        label += "\ntaste strength: " + tasteStrength;
         fill(0, 127, 0);
         text(label, x+7, y);
         
@@ -114,9 +111,9 @@ void draw() {
         silenceAudio = false;
         // Take log of cost to account for logarithmic tone sensitivity of human hearing (?). Multiply by 1000 to get frequencies into khz range.
         // Add 100 hertz so even the lowest data values will produce audible tone on speakers that don't reproduce low frequencies very well. 
-        float freq = log(retailCost.getFloat(row)) * 1000 + 100;
+        float freq = log(retailCost) * 1000 + 100;
         // Scale gain from 2/5 to 4/5 (data range is [0, 2]).
-        float gain = (tasteStrength.getInt(row) + 2) / 5.0;
+        float gain = (tasteStrength + 2) / 5.0;
         freqEnv.addSegment(freq, 200);
         gainControl.setGain(gain);
         
@@ -125,6 +122,7 @@ void draw() {
         text("Freqency: retail cost\nVolume:   taste strength", width - 200, marginTop);
       }
     }
+    data.addSeries("blah", HV.newIntegerSeries(1));
   }
   
   if (silenceAudio) {

@@ -24,13 +24,13 @@ import hivis.data.view.SeriesView;
 import hivis.data.view.TableFunction;
 
 /**
- * Represents a series or vector of values. 
+ * Represents a series or vector of values that are all of the same type.
  * Implementations typically define the type of value to store. 
  * This may be numeric or any kind of object.
  * 
  * @author O. J. Coleman
  */
-public interface DataSeries<V> extends DataSet, Iterable<V> {
+public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	/**
 	 * Get the number of elements in this series.
 	 */

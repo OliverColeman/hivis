@@ -90,17 +90,17 @@ void updatePlotTable() {
     ScrollableList select = selectors.get(d);
     int seriesIndex = (int) select.getValue();
     
-    //println(data.getSeriesLabel(seriesIndex) + " => " + plotDims[d]);
+    //println(data.getLabel(seriesIndex) + " => " + plotDims[d]);
     
     DataSeries series;
     // First dimension is label, we just convert values to strings in draw method.
     // 7th dimension is edges, just use raw value rounded to int.
     if (seriesIndex == 0 || seriesIndex == 6) {
-      series = data.getSeries(seriesIndex);
+      series = data.get(seriesIndex);
     }
     else {
       // For all other plot dimensions get a view of the series that converts the values to a unit range [0, 1] as this is easier to work with in the draw method.
-      series = data.getSeries(seriesIndex).toUnitRange();
+      series = data.get(seriesIndex).toUnitRange();
     }
    
     // Just use dimension index as the label to ensure the labels are unique.
@@ -129,16 +129,16 @@ void draw() {
     float maxShapeSize = 50;
     float paddingTop = 60;
     
-    for (int row = 0; row < toPlot.length(); row++) {
+    for (DataRow row : toPlot) {
       //"label", "x", "y", "hue", "brightness", "shape size", "shape type", "shape edges"
-      String label = toPlot.getSeries(0).get(row).toString();
-      float x = toPlot.getSeries(1).getFloat(row) * (width - maxShapeSize - 10) + 5 + maxShapeSize/2;
-      float y = (1 - toPlot.getSeries(2).getFloat(row)) * (height - maxShapeSize - paddingTop - 10) + paddingTop + 5;
-      float hue = toPlot.getSeries(3).getFloat(row);
-      float bri = toPlot.getSeries(4).getFloat(row) * 0.7 + 0.3;
-      float size = toPlot.getSeries(5).getFloat(row) * (maxShapeSize - minShapeSize) + minShapeSize;
-      int edges = round(toPlot.getSeries(6).getInt(row));
-      boolean type = toPlot.getSeries(7).getFloat(row) > 0.5;
+      String label = row.get(0).toString();
+      float x = row.getFloat(1) * (width - maxShapeSize - 10) + 5 + maxShapeSize/2;
+      float y = (1 - row.getFloat(2)) * (height - maxShapeSize - paddingTop - 10) + paddingTop + 5;
+      float hue = row.getFloat(3);
+      float bri = row.getFloat(4) * 0.7 + 0.3;
+      float size = row.getFloat(5) * (maxShapeSize - minShapeSize) + minShapeSize;
+      int edges = round(row.getInt(6));
+      boolean type = row.getFloat(7) > 0.5;
       
       // If this is a spiky shape rather than a polygon
       if (type) {

@@ -62,12 +62,29 @@ public interface DataTable extends DataSet, Iterable<DataRow> {
 	/**
 	 * Get the specified series.
 	 */
-	DataSeries<?> getSeries(int index);
+	DataSeries<?> get(int index);
 
 	/**
 	 * Get the specified series.
 	 */
+	DataSeries<?> get(String label);
+
+	/**
+	 * Get the specified series.
+	 * @deprecated As of 2.0. Replaced by {@link #get(int)}.
+	 */
+	DataSeries<?> getSeries(int index);
+
+	/**
+	 * Get the specified series.
+	 * @deprecated As of 2.0. Replaced by {@link #get(String)}.
+	 */
 	DataSeries<?> getSeries(String label);
+	
+	/**
+	 * Get a view of the specified row.
+	 */
+	DataRow getRow(int index);
 
 	/**
 	 * Returns the label associated with the specified series.

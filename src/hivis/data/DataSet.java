@@ -35,6 +35,8 @@ public interface DataSet {
 
 	/**
 	 * Adds the given DataSet as a container for this DataSet, or if it has already been added makes no changes.
+	 * Containers are notified of changes that occur to this DataSet via the {@link #setDataChanged(Object)} 
+	 * method.
 	 */
 	void addContainer(DataSet container);
 	

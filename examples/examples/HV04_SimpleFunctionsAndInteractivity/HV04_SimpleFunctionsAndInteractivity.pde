@@ -18,32 +18,25 @@ import hivis.data.view.*;
 // Stores the data to plot.
 DataTable data;
 
-// Series containing data we want to plot.
-DataSeries cyl; // // Number of cylinders.
-DataSeries disp; // // Displacement.
-DataSeries hp; // Horse Power. Because that's still a sensible unit of power. Neigh!
-DataSeries hpOnDisp; // hp divided by the corresponding values in disp.
-
-
 void setup() {
   size(1000, 300);
   textSize(15);
   colorMode(HSB, 1, 1, 1, 1);
   
   // Get a data set.
-  data = HV.mtCars();
+  DataTable cars = HV.mtCars();
   
-  // Get some series from the data table.
-  cyl = data.getSeries("cyl");
-  DataSeries dispOrig = data.getSeries("disp");
-  DataSeries hpOrig = data.getSeries("hp");
+  // Make a table to contain the data to plot.
+  data = HV.newTable();
+  // Add some series unchanged from the original data set.
+  data.addSeries(cars.selectSeries("cyl", "disp", "hp"));
   
-  // Get a series containing the values in hp divided by the corresponding values in disp.
-  hpOnDisp = hpOrig.divide(dispOrig);
+  // Add a series containing the values in hp divided by the corresponding values in disp.
+  data.addSeries("hp / disp", data.get("hp").divide(data.get("disp")));
   
-  // Scale the series used for x and y coorindates (disp and hp) to unit range [0, 1].
-  disp = dispOrig.toUnitRange();
-  hp = hpOrig.toUnitRange();
+  // Add versions of disp and hp that are scaled to unit range [0, 1], used for x and y coorindates.
+  data.addSeries("disp unit", data.get("disp").toUnitRange());
+  data.addSeries("hp unit", data.get("hp").toUnitRange());
 }
 
 
@@ -63,14 +56,17 @@ void draw() {
     text(c, 10, (c - 4) * yScale + yOffset);
   }
   
-  for (int row = 0; row < data.length(); row++) {
-    int c = cyl.getInt(row);
+  // Get the minimum value in the "hp / disp" series.
+  float hpOnDispMin = data.get("hp / disp").min().getFloat();
+  
+  for (DataRow row : data) {
+    int c = row.getInt("cyl");
     
     int y = (c - 4) * yScale + yOffset;
-    float x = (hpOnDisp.getFloat(row) - hpOnDisp.min().getFloat()) * xScale + xOffset;
+    float x = (row.getFloat("hp / disp") - hpOnDispMin) * xScale + xOffset;
     
-    float w = disp.getFloat(row) * 100;
-    float h = hp.getFloat(row) * 100;
+    float w = row.getFloat("disp unit") * 100;
+    float h = row.getFloat("hp unit") * 100;
     
     // Determine if we're hovering over a data point by testing if the distance from 
     // the centre of it to the mouse is less than the average/approximate radius of the point. 
@@ -86,7 +82,7 @@ void draw() {
     
     if (isHovering) {
       fill(1, 0, 1, 1);
-      text("  hp: " + hp.get(row) + "\ndisp: " + disp.get(row), x, y-40);
+      text("  hp: " + row.get("hp") + "\ndisp: " + row.get("disp"), x, y-40);
     }
   }
 }

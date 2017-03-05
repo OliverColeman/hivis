@@ -97,6 +97,13 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 		return get(index).equals(getEmptyValue());
 	}
 	
+	
+	@Override
+	public boolean isNumeric(int index) {
+		return isNumeric();
+	}
+
+	
 	@Override
 	public Class<?> getType() {
 		// If the type info seems to be available, use it.

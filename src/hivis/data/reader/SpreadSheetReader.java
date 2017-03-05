@@ -123,7 +123,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	 * @param headerRow The zero-based index of the row to use as column headers, or -1 for no header row.
 	 * @param firstDataRow The zero-based index of the row to start reading data from (to the end of the sheet).
 	 * @param firstDataColumn The zero-based index of the column to start creating series from (up to the last column).
-	 * @deprecated Superseded by {@link #SpreadSheetReader(hivis.data.reader.SpreadSheetReader.Config)}. This constructor will be removed in future releases.
+	 * @deprecated As of 2.0. Superseded by {@link #SpreadSheetReader(hivis.data.reader.SpreadSheetReader.Config)}. This constructor will be removed in future releases.
 	 */
 	public SpreadSheetReader(File file, int sheet, int headerRow, int firstDataRow, int firstDataColumn) {
 		this(file, sheet, headerRow, firstDataRow, firstDataColumn, true);
@@ -139,7 +139,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	 * @param firstDataRow The zero-based index of the row to start reading data from (to the end of the sheet).
 	 * @param firstDataColumn The zero-based index of the column to start creating series from (up to the last column).
 	 * @param doublePrecision If true then numeric series will be created as DataSeries&lt;Double&gt;, otherwise they will be created as DataSeries&lt;Float&gt;.
-	 * @deprecated Superseded by {@link #SpreadSheetReader(hivis.data.reader.SpreadSheetReader.Config)}. This constructor will be removed in future releases.
+	 * @deprecated As of 2.0. Superseded by {@link #SpreadSheetReader(hivis.data.reader.SpreadSheetReader.Config)}. This constructor will be removed in future releases.
 	 */
 	public SpreadSheetReader(File file, int sheet, int headerRow, int firstDataRow, int firstDataColumn, boolean doublePrecision) {
 		this(new Config().sourceFile(file).sheetIndex(sheet).headerRowIndex(headerRow).rowIndex(firstDataRow).columnIndex(firstDataColumn).doublePrecision(doublePrecision));
