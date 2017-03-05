@@ -213,7 +213,7 @@ public interface ListSet<E> extends List<E>, Set<E> {
      * </pre>
      * Similar idioms may be constructed for {@link #indexOf(Object)} and
      * {@link #lastIndexOf(Object)}, and all of the algorithms in the
-     * {@link Collections} class can be applied to a subList.
+     * java.util.Collections class can be applied to a subList.
      *
      * <p>The semantics of the list returned by this method become undefined if
      * the backing list (i.e., this list) is <i>structurally modified</i> in

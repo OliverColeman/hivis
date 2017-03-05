@@ -454,7 +454,7 @@ public abstract class AbstractDataSeries<V> extends DataSetDefault implements Da
 	
 	/**
 	 * This default implementation uses {@link #getFloat(int)} to populate the array.
-	 * @see hivis.data.DataSeries#asFloatArray(double[])
+	 * @see hivis.data.DataSeries#asFloatArray(float[])
 	 */
 	@Override
 	public float[] asFloatArray(float[] data) {

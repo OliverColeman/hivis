@@ -344,13 +344,13 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	
 	/**
 	 * Returns the maximum value contained in this series, or getEmptyValue() if the series is empty.
-	 * @Deprecated Superseded by {@link #max()}. 
+	 * @deprecated Superseded by {@link #max()}. 
 	 */
 	public V maxValue();
 	
 	/**
 	 * Returns the minimum value contained in this series, or getEmptyValue() if the series is empty.
-	 * @Deprecated Superseded by {@link #min()}.
+	 * @deprecated Superseded by {@link #min()}.
 	 */
 	public V minValue();
 	

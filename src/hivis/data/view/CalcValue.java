@@ -63,7 +63,7 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 	
 	
 	/**
-	 * Update the {@link #cache) value. The default implementation calls
+	 * Update the {@link #cache} value. The default implementation calls
 	 * {@link #calc()}. Sub-classes may override
 	 * this to provide a more efficient implementation, for example avoiding
 	 * autoboxing if a primitive type is stored.

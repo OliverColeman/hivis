@@ -63,7 +63,7 @@ public class HVDraw {
 
 
 	/**
-	 * Draws a pie chart based on a sequence of values (for example a {@link DataSeries} or {@link DataRow}). 
+	 * Draws a pie chart based on a sequence of values (for example a {@link DataSeries} or {@link hivis.data.DataRow}). 
 	 * Non-numeric values are ignored.
 	 */
 	public static void pie(PApplet applet, DataSequence values, float diameter, float x, float y, int[] palette, int paletteOffset) {

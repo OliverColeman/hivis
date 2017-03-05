@@ -20,6 +20,7 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.List;
@@ -32,7 +33,7 @@ import com.google.common.collect.HashBiMap;
 
 
 /**
- * <p>A {link ListSet} backed by a {@link HashBiMap}
+ * <p>A {link ListSet} backed by a <a href="http://google.github.io/guava/releases/19.0/api/docs/com/google/common/collect/HashBiMap.html">HashBiMap</a>
  * Addition (appending to end of list), contains, and index-of operations 
  * take O(1) time. Insertion and removal take O(n) time (excepting at the 
  * end of the list, in which case it is O(1)).
@@ -47,29 +48,29 @@ import com.google.common.collect.HashBiMap;
  * synchronizing on some object that naturally encapsulates the list.
  *
  * If no such object exists, the list should be "wrapped" using the
- * {@link Collections#synchronizedList Collections.synchronizedList}
+ * {@link Collections#synchronizedList}
  * method.  This is best done at creation time, to prevent accidental
  * unsynchronized access to the list:<pre>
  *   List list = Collections.synchronizedList(new ArrayList(...));</pre></p>
  *
  * <p><a name="fail-fast"/>
- * The iterators returned by this class's {@link #iterator() iterator} and
- * {@link #listIterator(int) listIterator} methods are <em>fail-fast</em>:
+ * The iterators returned by this class's {@link #iterator()} and
+ * {@link #listIterator(int)} methods are <em>fail-fast</em>:
  * if the list is structurally modified at any time after the iterator is
  * created, in any way except through the iterator's own
- * {@link ListIterator#remove() remove} or
- * {@link ListIterator#add(Object) add} methods, the iterator will throw a
+ * {@link ListIterator#remove()} or
+ * {@link ListIterator#add(Object)} methods, the iterator will throw a
  * {@link ConcurrentModificationException}.  Thus, in the face of
  * concurrent modification, the iterator fails quickly and cleanly, rather
- * than risking arbitrary, non-deterministic behavior at an undetermined
+ * than risking arbitrary, non-deterministic behaviour at an undetermined
  * time in the future.</p>
  *
- * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
+ * <p>Note that the fail-fast behaviour of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
  * presence of unsynchronized concurrent modification.  Fail-fast iterators
  * throw {@code ConcurrentModificationException} on a best-effort basis.
  * Therefore, it would be wrong to write a program that depended on this
- * exception for its correctness:  <i>the fail-fast behavior of iterators
+ * exception for its correctness:  <i>the fail-fast behaviour of iterators
  * should be used only to detect bugs.</i></p>
  * 
  * @author O. J. Coleman

@@ -33,8 +33,7 @@ import hivis.data.DataValueFloat;
 import hivis.data.DataValueInteger;
 import hivis.data.DataValueLong;
 import hivis.data.reader.SpreadSheetReader;
-import hivis.data.view.CalcSeries;
-import processing.core.PApplet;
+import hivis.data.reader.SpreadSheetReader.Config;
 import hivis.data.view.AbstractSeriesView;
 
 /**
@@ -136,9 +135,9 @@ public class HV {
 	 * <p>The returned DataTable will be updated in real time as changes are saved to the file.</p>
 	 * <p>DataSeries are created to match the data type for a column (using the first non-empty data element of a column):
 	 * 	<dl>
-	 * 		<dt>Numeric: </td><dd>DataSeries&lt;Double/Float&gt; (see {@link SpreadSheetReader.Config#doublePrecision(boolean)}.</dd>
+	 * 		<dt>Numeric: </td><dd>DataSeries&lt;Double/Float&gt; (see {@link Config#doublePrecision(boolean)}.</dd>
 	 * 		<dt>Date: </td><dd>DataSeries&lt;TemporalAccessor/Date&gt; (for columns formatted as dates/times (Excel), 
-	 * 			or text that looks like an ISO-like date or time (CSV). See {@link SpreadSheetReader.Config#useDeprecatedDates(boolean)}).</dd>
+	 * 			or text that looks like an ISO-like date or time (CSV). See {@link Config#useDeprecatedDates(boolean)}).</dd>
 	 * 		<dt>String: </td><dd>DataSeries&lt;String&gt; (for everything else).</dd>
 	 * 	</dl>
 	 * 

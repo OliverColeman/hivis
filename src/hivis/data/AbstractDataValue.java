@@ -162,7 +162,7 @@ public abstract class AbstractDataValue<V> extends DataSetDefault implements Dat
 
 	/**
 	 * Get the value stored as a double.
-	 * This default implementation casts the value given by {@link #get(int)}.
+	 * This default implementation casts the value given by {@link #get()}.
 	 * Sub-classes may override this to improve efficiency.
 	 * @see hivis.data.DataValue#getDouble()
 	 */
