@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 import java.util.Spliterator;
+import java.util.function.UnaryOperator;
 
 /**
  * <p>Interface for a List that enforces uniqueness amongst its members. 
@@ -44,13 +45,14 @@ public interface ListSet<E> extends List<E>, Set<E> {
     /**
      * Replaces the element at the specified position in this list with
      * the specified element. An exception is thrown if the list set already
-     * contains the element.
+     * contains the element 
+     * (excepting if element == null ? get(i) == null : element.equals(get(i))).
      *
      * @param index index of the element to replace
      * @param element element to be stored at the specified position
      * @return the element previously at the specified position
      * @throws IndexOutOfBoundsException {@inheritDoc}
-     * @throws IllegalArgumentException If the ListSet already contains the given element.
+     * @throws IllegalArgumentException If the ListSet already contains the given element (excepting if element == null ? get(i) == null : element.equals(get(i))).
      */
     public E set(int index, E element);
 
@@ -67,7 +69,9 @@ public interface ListSet<E> extends List<E>, Set<E> {
      * Inserts the specified element at the specified position in this
      * list. Shifts the element currently at that position (if any) and
      * any subsequent elements to the right (adds one to their indices).
-     * An exception is thrown if the list already contains the element.
+     * An exception is thrown if the list already contains the element 
+     * (this differs from the behaviour of {@link #add(Object)} because
+     * {@link List#add(int, Object)} has no return value). 
      *
      * @param index index at which the specified element is to be inserted
      * @param element element to be inserted
@@ -95,7 +99,16 @@ public interface ListSet<E> extends List<E>, Set<E> {
      * @return <tt>true</tt> if this list set contained the specified element
      */
     public boolean remove(Object o);
-
+    
+    /**
+     * Replaces each element of this list with the result of applying the operator to that element. 
+     * Errors or runtime exceptions thrown by the operator are relayed to the caller.
+     * 
+     * @throws IllegalArgumentException If the ListSet already contains the element provided by the 
+     *   operator (excepting if it is at the same index).
+     */
+    public void replaceAll(UnaryOperator<E> operator);
+    
     /**
      * Removes all of the elements from this list set. The list set will
      * be empty after this call returns.
@@ -228,9 +241,9 @@ public interface ListSet<E> extends List<E>, Set<E> {
     
     /**
      * Compares the specified object with this list set for equality.  Returns
-     * {@code true} if and only if the specified object is also a ListSet, both
-     * ListSets have the same size, and all corresponding pairs of elements in
-     * the two ListSets are <i>equal</i>.  (Two elements {@code e1} and
+     * {@code true} if and only if the specified object is also a List, both
+     * Lists have the same size, and all corresponding pairs of elements in
+     * the two Lists are <i>equal</i>.  (Two elements {@code e1} and
      * {@code e2} are <i>equal</i> if {@code (e1==null ? e2==null :
      * e1.equals(e2))}.)  In other words, two lists are defined to be
      * equal if they contain the same elements in the same order.<p>

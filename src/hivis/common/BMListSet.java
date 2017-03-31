@@ -21,12 +21,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.UnaryOperator;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -167,7 +170,7 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
 	 */
 	@Override
 	public boolean addAll(int index, Collection<? extends T> c) {
-		rangeCheck(index);
+		rangeCheckForAdd(index);
 		ArrayList<T> toAdd = new ArrayList<>(c.size());
 		for (T e : c) {
 			if (!map.containsValue(e)) {
@@ -222,6 +225,7 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
 	 */
 	@Override
 	public T get(int index) {
+		this.rangeCheck(index);
 		return map.get(index);
 	}
 
@@ -320,6 +324,7 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
 		for (int i = size()-1; i >= 0; i--) {
 			if (!keep[i]) {
 				remove(i);
+				changed = true;
 			}
 		}
 		return changed;
@@ -349,6 +354,17 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
 			}
 		}
     }
+	
+    /**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void replaceAll(UnaryOperator<T> operator) {
+		ListIterator<T> li = listIterator();
+		while (li.hasNext()) {
+			li.set(operator.apply(li.next()));
+		}
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -356,6 +372,10 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
 	@Override
 	public T set(int index, T element) {
 		rangeCheck(index);
+		T current = get(index);
+		if (element == null ? current == null : element.equals(current)) {
+			return current;
+		}
 		checkNotContains(element);
 		return map.forcePut(index, element);
 	}
@@ -421,13 +441,13 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
 	public boolean equals(Object o) {
         if (o == this)
             return true;
-        if (!(o instanceof ListSet))
+        if (!(o instanceof List))
             return false;
         
         // Use iterators because they'll fail fast in the face of 
         // structural modifications while we're checking for equality.
         ListIterator<T> e1 = listIterator();
-        ListIterator e2 = ((ListSet) o).listIterator();
+        ListIterator e2 = ((List) o).listIterator();
         while (e1.hasNext() && e2.hasNext()) {
             T o1 = e1.next();
             Object o2 = e2.next();
@@ -436,6 +456,28 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
         }
         return !(e1.hasNext() || e2.hasNext());
     }
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void sort(Comparator<? super T> c) {
+		T[] values = (T[]) this.toArray();
+		Arrays.sort(values, c);
+		map.clear();
+		for (int i = 0; i < values.length; i++) {
+			map.put(i, values[i]);
+		}
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Spliterator<T> spliterator() {
+		return map.values().spliterator();
+	}
+	
 	
 	private void rangeCheck(int index) {
 		if (index < 0 || index >= size()) {
@@ -577,7 +619,7 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
 			Set<Long> s2 = (new AListSet<Long>()).asSet();
 			
 			Collection<Long> col;
-			for (int i = 1; i < 1000; i++) {
+			for (int i = 1; i < 100; i++) {
 				long c = r.nextInt(i)+2;
 				
 				switch (r.nextInt(9)) {

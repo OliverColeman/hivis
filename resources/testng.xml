@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+  
+<suite name="hivis" verbose="1" >
+  <test name="common" >
+    <packages>
+      <package name="hivis.common" />
+    </packages>
+  </test>
+</suite>

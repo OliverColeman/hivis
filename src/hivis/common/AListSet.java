@@ -21,9 +21,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 /**
  * <p>A {link ListSet} backed by an {@link ArrayList}.
@@ -104,8 +107,7 @@ public class AListSet<E> extends ArrayList<E> implements ListSet<E> {
      * @throws NullPointerException if the specified collection is null
      */
     public AListSet(Collection<? extends E> c) {
-    	set.addAll(c);
-    	this.addAll(set);
+    	this.addAll(c);
     }
 
     
@@ -135,6 +137,10 @@ public class AListSet<E> extends ArrayList<E> implements ListSet<E> {
 	@Override
     public E set(int index, E element) {
 		rangeCheck(index);
+		E current = get(index);
+		if (element == null ? current == null : element.equals(current)) {
+			return current;
+		}
 		checkNotContains(element);
     	set.add(element);
     	return super.set(index, element);
@@ -161,6 +167,17 @@ public class AListSet<E> extends ArrayList<E> implements ListSet<E> {
     	super.add(index, element);
     	set.add(element);
     }
+	
+    /**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void replaceAll(UnaryOperator<E> operator) {
+		ListIterator<E> li = listIterator();
+		while (li.hasNext()) {
+			li.set(operator.apply(li.next()));
+		}
+	}
 
     /**
 	 * {@inheritDoc}
@@ -213,7 +230,7 @@ public class AListSet<E> extends ArrayList<E> implements ListSet<E> {
 	 */
 	@Override
     public boolean addAll(int index, Collection<? extends E> c) {
-		rangeCheck(index);
+		rangeCheckForAdd(index);
     	ArrayList<E> added = new ArrayList<>(c.size());
     	for (E element : c) {
     		if (set.add(element)) {
@@ -281,13 +298,13 @@ public class AListSet<E> extends ArrayList<E> implements ListSet<E> {
 	
 	private void rangeCheck(int index) {
 		if (index < 0 || index >= size()) {
-			throw new IndexOutOfBoundsException("Index is out of range: " + index);
+			throw new IndexOutOfBoundsException("Index is out of range: " + index + " (size = " + size());
 		}
 	}
 
 	private void rangeCheckForAdd(int index) {
 		if (index < 0 || index > size()) {
-			throw new IndexOutOfBoundsException("Index is out of range: " + index);
+			throw new IndexOutOfBoundsException("Index is out of range: " + index + " (size = " + size());
 		}
 	}
 	
@@ -299,4 +316,174 @@ public class AListSet<E> extends ArrayList<E> implements ListSet<E> {
 			throw new IllegalArgumentException("Value already present: " + e);
 		}
 	}
+	
+
+
+    // Iterators, from OpenJDK, below license header applies to below code only. 
+	
+	/*
+	 * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+	 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+	 *
+	 * This code is free software; you can redistribute it and/or modify it
+	 * under the terms of the GNU General Public License version 2 only, as
+	 * published by the Free Software Foundation.  Oracle designates this
+	 * particular file as subject to the "Classpath" exception as provided
+	 * by Oracle in the LICENSE file that accompanied this code.
+	 *
+	 * This code is distributed in the hope that it will be useful, but WITHOUT
+	 * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+	 * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+	 * version 2 for more details (a copy is included in the LICENSE file that
+	 * accompanied this code).
+	 *
+	 * You should have received a copy of the GNU General Public License version
+	 * 2 along with this work; if not, write to the Free Software Foundation,
+	 * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+	 *
+	 * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+	 * or visit www.oracle.com if you need additional information or have any
+	 * questions.
+	 */
+
+	/**
+	 * {@inheritDoc}
+	 */
+    public Iterator<E> iterator() {
+        return new Itr();
+    }
+
+    /**
+	 * {@inheritDoc}
+	 */
+    public ListIterator<E> listIterator() {
+        return listIterator(0);
+    }
+
+    /**
+	 * {@inheritDoc}
+	 */
+    public ListIterator<E> listIterator(final int index) {
+        rangeCheckForAdd(index);
+
+        return new ListItr(index);
+    }
+
+    private class Itr implements Iterator<E> {
+        /**
+         * Index of element to be returned by subsequent call to next.
+         */
+        int cursor = 0;
+
+        /**
+         * Index of element returned by most recent call to next or
+         * previous.  Reset to -1 if this element is deleted by a call
+         * to remove.
+         */
+        int lastRet = -1;
+
+        /**
+         * The modCount value that the iterator believes that the backing
+         * List should have.  If this expectation is violated, the iterator
+         * has detected concurrent modification.
+         */
+        int expectedModCount = modCount;
+
+        public boolean hasNext() {
+            return cursor != size();
+        }
+
+        public E next() {
+            checkForComodification();
+            try {
+                int i = cursor;
+                E next = get(i);
+                lastRet = i;
+                cursor = i + 1;
+                return next;
+            } catch (IndexOutOfBoundsException e) {
+                checkForComodification();
+                throw new NoSuchElementException();
+            }
+        }
+
+        public void remove() {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+                AListSet.this.remove(lastRet);
+                if (lastRet < cursor)
+                    cursor--;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException e) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+    }
+
+    private class ListItr extends Itr implements ListIterator<E> {
+        ListItr(int index) {
+            cursor = index;
+        }
+
+        public boolean hasPrevious() {
+            return cursor != 0;
+        }
+
+        public E previous() {
+            checkForComodification();
+            try {
+                int i = cursor - 1;
+                E previous = get(i);
+                lastRet = cursor = i;
+                return previous;
+            } catch (IndexOutOfBoundsException e) {
+                checkForComodification();
+                throw new NoSuchElementException();
+            }
+        }
+
+        public int nextIndex() {
+            return cursor;
+        }
+
+        public int previousIndex() {
+            return cursor-1;
+        }
+
+        public void set(E e) {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+            	AListSet.this.set(lastRet, e);
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        public void add(E e) {
+            checkForComodification();
+
+            try {
+                int i = cursor;
+                AListSet.this.add(i, e);
+                lastRet = -1;
+                cursor = i + 1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+    }
 }

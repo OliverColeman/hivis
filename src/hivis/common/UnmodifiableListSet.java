@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 /**
  * An unmodifiable view of a ListSet.
@@ -175,5 +176,10 @@ class UnmodifiableListSet<T> implements ListSet<T> {
 	@Override
 	public String toString() {
 		return ls.toString();
+	}
+
+	@Override
+	public void replaceAll(UnaryOperator<T> operator) {
+		throw new UnsupportedOperationException();
 	}
 }
