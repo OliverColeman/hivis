@@ -19,25 +19,12 @@ void setup() {
   // Set canvas size to match pie chart size.
   size(1000, 1000);
   
-  // Ask the user to select a spreadsheet to visualise.
-  selectInput("Select an excel file to visualise:", "fileSelected");
-}
-
-
-// Method that gets called when a file is selected.
-void fileSelected(File selection) {
-  // If no file was selected.
-  if (selection == null) {
-    println("No file selected.");
-  } 
-  else {
-    // Get data from spread sheet. 
-    // The SpreadSheetReader will automatically update the DataTable it provides if the source file is changed.
-    data = HV.loadSpreadSheet(selection);
-    
-    // Make a colour palette based on the length of the series in the table.
-    palette = HVDraw.makeRainbowPalette(data.length(), 0.9, 0.8);
-  }
+  data = HV.loadSpreadSheet(
+    HV.loadSSConfig().sourceFile(sketchFile("Employee Diversity Social Media.csv"))
+  );
+  
+  // Make a colour palette based on the length of the series in the table.
+  palette = HVDraw.makeRainbowPalette(data.length(), 0.9, 0.8);
 }
 
 

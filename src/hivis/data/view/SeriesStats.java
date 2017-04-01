@@ -140,17 +140,4 @@ public class SeriesStats implements TableFunction {
 		
 		output.putAll(series);
 	}
-	
-	
-	public static void main(String[] args) {
-		for (int sd = 1; sd <= 1000000; sd *= 10) {
-			DataTable table = new DataTableDefault();
-			for (int s = 0; s < 100000; s++) {
-				table.addSeries(""+s, HV.randomNormalSeries(5, 0, sd));
-			}
-	
-			DataTable stats = table.apply(new SeriesStats(), false);
-			System.out.println(stats);
-		}
-	}
 }

@@ -18,8 +18,10 @@ void setup() {
   // Make a canvas that is 1000 pixels wide by 500 pixels high.
   size(1000, 500);
   
-  // Ask the user to select a spreadsheet to visualise.
-  selectInput("Select an excel file to visualise:", "fileSelected");
+  // We automatically load the supplied data file by default. 
+  // If you want to load your own data then comment the below line and uncomment the line beginning "selectInput(..." 
+  fileSelected(sketchFile("iris.csv"));
+  //selectInput("Select an xlsx or CSV file to visualise:", "fileSelected");
 }
 
 
@@ -39,8 +41,8 @@ void fileSelected(File selection) {
     // Get the series containing the data we want to plot. 
     // Note that the first series starts at index 0 (column A in the spreadsheet).
     // We scale the values in the series to be in the unit range [0, 1] with the method toUnitRange(). This will make it easier to work with.
-    xSeries = data.getSeries(1).toUnitRange();
-    ySeries = data.getSeries(2).toUnitRange();
+    xSeries = data.get(1).toUnitRange();
+    ySeries = data.get(2).toUnitRange();
   }
 }
 

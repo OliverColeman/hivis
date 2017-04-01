@@ -34,9 +34,11 @@ void setup() {
   
   // Allow specifying colours using the Hue, Saturation, Brightness colour space, with unit [0, 1] ranges.
   colorMode(HSB, 1, 1, 1, 1);
-
-  // Ask the user to select a spreadsheet to visualise.
-  selectInput("Select an excel file to visualise:", "fileSelected");
+  
+  // We automatically load the supplied data file by default. 
+  // If you want to load your own data then comment the below line and uncomment the line beginning "selectInput(..." 
+  fileSelected(sketchFile("iris.csv"));
+  //selectInput("Select an xlsx or CSV file to visualise:", "fileSelected");
 }
 
 
@@ -53,9 +55,9 @@ void fileSelected(File selection) {
     
     // Get the series/columns we're interested in.
     // Transform to unit range [0, 1] to make them easier to work with.
-    xSeries = data.getSeries(0).toUnitRange();
-    ySeries = data.getSeries(1).toUnitRange();
-    freqSeries = data.getSeries(2).toUnitRange();
+    xSeries = data.get(0).toUnitRange();
+    ySeries = data.get(1).toUnitRange();
+    freqSeries = data.get(2).toUnitRange();
     
     // Set-up audio.
     AudioContext ac = new AudioContext();

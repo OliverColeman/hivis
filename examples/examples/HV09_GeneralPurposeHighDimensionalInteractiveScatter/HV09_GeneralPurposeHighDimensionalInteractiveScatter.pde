@@ -49,8 +49,10 @@ void setup() {
     });
   }
   
-  // Ask the user to select a spreadsheet to visualise.
-  selectInput("Select an excel file to visualise:", "fileSelected", sketchFile("mtcars.xlsx"));
+  // We automatically load the supplied data file by default. 
+  // If you want to load your own data then comment the below line and uncomment the line beginning "selectInput(..." 
+  fileSelected(sketchFile("mtcars.xlsx"));
+  //selectInput("Select an xlsx or CSV file to visualise:", "fileSelected");
 }
 
 
@@ -61,8 +63,8 @@ void fileSelected(File selection) {
   else {
     // Get data from spread sheet. The SpreadSheetReader will automatically update the DataTable it provides.
     data = HV.loadSpreadSheet(
-	  HV.loadSSConfig().sourceFile(selection)
-	);
+	    HV.loadSSConfig().sourceFile(selection)
+	  );
   
     println("\nLoaded data:\n" + data);
     

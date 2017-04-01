@@ -242,9 +242,6 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 					}
 				}
 				
-				System.out.println(stringCount);
-				System.out.println(lastColumnIndexDesired);
-				
 				// If the first row contains all strings, except one column at most.
 				if (stringCount >= lastColumnIndexDesired) {
 					// Use it as the header row.
@@ -420,7 +417,6 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 				if (columnDateFormatMap.containsKey(column)) {
 					try {
 						TemporalAccessor dt = Util.parseDateTime(v, columnDateFormatMap.get(column));
-						//System.out.println("A " + v + "     " + dt + "     " + dt.getClass().getSimpleName());
 						return conf.useDeprecatedDates ? Util.temporalAccessorToDate(dt) : dt;
 					} catch (DateTimeParseException e) {}
 				}
@@ -431,7 +427,6 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 					// Shouldn't get an exception here since Util.determineDateFormat just provided this format because it works.
 					try {
 						TemporalAccessor dt = Util.parseDateTime(v, format);
-						//System.out.println("B " + v + "     " + dt + "     " + dt.getClass().getSimpleName());
 						return conf.useDeprecatedDates ? Util.temporalAccessorToDate(dt) : dt;
 					} catch (DateTimeParseException e) {}
 				}
@@ -704,52 +699,5 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			} catch (CloneNotSupportedException e) {}
 			return null;
 		}
-	}
-	
-	public static void main(String[] args) {
-		HV.mtCars().removeSeries(0);
-		
-		DataTable data = HV.loadSpreadSheet(
-			    HV.loadSSConfig().sourceFile("/home/data/processing/hivis/examples/examples/HV06_InteractiveSonification/KIB - Oil Well.xlsx").sheetIndex(1).headerRowIndex(0).rowIndex(3)
-			  );
-		
-		//DataTable data = HV.loadSpreadSheet(new File("/home/data/processing/data/test.csv"));
-		  
-		//DataTable data = HV.loadSpreadSheet(new SpreadSheetReader.Config().sourceFile("/home/data/processing/data/test.csv").rowIndex(1).columnIndex(2).rowCount(5).columnCount(4));
-		
-		System.out.println("\ndata:\n" + data.selectRowRange(0,  5));
-
-//		DataTable data2 = HV.loadSpreadSheet(new SpreadSheetReader.Config().sourceFile("/home/data/processing/data/test.csv").useDeprecatedDates(true));
-//		System.out.println("\ndata2:\n" + data2);
-
-		  
-		  /*
-		  // Get the series/columns we're interested in.
-		  // Transform some to unit range [0, 1] to make them easier to work with.
-		  DataSeries<Float> retailMarkup = data.getSeries(7).toUnitRange().asFloat();
-		  DataSeries<Float> healthRating = data.getSeries(19).toUnitRange().asFloat();
-		  DataSeries<Float> retailCost = data.getSeries(6).asFloat();
-		  DataSeries<Integer> tasteStrength = data.getSeries(2).asInt();
-		  
-		  System.out.println("\nretailMarkup:\n" + retailMarkup);
-		  System.out.println("\nhealthRating:\n" + healthRating);
-		  System.out.println("\nretailCost:\n" + retailCost);
-		  System.out.println("\ntasteStrength:\n" + tasteStrength);
-		  
-		  System.out.println(data.getSeries(7).minValue());
-		  System.out.println(data.getSeries(7).maxValue());
-		  */
-		  /*
-		SpreadSheetReader reader = new SpreadSheetReader(args[0], 0, 0, 1, 0);
-		DataTable data = reader.getData();
-		System.out.println(data.toString());
-		
-		data.addChangeListener(new DataListener() {
-			@Override
-			public void dataChanged(DataEvent event) {
-				System.out.println(event.toString());
-			}
-		});
-		*/
 	}
 }
