@@ -17,17 +17,22 @@
 package hivis.data;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
+import hivis.data.DataSeriesDouble.Sorted;
+import hivis.data.view.AbstractSeriesView;
 import hivis.data.view.CalcSeries;
+import hivis.data.view.SeriesView;
+import hivis.data.view.SortedSeries;
 
 /**
  * Data series storing single-precision floating-point numbers (represented as float for efficiency).
  * 
  * @author O. J. Coleman
  */
-public class DataSeriesFloat extends AbstractDataSeries<Float> {
+public class DataSeriesFloat extends AbstractModifiableDataSeries<Float> {
 	protected float[] elements;
 	int size;
 	
@@ -99,7 +104,7 @@ public class DataSeriesFloat extends AbstractDataSeries<Float> {
 	@Override
 	public synchronized void remove(int index) {
 		try {
-			for (int i = index; i < size; i++) {
+			for (int i = index; i < size-1; i++) {
 				elements[i] = elements[i+1];
 			}
 		}
@@ -124,16 +129,21 @@ public class DataSeriesFloat extends AbstractDataSeries<Float> {
 		size = data.length;
 		this.setDataChanged(DataSeriesChange.ValuesChanged);
 	}
-	
 
 	@Override
 	public void resize(int newLength) {
+		resize(newLength, getEmptyValue());
+	}
+	
+	@Override
+	public void resize(int newLength, Float padValue) {
 		if (newLength < size) {
 			size = newLength;
 			this.setDataChanged(DataSeriesChange.ValuesRemoved);
 		}
 		else if (newLength > size) {
 			elements = Arrays.copyOf(elements, newLength);
+			Arrays.fill(elements, size, newLength, padValue);
 			size = newLength;
 			this.setDataChanged(DataSeriesChange.ValuesAdded);
 		}
@@ -162,6 +172,45 @@ public class DataSeriesFloat extends AbstractDataSeries<Float> {
 		return new DataSeriesFloat();
 	}
 
+
+	@Override
+	public SeriesView<Float> sort() {
+		return new Sorted(this);
+	}
+	
+	@Override
+	public SeriesView<Float> sort(Comparator<Float> comparator) {
+		return new Sorted(this, comparator);
+	}
+	
+	/**
+	 * Subclass of SortedSeries optimised for floats.
+	 */
+	public static class Sorted extends SortedSeries<Float> {
+		DataSeriesFloat cache = new DataSeriesFloat();
+		public Sorted(DataSeries<Float> source) { super(source); }
+		public Sorted(DataSeries<Float> source, Comparator<Float> comp) { super(source, comp); }
+		@Override
+		public void update(DataEvent cause) {
+			super.update(cause);
+			cache.elements = new float[elements.length];
+			for (int i = 0; i < elements.length; i++) {
+				cache.elements[i] = elements[i];
+			}
+			cache.size = cache.elements.length;
+		}
+		@Override
+		public float getFloat(int index) {
+			if (recalc) update(null);
+			return cache.getFloat(index);
+		}
+		@Override
+		public float[] asFloatArray() {
+			if (recalc) update(null);
+			return cache.asFloatArray();
+		}
+	}
+	
 //	@Override
 //	public List<Double> asList() {
 //		return Arrays.asList(elements);

@@ -39,7 +39,7 @@ import hivis.data.view.AbstractValueView;
  * 
  * @author O. J. Coleman
  */
-public abstract class AbstractDataValue<V> extends DataSetDefault implements DataValue<V> {
+public abstract class AbstractDataValue<V> extends DataDefault implements DataValue<V> {
 	private TypeToken<V> typeToken = new TypeToken<V>(getClass()) {};
 	private Class<?> type = typeToken.getRawType();
 	
@@ -77,11 +77,21 @@ public abstract class AbstractDataValue<V> extends DataSetDefault implements Dat
 		return get().equals(getEmptyValue());
 	}
 	
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) return true;
+		if (!(o instanceof DataValue)) return false;
+		DataValue<?> v = (DataValue<?>) o;
+		if (!Util.equalsIncNull(v.getType(), this.getType())) return false;
+		return Util.equalsIncNull(this.get(), v.get());
+	}
+	
 	@Override
 	public Class<?> getType() {
 		// If the type info seems to be available, use it.
 		if (type != null && !type.isAssignableFrom(Object.class)) return type;
-		// Otherwise try to get type from an instance.
+		// Otherwise try to get type from instance.
 		V e = get();
 		if (e != null) {
 			type = e.getClass();
@@ -190,7 +200,7 @@ public abstract class AbstractDataValue<V> extends DataSetDefault implements Dat
 			public float getFloat() {
 				return me.getFloat();
 			}
-			public void updateView(Object cause) {
+			public void updateView(DataEvent cause) {
 			}
 		};
 	}
@@ -213,7 +223,7 @@ public abstract class AbstractDataValue<V> extends DataSetDefault implements Dat
 			public double getDouble() {
 				return me.getDouble();
 			}
-			public void updateView(Object cause) {
+			public void updateView(DataEvent cause) {
 			}
 		};
 	}
@@ -236,7 +246,7 @@ public abstract class AbstractDataValue<V> extends DataSetDefault implements Dat
 			public int getInteger() {
 				return me.getInt();
 			}
-			public void updateView(Object cause) {
+			public void updateView(DataEvent cause) {
 			}
 		};
 	}
@@ -259,7 +269,7 @@ public abstract class AbstractDataValue<V> extends DataSetDefault implements Dat
 			public long getLong() {
 				return me.getLong();
 			}
-			public void updateView(Object cause) {
+			public void updateView(DataEvent cause) {
 			}
 		};
 	}

@@ -23,16 +23,16 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Default base class for any object representing data via a {@link DataSet}. For example a series, table or graph.
+ * Default base class for any object representing data via a {@link Data}. For example a series, table or graph.
  * It provides some basic data storage (name, container DataSet) as well as a framework for handling
  * changes to DataSets (see {@link #beginChanges(Object)}, {@link #setDataChanged(Object)} and 
  * {@link #finishChanges(Object)}.
  * 
  * @author O. J. Coleman
  */
-public class DataSetDefault implements DataSet {
-	private Set<DataSet> containers = new HashSet<>();
-	private Set<DataSet> containersUnmod = Collections.unmodifiableSet(containers);
+public class DataDefault implements Data {
+	private Set<Data> containers = new HashSet<>();
+	private Set<Data> containersUnmod = Collections.unmodifiableSet(containers);
 	
 	private List<DataListener> changeListeners = new ArrayList<>();
 	
@@ -47,26 +47,26 @@ public class DataSetDefault implements DataSet {
 	private Set<Object> changeTypes = new HashSet<>();
 	
 	
-	public DataSetDefault() {
+	public DataDefault() {
 	}
 	
-	public DataSetDefault(DataSet container) {
+	public DataDefault(Data container) {
 		addContainer(container);
 	}
 
 	@Override
-	public Set<DataSet> getContainers() {
+	public Set<Data> getContainers() {
 		return containersUnmod;
 	}
 	
 	@Override
-	public void addContainer(DataSet container) {
+	public void addContainer(Data container) {
 		if (container == null) throw new IllegalArgumentException("Container to add may not be null.");
 		containers.add(container);
 	}
 	
 	@Override
-	public void removeContainer(DataSet container) {
+	public void removeContainer(Data container) {
 		containers.remove(container);
 	}
 	
@@ -108,14 +108,14 @@ public class DataSetDefault implements DataSet {
 	 * All subclasses should call this method whenever the data is modified in some way.
 	 * This method should not generally be called by non-subclasses.
 	 * If a container is set then the change will be registered with it too.
-	 * If no object has registered that it is making multiple changes via {@link DataSetDefault#beginChanges(Object)}
+	 * If no object has registered that it is making multiple changes via {@link DataDefault#beginChanges(Object)}
 	 * then a DataChangeEvent will be fired (see {@link #addChangeListener(DataListener)}).  
 	 */
 	@Override
 	public synchronized void setDataChanged(Object changeType) {
 		changeTypes.add(changeType);
 		
-		for (DataSet c : containers) {
+		for (Data c : containers) {
 			c.setDataChanged(changeType);
 		}
 		
@@ -134,7 +134,7 @@ public class DataSetDefault implements DataSet {
 	public void beginChanges(Object changer) {
 		currentChangers.add(changer);
 		
-		for (DataSet c : containers) {
+		for (Data c : containers) {
 			c.beginChanges(changer);
 		}
 	}
@@ -155,7 +155,7 @@ public class DataSetDefault implements DataSet {
 			fireChangeEvent();
 		}
 		
-		for (DataSet c : containers) {
+		for (Data c : containers) {
 			c.finishChanges(changer);
 		}
 	}

@@ -184,7 +184,7 @@ public class TableViewSeries extends TableViewSeriesBase {
 			if (!inputTables.get(0).hasSeries(label)) {
 				label = label.trim();
 				if (!inputTables.get(0).hasSeries(label)) {
-					System.err.println("No series with label " + label + " in input table, ignoring.");
+					// System.err.println("No series with label " + label + " in input table, ignoring.");
 					continue;
 				}
 			}

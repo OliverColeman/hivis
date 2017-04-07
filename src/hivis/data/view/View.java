@@ -15,6 +15,8 @@
  */
 package hivis.data.view;
 
+import hivis.data.DataEvent;
+
 /**
  * Interface for classes that present a view of some data.
  *
@@ -22,12 +24,12 @@ package hivis.data.view;
  */
 public interface View {
 	/**
-	 * Update this view. If the view does not cache the view it presents then it may not be necessary to do anything in this method.
-	 * Note that views based on a {@link hivis.data.DataSet} or subclasses thereof will generally update themselves automatically when the
+	 * Update this view. If the view does not cache the data it presents then it may not be necessary to do anything in this method.
+	 * Note that views based on a {@link hivis.data.Data} or subclasses thereof will generally update themselves automatically when the
 	 * underlying DataSet changes. This method is for handling the case where the view is also affected by an external factor, such
 	 * as parameters to a function that may change.
 	 * 
-	 * @param cause Optional argument for specifying the reason for updating the view. Implementation specific.
+	 * @param cause The event that triggered the update, or null if not applicable. 
 	 */
-	void updateView(Object cause);
+	void update(DataEvent cause);
 }

@@ -72,7 +72,7 @@ public abstract class TestListSet {
 	
 	@Test(dataProvider = "listset")
 	public void isEmpty(Double[] raw, List<Double> ls) {
-		System.out.println(ls.toString());
+		//System.out.println(ls.toString());
 		boolean isEmpty = raw.length == 0;
 		Assert.assertEquals(isEmpty, ls.isEmpty());
 	}

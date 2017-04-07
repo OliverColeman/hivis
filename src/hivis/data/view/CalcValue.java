@@ -18,6 +18,9 @@ package hivis.data.view;
 
 
 import hivis.data.DataEvent;
+
+import java.util.Iterator;
+
 import hivis.data.DataSeries;
 import hivis.data.DataValue;
 import hivis.data.DataValueInteger;
@@ -54,7 +57,7 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 	
 	
 	/**
-	 * Create a DataValue function of the given input series.
+	 * Create a DataValue function of the given input collection.
 	 */
 	public CalcValue(DataSeries<I>... input) {
 		super(input);
@@ -68,7 +71,7 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 	 * this to provide a more efficient implementation, for example avoiding
 	 * autoboxing if a primitive type is stored.
 	 */
-	public void updateView(Object cause) {
+	public void updateView(DataEvent cause) {
 		cache.setValue(calc());
 	}
 	
@@ -204,7 +207,7 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 		}
 		
 		@Override
-		public void updateView(Object cause) {
+		public void updateView(DataEvent cause) {
 			cache.setValue(calcFloat());
 		}
 		
@@ -265,35 +268,35 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 		
 		public static class SeriesFunc extends FloatValue {
 			SeriesOp op;
-			public SeriesFunc(DataSeries series, SeriesOp op) {
-				super(series);
+			public SeriesFunc(DataSeries collection, SeriesOp op) {
+				super(collection);
 				this.op = op;
 			}
 			public float calcFloat() {
 				DataSeries s = getInputSeries(0);
 				int len = s.length();
 				if (len == 0 && op.undefinedForEmpty) return Float.NaN;
-				float val = s.getFloat(0);
+				Iterator<Float> itr = s.asFloat().iterator();
+				float val = itr.next();
 				switch (op) {
 				case MIN:
-					for (int i = 1; i < len; i++) {
-						if (val > s.getFloat(i)) val = s.getFloat(i);
+					while (itr.hasNext()) {
+						val = Math.min(val, itr.next());
 					}
 					return val;
 				case MAX:
-					for (int i = 1; i < len; i++) {
-						if (val < s.getFloat(i)) val = s.getFloat(i);
+					while (itr.hasNext()) {
+						val = Math.max(val, itr.next());
 					}
 					return val;
 				case SUM:
-				case MEAN:
-					for (int i = 1; i < len; i++) {
-						val += s.getFloat(i);
+					while (itr.hasNext()) {
+						val += itr.next();
 					}
-					return op == SeriesOp.MEAN ? val / len : val;
+					return val;
 				case PRODUCT:
-					for (int i = 1; i < len; i++) {
-						val *= s.getFloat(i);
+					while (itr.hasNext()) {
+						val *= itr.next();
 					}
 					return val;
 				}
@@ -314,7 +317,7 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 		}
 		
 		@Override
-		public void updateView(Object cause) {
+		public void updateView(DataEvent cause) {
 			cache.setValue(calcDouble());
 		}
 		
@@ -375,52 +378,59 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 		
 		public static class SeriesFunc extends DoubleValue {
 			SeriesOp op;
-			public SeriesFunc(DataSeries series, SeriesOp op) {
-				super(series);
+			public SeriesFunc(DataSeries<?> collection, SeriesOp op) {
+				super(collection);
 				this.op = op;
 			}
 			public double calcDouble() {
-				DataSeries s = getInputSeries(0);
+				DataSeries<?> s = getInputSeries(0);
 				int len = s.length();
 				if (len == 0 && op.undefinedForEmpty) return Double.NaN;
-				double val = s.getDouble(0);
+				Iterator<Double> itr;
+				double val;
 				switch (op) {
 				case MIN:
-					for (int i = 1; i < len; i++) {
-						if (val > s.getDouble(i)) val = s.getDouble(i);
+					itr = s.asDouble().iterator();
+					val = itr.next();
+					while (itr.hasNext()) {
+						val = Math.min(val, itr.next());
 					}
 					return val;
 				case MAX:
-					for (int i = 1; i < len; i++) {
-						if (val < s.getDouble(i)) val = s.getDouble(i);
+					itr = s.asDouble().iterator();
+					val = itr.next();
+					while (itr.hasNext()) {
+						val = Math.max(val, itr.next());
 					}
 					return val;
 				case SUM:
-					for (int i = 1; i < len; i++) {
-						val += s.getDouble(i);
-					}
-					return val;
-				case PRODUCT:
-					for (int i = 1; i < len; i++) {
-						val *= s.getDouble(i);
-					}
-					return val;
 				case MEAN:
-					// If s is derived from AbstractDataSeries (very likely), then we'll be reusing the same CalcValue object.
-					// This means that if s.sum() is called elsewhere we won't recalculate it unnecessarily. 
-					return s.sum().getDouble() / len;
+					itr = s.asDouble().iterator();
+					val = itr.next();
+					while (itr.hasNext()) {
+						val += itr.next();
+					}
+					return op == SeriesOp.MEAN ? val / len : val;
+				case PRODUCT:
+					itr = s.asDouble().iterator();
+					val = itr.next();
+					while (itr.hasNext()) {
+						val *= itr.next();
+					}
+					return val;
 				case VARIANCE:
-					// If s is derived from AbstractDataSeries (very likely), then we'll be reusing the same CalcValue object.
+					// If s is derived from AbstractDataCollection (very likely), then we'll be reusing the same CalcValue object.
 					// This means that if s.mean() is called elsewhere we won't recalculate it unnecessarily.
 					double mean = s.mean().getDouble();
+					itr = s.asDouble().iterator();
 					val = 0;
-					for (int i = 0; i < len; i++) {
-						double v = s.getDouble(i) - mean;
+					while (itr.hasNext()) {
+						double v = itr.next() - mean;
 						val += v * v;
 					}
 					return val / len;
 				case STD_DEV:
-					// If s is derived from AbstractDataSeries (very likely), then we'll be reusing the same CalcValue object.
+					// If s is derived from AbstractDataCollection (very likely), then we'll be reusing the same CalcValue object.
 					// This means that if s.variance() is called elsewhere we won't recalculate it unnecessarily. 
 					return Math.sqrt(s.variance().getDouble());
 				}
@@ -442,7 +452,7 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 		}
 		
 		@Override
-		public void updateView(Object cause) {
+		public void updateView(DataEvent cause) {
 			cache.setValue(calcInteger());
 		}
 		
@@ -503,35 +513,35 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 		
 		public static class SeriesFunc extends IntValue {
 			SeriesOp op;
-			public SeriesFunc(DataSeries series, SeriesOp op) {
-				super(series);
+			public SeriesFunc(DataSeries collection, SeriesOp op) {
+				super(collection);
 				this.op = op;
 			}
 			public int calcInteger() {
 				DataSeries s = getInputSeries(0);
 				int len = s.length();
 				if (len == 0 && op.undefinedForEmpty) return Integer.MIN_VALUE;
-				int val = s.getInt(0);
+				Iterator<Integer> itr = s.asInt().iterator();
+				int val = itr.next();
 				switch (op) {
 				case MIN:
-					for (int i = 1; i < len; i++) {
-						if (val > s.getInt(i)) val = s.getInt(i);
+					while (itr.hasNext()) {
+						val = Math.min(val, itr.next());
 					}
 					return val;
 				case MAX:
-					for (int i = 1; i < len; i++) {
-						if (val < s.getInt(i)) val = s.getInt(i);
+					while (itr.hasNext()) {
+						val = Math.max(val, itr.next());
 					}
 					return val;
 				case SUM:
-				case MEAN:
-					for (int i = 1; i < len; i++) {
-						val += s.getInt(i);
+					while (itr.hasNext()) {
+						val += itr.next();
 					}
-					return op == SeriesOp.MEAN ? val / len : val;
+					return val;
 				case PRODUCT:
-					for (int i = 1; i < len; i++) {
-						val *= s.getInt(i);
+					while (itr.hasNext()) {
+						val *= itr.next();
 					}
 					return val;
 				}
@@ -552,7 +562,7 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 		}
 		
 		@Override
-		public void updateView(Object cause) {
+		public void updateView(DataEvent cause) {
 			cache.setValue(calcLong());
 		}
 		
@@ -613,35 +623,35 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 		
 		public static class SeriesFunc extends LongValue {
 			SeriesOp op;
-			public SeriesFunc(DataSeries series, SeriesOp op) {
-				super(series);
+			public SeriesFunc(DataSeries collection, SeriesOp op) {
+				super(collection);
 				this.op = op;
 			}
 			public long calcLong() {
 				DataSeries s = getInputSeries(0);
 				long len = s.length();
 				if (len == 0 && op.undefinedForEmpty) return Long.MIN_VALUE;
-				long val = s.getLong(0);
+				Iterator<Long> itr = s.asLong().iterator();
+				long val = itr.next();
 				switch (op) {
 				case MIN:
-					for (int i = 1; i < len; i++) {
-						if (val > s.getLong(i)) val = s.getLong(i);
+					while (itr.hasNext()) {
+						val = Math.min(val, itr.next());
 					}
 					return val;
 				case MAX:
-					for (int i = 1; i < len; i++) {
-						if (val < s.getLong(i)) val = s.getLong(i);
+					while (itr.hasNext()) {
+						val = Math.max(val, itr.next());
 					}
 					return val;
 				case SUM:
-				case MEAN:
-					for (int i = 1; i < len; i++) {
-						val += s.getLong(i);
+					while (itr.hasNext()) {
+						val += itr.next();
 					}
-					return op == SeriesOp.MEAN ? val / len : val;
+					return val;
 				case PRODUCT:
-					for (int i = 1; i < len; i++) {
-						val *= s.getLong(i);
+					while (itr.hasNext()) {
+						val *= itr.next();
 					}
 					return val;
 				}

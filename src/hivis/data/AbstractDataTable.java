@@ -27,7 +27,9 @@ import com.google.common.base.Objects;
 
 import hivis.common.ListSet;
 import hivis.common.Util;
+import hivis.data.view.CalcSeries;
 import hivis.data.view.RowFilter;
+import hivis.data.view.SeriesView;
 import hivis.data.view.TableFunction;
 import hivis.data.view.TableView;
 import hivis.data.view.TableViewAppend;
@@ -36,12 +38,12 @@ import hivis.data.view.TableViewFunction;
 import hivis.data.view.TableViewSeries;
 import hivis.data.view.TableViewTranspose;
 
-public abstract class AbstractDataTable extends DataSetDefault implements DataTable {
+public abstract class AbstractDataTable extends DataDefault implements DataTable {
 	public AbstractDataTable() {
 		super();
 	}
 
-	public AbstractDataTable(DataSet container) {
+	public AbstractDataTable(Data container) {
 		super(container);
 	}
 
@@ -209,6 +211,93 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 		return Util.dataTableToString(this);
 	}
 	
+
+	@Override
+	public boolean containsKey(String key) {
+		return this.hasSeries(key);
+	}
+
+	@Override
+	public DataSeries<?> put(String key, DataSeries<?> value) {
+		this.addSeries(key, value);
+		return null;
+	}
+	
+	@Override
+	public DataSeries<?> remove(String key) {
+		DataSeries<?> existing = this.getSeries(key);
+		this.removeSeries(key);
+		return existing;
+	}
+	
+	@Override
+	public int size() {
+		return this.seriesCount();
+	}
+	
+	@Override
+	public SeriesView<String> keys() {
+		return new CalcSeries<Object, String> (this) {
+			@Override 
+			public void update(DataEvent cause) {
+				if (cache == null) {
+					setupCache();
+				}
+				// The cache has a change listener attached to it that will call dataChanged  
+				// on this CalcSeries if the data in it (the cache) actually changes, so we 
+				// use beginChanges and finishChanges to avoid firing multiple change events.
+				this.beginChanges(this);
+				// Make sure cache series is the right length.
+				int length = length();
+				cache.resize(length);
+				for (int i = 0; i < length; i++) {
+					cache.setValue(i, inputTable.getSeriesLabel(i));
+				}
+				this.finishChanges(this);
+			}
+			@Override 
+			public int length() {
+				return inputTable.seriesCount();
+			}
+			@Override
+			public String calc(int index) {
+				return null;
+			}
+		};
+	}
+	
+	@Override
+	public SeriesView<DataSeries<?>> values() {
+		return new CalcSeries<Object, DataSeries<?>> (this) {
+			@Override 
+			public void update(DataEvent cause) {
+				if (cache == null) {
+					setupCache();
+				}
+				// The cache has a change listener attached to it that will call dataChanged  
+				// on this CalcSeries if the data in it (the cache) actually changes, so we 
+				// use beginChanges and finishChanges to avoid firing multiple change events.
+				this.beginChanges(this);
+				// Make sure cache series is the right length.
+				int length = length();
+				cache.resize(length);
+				for (int i = 0; i < length; i++) {
+					cache.setValue(i, inputTable.get(i));
+				}
+				this.finishChanges(this);
+			}
+			@Override 
+			public int length() {
+				return inputTable.seriesCount();
+			}
+			@Override
+			public DataSeries<?> calc(int index) {
+				return null;
+			}
+		};
+	}
+	
+	
 	/**
 	 * Returns an iterator that presents a row-based ({@link DataRow}) view of the table.
 	 * The iterator will throw a ConcurrentModificationException if the table 
@@ -277,7 +366,7 @@ public abstract class AbstractDataTable extends DataSetDefault implements DataTa
 		};
 	}
 	
-	private class Row extends DataSetDefault implements DataRow, DataListener {
+	private class Row extends DataDefault implements DataRow, DataListener {
 		int rowIndex;
 		int hash;
 		

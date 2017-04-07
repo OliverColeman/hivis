@@ -28,7 +28,7 @@ import hivis.data.view.Function;
  * 
  * @author O. J. Coleman
  */
-public interface DataValue<V> extends DataSet, Comparable<V> {
+public interface DataValue<V> extends Data, Comparable<V> {
 	/**
 	 * Get the value, if set, otherwise returns {@link #getEmptyValue()}.
 	 */
@@ -57,6 +57,13 @@ public interface DataValue<V> extends DataSet, Comparable<V> {
 	 * @see #getEmptyValue()
 	 */
 	boolean isEmpty();
+	
+
+	/**
+	 * Returns true iff the given object is a DataValue storing the same type of data 
+	 * and this.get().equals(o.get()) (or both values are null). 
+	 */
+	boolean equals(Object o);
 	
 	/**
 	 * Return the Class of the type stored.

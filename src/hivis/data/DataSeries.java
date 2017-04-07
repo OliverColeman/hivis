@@ -16,6 +16,7 @@
 
 package hivis.data;
 
+import java.util.Comparator;
 import java.util.List;
 
 import hivis.data.view.Function;
@@ -24,7 +25,7 @@ import hivis.data.view.SeriesView;
 import hivis.data.view.TableFunction;
 
 /**
- * Represents a series or vector of values that are all of the same type.
+ * Represents a series or vector of values that are all of the same type (Java Class).
  * Implementations typically define the type of value to store. 
  * This may be numeric or any kind of object.
  * 
@@ -35,6 +36,13 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * Get the number of elements in this series.
 	 */
 	int length();
+	
+	/**
+	 * Returns true iff the given object is a DataSeries storing the same type of data, 
+	 * is of the same length, and every element in this series {@link Object#equals(Object)}
+	 * the corresponding value in the given series (or both values are null). 
+	 */
+	boolean equals(Object o);
 
 	/**
 	 * Get the element at the specified index, or the empty value 
@@ -84,6 +92,13 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * @param newLength The new length for the series.
 	 */
 	void resize(int newLength);
+
+	/**
+	 * Resize this DataSeries, removing values from the end or padding with the given value as necessary;
+	 * @param newLength The new length for the series.
+	 * @param padValue
+	 */
+	void resize(int newLength, V padValue);
 
 	/**
 	 * Returns true iff the value at the given index is considered empty
@@ -270,12 +285,27 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 */
 	String[] asStringArray(String[] data);
 	
+	/**
+	 * Get an unmodifiable view of this series.
+	 */
+	public SeriesView<V> unmodifiableView();
 	
 	/**
 	 * Get an empty series of the same type as this series.
 	 */
 	public DataSeries<V> getNewSeries();
-	
+
+	/**
+	 * Get a series of the same type as this series containing the given values.
+	 * Attempts to cast the given values to the type stored by this series.
+	 * 
+	 * @param values
+	 *            A sequence of values (may be an array, List, DataSeries or any
+	 *            other object that implements Iterable) to populate the new
+	 *            DataSeries.
+	 */
+	public DataSeries<V> getNewSeries(Iterable<?> values);
+
 	/**
 	 * Get a {@link DataValue} storing the same type as this series.
 	 */
@@ -359,11 +389,53 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	
 	
 	/**
+	 * Create a view of this series containing the values in this series sorted
+	 * into ascending order, according to the natural ordering of the values.
+	 * All values in the series must implement the Comparable interface.
+	 * Furthermore, all values must be mutually comparable (that is,
+	 * v1.compareTo(v2) must not throw a ClassCastException for any values v1
+	 * and v2). This sort is guaranteed to be stable: equal values will not be
+	 * reordered as a result of the sort.
+	 */
+	public SeriesView<V> sort();
+
+	/**
+	 * Create a view of this series containing the values in this series sorted
+	 * according to the order induced by the specified comparator. All values in
+	 * the series must implement the Comparable interface. Furthermore, all
+	 * values must be mutually comparable (that is, v1.compareTo(v2) must not
+	 * throw a ClassCastException for any values v1 and v2). This sort is
+	 * guaranteed to be stable: equal values will not be reordered as a result
+	 * of the sort.
+	 */
+	public SeriesView<V> sort(Comparator<V> comparator);
+	
+	/**
+	 * Create a view of a DataSeries containing the values in the DataSeries
+	 * grouped according to the "natural" grouping, based on the natural
+	 * ordering, of the values. A group consists of all the elements in the
+	 * series which are considered equal according {@link Comparable#compareTo}
+	 * .All values must implement the Comparable interface and must be mutually
+	 * comparable (that is, v1.compareTo(v2) must not throw a ClassCastException
+	 * for any values v1 and v2).
+	 */
+	public DataMap<V, SeriesView<V>> group();
+
+	/**
+	 * Create a view of a DataSeries containing the values in the DataSeries
+	 * grouped according to the ordering induced by the specified comparator. A
+	 * group consists of all the elements in the series which are considered
+	 * equal according {@link Comparator#compareTo}. All values must implement
+	 * the Comparable interface and must be mutually comparable (that is,
+	 * v1.compareTo(v2) must not throw a ClassCastException for any values v1
+	 * and v2).
+	 */
+	public <K> DataMap<K, SeriesView<V>> group(Function<V, K> keyFuntion);
+	
+	/**
 	 * Create a view of this series containing the values in this 
 	 * series scaled to the unit range [0, 1]. Equivalent to
-	 * <code>this.asDouble().subtract(this.minValue()).divide(this.maxValue() - this.minValue())</code>,
-	 * however the values in the view will be updated when the vales in the
-	 * series change.
+	 * <code>this.subtract(this.min()).divide(this.max().subtract(this.min()))</code>.
 	 * 
 	 * @throws UnsupportedOperationException if this series is non-numeric.
 	 */

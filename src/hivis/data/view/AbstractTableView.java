@@ -201,7 +201,7 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 	}
 	
 	@Override
-	public void updateView(Object cause) {
+	public void update(DataEvent cause) {
 		List<Object> events = new ArrayList<>();
 		events.add(cause);
 		updateSeriesWrapper(events);

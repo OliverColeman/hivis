@@ -87,6 +87,24 @@ public interface ListMap<K, V> extends Map<K, V> {
 	 *             <a href="Collection.html#optional-restrictions">optional</a>)
 	 */
 	boolean containsKey(Object key);
+	
+	/**
+	 * Returns the index in this list map of the specified key, 
+	 * or -1 if the key does not exist.
+	 * 
+	 * @param key
+	 *            key whose position in this map is to be determined
+	 * @return index in this list map of the specified key, 
+	 * or -1 if the key does not exist.
+	 * @throws ClassCastException
+	 *             if the key is of an inappropriate type for this map (
+	 *             <a href="Collection.html#optional-restrictions">optional</a>)
+	 * @throws NullPointerException
+	 *             if the specified key is null and this map does not permit
+	 *             null keys (
+	 *             <a href="Collection.html#optional-restrictions">optional</a>)
+	 */
+	int indexOfKey(Object key);
 
 	/**
 	 * Returns <tt>true</tt> if this list map maps one or more keys to the
@@ -109,6 +127,24 @@ public interface ListMap<K, V> extends Map<K, V> {
 	 *             <a href="Collection.html#optional-restrictions">optional</a>)
 	 */
 	boolean containsValue(Object value);
+	
+	/**
+	 * Returns the index in this list map of the first occurrence of the specified value, 
+	 * or -1 if the value does not exist.
+	 *
+	 * @param value
+	 *            value whose position in this map is to be determined
+	 * @return index in this list map of the first occurrence of the specified value, 
+	 * or -1 if the value does not exist.
+	 * @throws ClassCastException
+	 *             if the value is of an inappropriate type for this map (
+	 *             <a href="Collection.html#optional-restrictions">optional</a>)
+	 * @throws NullPointerException
+	 *             if the specified value is null and this map does not permit
+	 *             null values (
+	 *             <a href="Collection.html#optional-restrictions">optional</a>)
+	 */
+	int indexOfValue(Object value);
 
 	/**
 	 * Returns the entry at the specified position in this list.

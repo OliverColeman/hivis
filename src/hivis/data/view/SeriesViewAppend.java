@@ -16,8 +16,7 @@
 
 package hivis.data.view;
 
-import com.google.common.reflect.TypeToken;
-
+import hivis.data.DataEvent;
 import hivis.data.DataSeries;
 
 /**
@@ -101,7 +100,7 @@ public class SeriesViewAppend<V> extends AbstractSeriesView<V, V> {
 	}
 
 	@Override
-	public void updateView(Object cause) {
+	public void update(DataEvent cause) {
 		// Nothing to do, view is not cached.
 	}
 }

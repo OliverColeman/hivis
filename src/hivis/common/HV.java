@@ -20,11 +20,14 @@ import java.io.File;
 import java.util.Date;
 import java.util.Random;
 
-import hivis.data.AbstractDataSeries;
+import hivis.data.AbstractModifiableDataSeries;
+import hivis.data.DataEvent;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesInteger;
+import hivis.data.DataSeriesLong;
 import hivis.data.DataSeriesDouble;
+import hivis.data.DataSeriesFloat;
 import hivis.data.DataTable;
 import hivis.data.DataTableDefault;
 import hivis.data.DataValue;
@@ -157,29 +160,14 @@ public class HV {
 	}
 	
 	/**
-	 * Create a new DataSeries storing real (double) numbers.
-	 */
-	public static DataSeries<Double> newRealSeries() {
-		return new DataSeriesDouble();
-	}
-	
-	/**
 	 * Create a new DataSeries containing the given real (double) numbers.
 	 */
 	public static DataSeries<Double> newRealSeries(double... data) {
 		return new DataSeriesDouble(data);
 	}
 	
-	
 	/**
-	 * Create a new DataSeries storing integer (int) numbers.
-	 */
-	public static DataSeries<Integer> newIntegerSeries() {
-		return new DataSeriesInteger();
-	}
-	
-	/**
-	 * Create a new DataSeries containing the given real (double) numbers.
+	 * Create a new DataSeries containing the given integer (int) numbers.
 	 */
 	public static DataSeries<Integer> newIntegerSeries(int... data) {
 		return new DataSeriesInteger(data);
@@ -197,31 +185,60 @@ public class HV {
 	 * Create a new DataSeries storing the specified items.
 	 */
 	public static <V> DataSeries<V> newSeries(V... items) {
-		// First check if a mix of ints and doubles were passed. If so create a real series instead of a generic series.
-		boolean isIntOrDouble = true;
+		// First check if all the values are numeric, and which type.
+		boolean isNumeric = true;
+		boolean isDouble = true;
 		boolean isInt = true;
+		boolean isLong = true;
+		boolean isFloat = true;
 		for (Object o : items) {
-			if (!(o instanceof Integer)) {
+			if (!(o instanceof Number)) {
+				isNumeric = false;
+				break;
+			}
+			else if (!(o instanceof Integer)) {
 				isInt = false;
-				if (!(o instanceof Double)) {
-					isIntOrDouble = false;
-					break;
+			}
+			else if (!(o instanceof Long)) {
+				isLong = false;
+			}
+			else if (!(o instanceof Float)) {
+				isFloat = false;
+			}
+			else if (!(o instanceof Double)) {
+				isDouble = false;
+			}
+		}
+		
+		if (isNumeric) {
+			if (isInt) {
+				int[] vals = new int[items.length];
+				for (int i = 0; i < items.length; i++) {
+					vals[i] = ((Number) items[i]).intValue();
 				}
+				return (DataSeries<V>) new DataSeriesInteger(vals);
 			}
-		}
-		if (isInt) {
-			int[] ints = new int[items.length];
-			for (int i = 0; i < items.length; i++) {
-				ints[i] = ((Number) items[i]).intValue();
+			if (isLong) {
+				long[] vals = new long[items.length];
+				for (int i = 0; i < items.length; i++) {
+					vals[i] = ((Number) items[i]).longValue();
+				}
+				return (DataSeries<V>) new DataSeriesLong(vals);
 			}
-			return (DataSeries<V>) newIntegerSeries(ints);
-		}
-		if (isIntOrDouble) {
-			double[] reals = new double[items.length];
-			for (int i = 0; i < items.length; i++) {
-				reals[i] = ((Number) items[i]).doubleValue();
+			if (isFloat) {
+				float[] vals = new float[items.length];
+				for (int i = 0; i < items.length; i++) {
+					vals[i] = ((Number) items[i]).floatValue();
+				}
+				return (DataSeries<V>) new DataSeriesFloat(vals);
 			}
-			return (DataSeries<V>) newRealSeries(reals);
+			if (isDouble) {
+				double[] vals = new double[items.length];
+				for (int i = 0; i < items.length; i++) {
+					vals[i] = ((Number) items[i]).doubleValue();
+				}
+				return (DataSeries<V>) new DataSeriesDouble(vals);
+			}
 		}
 		return new DataSeriesGeneric<V>(items);
 	}
@@ -243,7 +260,7 @@ public class HV {
 			public Integer getEmptyValue() {
 				return Integer.MIN_VALUE;
 			}
-			public void updateView(Object cause) {
+			public void update(DataEvent cause) {
 			}
 		};
 	}
@@ -265,7 +282,7 @@ public class HV {
 			public Double getEmptyValue() {
 				return Double.NaN;
 			}
-			public void updateView(Object cause) {
+			public void update(DataEvent cause) {
 			}
 		};
 	}
@@ -320,8 +337,8 @@ public class HV {
 	 * @param min The minimum allowable date.
 	 * @param max The maximum allowable date.
 	 */
-	public static AbstractDataSeries<Date> randomDateSeries(int length, Date min, Date max) {
-		AbstractDataSeries<Date> dates = new DataSeriesGeneric<Date>();
+	public static AbstractModifiableDataSeries<Date> randomDateSeries(int length, Date min, Date max) {
+		AbstractModifiableDataSeries<Date> dates = new DataSeriesGeneric<Date>();
 		long minTS = min.getTime();
 		long maxTS = max.getTime();
 		for (int i = 0; i < length; i++) {

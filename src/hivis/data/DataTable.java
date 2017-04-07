@@ -26,12 +26,25 @@ import hivis.data.view.TableView;
 import hivis.data.view.TableViewFilterRows;
 
 /**
+ * <p>
  * Represents a table of data in which the columns are represented as
- * {@link DataSeries}.
+ * {@link DataSeries}, each of which has a unique String label. The label/series
+ * pairs have a fixed order (either the order they have been added or an
+ * ordering defined by a view).
+ * </p>
+ * 
+ * <p>
+ * DataTable extends {@link DataMap}, it's a mapping from labels to DataSeries,
+ * this means that it inherits several methods which are awkwardly named in the
+ * context of a table, such as {@link DataMap#keys()} (series labels) and
+ * {@link DataMap#values()} (corresponding data series). On the plus side these
+ * methods provide the set of labels and series as view DataSeries that will
+ * update when labels/series are added, removed or rearranged in the table.
+ * </p>
  * 
  * @author O. J. Coleman
  */
-public interface DataTable extends DataSet, Iterable<DataRow> {
+public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<DataRow> {
 
 	/**
 	 * Get the number of series.
@@ -61,11 +74,12 @@ public interface DataTable extends DataSet, Iterable<DataRow> {
 
 	/**
 	 * Get the specified series.
+	 * @throws IndexOutOfBoundsException if the index is out of range ( index < 0 || index >= seriesCount())
 	 */
 	DataSeries<?> get(int index);
 
 	/**
-	 * Get the specified series.
+	 * Get the specified series, or null if there is no series with the given label.
 	 */
 	DataSeries<?> get(String label);
 

@@ -13,17 +13,14 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307 USA
  */
-
-package hivis.data.reader;
-
-import hivis.data.Data;
-import hivis.data.DataDefault;
+package hivis.data;
 
 /**
- * Interface for classes that provide a {@link DataDefault} from an external source.
+ * Represents a change to a {@link DataMap}.
  * 
  * @author O. J. Coleman
  */
-public interface DataSetSource<D extends Data> {
-	public D getData();
+public enum MapChange {
+	Changed, Added, Removed
+
 }

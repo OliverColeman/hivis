@@ -21,7 +21,7 @@ package hivis.data;
  * 
  * @author O. J. Coleman
  */
-public interface DataSequence extends DataSet {
+public interface DataSequence extends Data {
 
 	/**
 	 * Returns the number of elements in this sequence.

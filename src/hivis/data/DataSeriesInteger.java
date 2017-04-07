@@ -17,14 +17,19 @@
 package hivis.data;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Random;
+
+import hivis.data.view.AbstractSeriesView;
+import hivis.data.view.SeriesView;
+import hivis.data.view.SortedSeries;
 
 /**
  * Data series storing integer numbers (represented as int for efficiency).
  * 
  * @author O. J. Coleman
  */
-public class DataSeriesInteger extends AbstractDataSeries<Integer> implements DataSeries.IntSeries {
+public class DataSeriesInteger extends AbstractModifiableDataSeries<Integer> implements DataSeries.IntSeries {
 	protected int[] elements;
 	int size;
 	
@@ -45,7 +50,7 @@ public class DataSeriesInteger extends AbstractDataSeries<Integer> implements Da
 		size = data.length;
 	}
 	
-	public DataSeriesInteger( DataSeriesInteger series) {
+	public DataSeriesInteger(DataSeriesInteger series) {
 		super();
         elements = Arrays.copyOf(series.elements, series.size);
 		size = series.size;
@@ -96,7 +101,7 @@ public class DataSeriesInteger extends AbstractDataSeries<Integer> implements Da
 	@Override
 	public synchronized void remove(int index) {
 		try {
-			for (int i = index; i < size; i++) {
+			for (int i = index; i < size-1; i++) {
 				elements[i] = elements[i+1];
 			}
 		}
@@ -123,12 +128,18 @@ public class DataSeriesInteger extends AbstractDataSeries<Integer> implements Da
 	
 	@Override
 	public void resize(int newLength) {
+		resize(newLength, getEmptyValue());
+	}
+	
+	@Override
+	public void resize(int newLength, Integer padValue) {
 		if (newLength < size) {
 			size = newLength;
 			this.setDataChanged(DataSeriesChange.ValuesRemoved);
 		}
 		else if (newLength > size) {
 			elements = Arrays.copyOf(elements, newLength);
+			Arrays.fill(elements, size, newLength, padValue);
 			size = newLength;
 			this.setDataChanged(DataSeriesChange.ValuesAdded);
 		}
@@ -137,5 +148,41 @@ public class DataSeriesInteger extends AbstractDataSeries<Integer> implements Da
 	@Override
 	public DataSeriesInteger getNewSeries() {
 		return new DataSeriesInteger();
+	}
+	
+
+	@Override
+	public SeriesView<Integer> sort() {
+		return new Sorted(this);
+	}
+	
+	@Override
+	public SeriesView<Integer> sort(Comparator<Integer> comparator) {
+		return new Sorted(this, comparator);
+	}
+	
+	/**
+	 * Subclass of SortedSeries optimised for ints.
+	 */
+	public static class Sorted extends SortedSeries<Integer> {
+		DataSeriesInteger cache = new DataSeriesInteger();
+		public Sorted(DataSeries<Integer> source) { super(source); }
+		public Sorted(DataSeries<Integer> source, Comparator<Integer> comp) { super(source, comp); }
+		@Override
+		public void update(DataEvent cause) {
+			super.update(cause);
+			cache.elements = Arrays.stream(elements).mapToInt(i->i).toArray();
+			cache.size = cache.elements.length;
+		}
+		@Override
+		public int getInt(int index) {
+			if (recalc) update(null);
+			return cache.getInt(index);
+		}
+		@Override
+		public int[] asIntArray() {
+			if (recalc) update(null);
+			return cache.asIntArray();
+		}
 	}
 }

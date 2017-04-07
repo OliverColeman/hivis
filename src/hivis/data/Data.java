@@ -20,30 +20,30 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Interface for any object representing a set of data. For example a vector, table or graph.
+ * Interface for any object representing data. For example a series, table or graph.
  * It provides some basic data storage (name, container DataSet) as well as a framework for handling
  * changes to DataSets (see {@link #beginChanges(Object)}, {@link #setDataChanged(Object)} and 
  * {@link #finishChanges(Object)}.
  * 
  * @author O. J. Coleman
  */
-public interface DataSet {
+public interface Data {
 	/**
 	 * Get the DataSets that "contain" this DataSet as part of their own data. For example a {@link DataTable} contains {@link DataSeries}.
 	 */
-	Set<DataSet> getContainers();
+	Set<Data> getContainers();
 
 	/**
 	 * Adds the given DataSet as a container for this DataSet, or if it has already been added makes no changes.
 	 * Containers are notified of changes that occur to this DataSet via the {@link #setDataChanged(Object)} 
 	 * method.
 	 */
-	void addContainer(DataSet container);
+	void addContainer(Data container);
 	
 	/**
 	 * Removes the given DataSet as a container for this DataSet.
 	 */
-	void removeContainer(DataSet container);
+	void removeContainer(Data container);
 
 	/**
 	 * Registers an object for notification of changes to the DataSet.
@@ -68,8 +68,8 @@ public interface DataSet {
 	
 	/**
 	 * All implementations should call this method whenever the data is modified in some way.
-	 * If any containers are set then the change will be registered with them too (see {@link #addContainer(DataSet)}).
-	 * If no object has registered that it is making multiple changes via {@link DataSet#beginChanges(Object)}
+	 * If any containers are set then the change will be registered with them too (see {@link #addContainer(Data)}).
+	 * If no object has registered that it is making multiple changes via {@link Data#beginChanges(Object)}
 	 * then a DataChangeEvent will be fired (see {@link #addChangeListener(DataListener)}).  
 	 */
 	void setDataChanged(Object changeType);

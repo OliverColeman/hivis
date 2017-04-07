@@ -4,6 +4,8 @@
   <test name="common" >
     <packages>
       <package name="hivis.common" />
+      <package name="hivis.data" />
+      <package name="hivis.data.view" />
     </packages>
   </test>
 </suite>

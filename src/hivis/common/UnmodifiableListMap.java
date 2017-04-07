@@ -116,4 +116,14 @@ public class UnmodifiableListMap<K, V> implements ListMap<K, V> {
 		return this;
 	}
 
+	@Override
+	public int indexOfKey(Object key) {
+		return lm.indexOfKey(key);
+	}
+
+	@Override
+	public int indexOfValue(Object value) {
+		return lm.indexOfValue(value);
+	}
+
 }

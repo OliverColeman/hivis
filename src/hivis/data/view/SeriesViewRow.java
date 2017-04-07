@@ -170,7 +170,7 @@ public class SeriesViewRow<V> extends AbstractSeriesView<V, V> {
 	}
 
 	@Override
-	public void updateView(Object cause) {
+	public void update(DataEvent cause) {
 		// Nothing to do, view is not cached.
 	}
 }

@@ -161,6 +161,17 @@ public class LSListMap<K, V> implements ListMap<K, V> {
 	}
 
 	@Override
+	public int indexOfKey(Object key) {
+		return keys.indexOf(key);
+	}
+
+	@Override
+	public int indexOfValue(Object value) {
+		return values.indexOf(value);
+	}
+
+
+	@Override
 	public V get(Object key) {
 		if (!keys.contains(key)) return null;
 		return list.get(keys.indexOf(key)).getValue();
@@ -479,5 +490,4 @@ public class LSListMap<K, V> implements ListMap<K, V> {
 			c.put((long) r.nextInt((int) size), r.nextDouble());
 		}
 		return c;
-	}
-}
+	}}

@@ -16,15 +16,16 @@
 
 package hivis.data;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.reflect.TypeToken;
-
 import hivis.common.Util;
+import hivis.data.view.AbstractSeriesView;
+import hivis.data.view.SeriesView;
 
 
 /**
@@ -33,12 +34,8 @@ import hivis.common.Util;
  * 
  * @author O. J. Coleman
  */
-public class DataSeriesGeneric<V> extends AbstractDataSeries<V> {
-	private TypeToken<V> typeToken = new TypeToken<V>(getClass()) {};
-	private Class<?> type = typeToken.getRawType();
-	
+public class DataSeriesGeneric<V> extends AbstractModifiableDataSeries<V> {
 	protected List<V> elements;
-	
 	
 	/**
 	 * Create a new empty DataSeries.
@@ -65,19 +62,6 @@ public class DataSeriesGeneric<V> extends AbstractDataSeries<V> {
     	this.elements = new ArrayList<V>(data.elements);
     }
     
-
-	@Override
-	public Class<?> getType() {
-		// If the type info seems to be available, use it.
-		if (type != null && !type.isAssignableFrom(Object.class)) return type;
-		// Otherwise try to get type from an instance.
-		V e = length() > 0 ? get(0) : null;
-		if (e != null) {
-			type = e.getClass();
-			return type;
-		}
-		return Object.class;
-	}
     
 	@Override
 	public int length() {
@@ -111,19 +95,14 @@ public class DataSeriesGeneric<V> extends AbstractDataSeries<V> {
 		elements.remove(index);
 		this.setDataChanged(DataSeriesChange.ValuesRemoved);
 	}
-	
-	
-	@Override
-	public V[] asArray(V[] data) {
-		if (data == null || data.length < elements.size()) {
-			return Arrays.copyOf(data, elements.size());
-		}
-		System.arraycopy(elements, 0, data, 0, elements.size());
-		return data;
-	}
 
 	@Override
 	public void resize(int newLength) {
+		resize(newLength, getEmptyValue());
+	}
+	
+	@Override
+	public void resize(int newLength, V padValue) {
 		if (newLength < elements.size()) {
 			while (newLength < elements.size()) {
 				elements.remove(elements.size() - 1);
@@ -132,7 +111,7 @@ public class DataSeriesGeneric<V> extends AbstractDataSeries<V> {
 		}
 		else if (newLength > elements.size()) {
 			while (newLength > elements.size()) {
-				elements.add(getEmptyValue());
+				elements.add(padValue);
 			}
 			this.setDataChanged(DataSeriesChange.ValuesAdded);
 		}
@@ -142,9 +121,4 @@ public class DataSeriesGeneric<V> extends AbstractDataSeries<V> {
 	public DataSeries<V> getNewSeries() {
 		return new DataSeriesGeneric<V>();
 	}
-
-//	@Override
-//	public List<V> asList() {
-//		return Collections.unmodifiableList(elements);
-//	}
 }

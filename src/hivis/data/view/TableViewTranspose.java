@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import hivis.common.Util;
-import hivis.data.AbstractDataSeries;
+import hivis.data.AbstractModifiableDataSeries;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataTable;
@@ -89,7 +89,7 @@ public class TableViewTranspose extends AbstractTableView<DataSeries<?>> {
 		series.put(origRowKeysLabel, newRowKeys);
 		
 		if (seriesExample == null) {
-			seriesExample = AbstractDataSeries.getNewSeries(type);
+			seriesExample = AbstractModifiableDataSeries.getNewSeries(type);
 		}
 		
 		for (int ori = 0; ori < table.length(); ori++) {

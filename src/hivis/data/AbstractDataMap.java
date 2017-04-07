@@ -13,17 +13,23 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307 USA
  */
+package hivis.data;
 
-package hivis.data.reader;
-
-import hivis.data.Data;
-import hivis.data.DataDefault;
+import java.util.StringJoiner;
 
 /**
- * Interface for classes that provide a {@link DataDefault} from an external source.
- * 
- * @author O. J. Coleman
+ *
+ * @author oliver
  */
-public interface DataSetSource<D extends Data> {
-	public D getData();
+public abstract class AbstractDataMap<K, V> extends DataDefault implements DataMap<K, V> {
+	@Override
+	public String toString() {
+		StringJoiner sj = new StringJoiner(",\n\t", "DataMap (" + size() + ") [ " + (size() > 1 ? "\n\t" : ""), (size() > 1 ? "\n" : "") + " ]");
+		
+		for (K key : keys()) {
+			sj.add(key + " => " + get(key));
+		}
+		
+		return sj.toString();
+	}
 }

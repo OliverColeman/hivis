@@ -24,16 +24,16 @@ import com.google.common.collect.Sets;
 import hivis.common.BMListSet;
 import hivis.common.ListSet;
 import hivis.common.Util;
-import hivis.data.AbstractDataSeries;
+import hivis.data.AbstractModifiableDataSeries;
 import hivis.data.DataSeries;
-import hivis.data.DataSetDefault;
+import hivis.data.DataDefault;
 import hivis.data.DataTable;
 import hivis.data.DataTableChange;
 import hivis.data.DataTableDefault;
 
 
 /**
- * Base class for {@link DataTable} views that select and/or reorder {@link AbstractDataSeries}.
+ * Base class for {@link DataTable} views that select and/or reorder {@link AbstractModifiableDataSeries}.
  * Provides a convenient interface for doing so and handles and produces the necessary events. 
  * 
  * @author O. J. Coleman

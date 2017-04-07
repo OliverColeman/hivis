@@ -95,11 +95,16 @@ public class Series {
 		System.out.println("\ncosineIntNumbers = intNumbers.applyMathMethod(\"cos\") =>\n\t" + cosineIntNumbers);
 		
 		
-		// A useful built-in series method is toUnitRange(), which creates a series containing the
+		// Some useful built-in series methods are: 
+		// toUnitRange(), which creates a series containing the
 		// values in the original series scaled to the unit range [0, 1]:	
 		DataSeries realNumbersUnitRange = realNumbers.toUnitRange();
 		System.out.println("\nrealNumbersUnitRange = realNumbers.toUnitRange() =>\n\t" + realNumbersUnitRange);
 		
+		// sort(), which creates a series containing the values in the original series sorted according to their "natural" ordering:
+		DataSeries realNumbersUnitRangeSorted = realNumbersUnitRange.sort();
+		System.out.println("\nrealNumbersUnitRangeSorted = realNumbersUnitRange.sort() =>\n\t" + realNumbersUnitRangeSorted);
+		// (There's a similar sort method accepting a Comparator as an argument allowing custom orderings.)
 		
 		// We can derive new series by applying a custom function to each element of a series.
 		// You define the function via an implementation of the Function class.
@@ -151,7 +156,7 @@ public class Series {
 		// Also note that the customFunc series is a view of the plus1 series, which in turn is a view of realNumbers; 
 		// changes to the underlying data will "bubble up" through the chain of views.
 		realNumbers.append(55.55);
-		System.out.println("\nrealNumbersUnitRange reflecting appended value in realNumbers =>\n" + realNumbersUnitRange);
+		System.out.println("\nrealNumbersUnitRangeSorted reflecting appended value in realNumbers =>\n" + realNumbersUnitRangeSorted);
 		System.out.println("\nplus1 reflecting appended value in realNumbers =>\n" + plus1);
 		System.out.println("\ncustomFunc reflecting appended value in realNumbers (via plus1) =>\n" + customFunc);
 		System.out.println("\nrealNumbersAppendPlus1 reflecting appended value in realNumbers =>\n" + realNumbersAppendPlus1);

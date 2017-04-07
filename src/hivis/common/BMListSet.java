@@ -208,7 +208,7 @@ public class BMListSet<T> extends AbstractList<T> implements ListSet<T> {
 	public boolean contains(Object o) {
 		return map.containsValue(o);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */

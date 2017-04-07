@@ -17,17 +17,22 @@
 package hivis.data;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
+import hivis.data.DataSeriesInteger.Sorted;
+import hivis.data.view.AbstractSeriesView;
 import hivis.data.view.CalcSeries;
+import hivis.data.view.SeriesView;
+import hivis.data.view.SortedSeries;
 
 /**
  * Data series storing double-precision floating-point numbers (represented as double for efficiency).
  * 
  * @author O. J. Coleman
  */
-public class DataSeriesDouble extends AbstractDataSeries<Double> {
+public class DataSeriesDouble extends AbstractModifiableDataSeries<Double> {
 	protected double[] elements;
 	int size;
 	
@@ -99,7 +104,7 @@ public class DataSeriesDouble extends AbstractDataSeries<Double> {
 	@Override
 	public synchronized void remove(int index) {
 		try {
-			for (int i = index; i < size; i++) {
+			for (int i = index; i < size-1; i++) {
 				elements[i] = elements[i+1];
 			}
 		}
@@ -125,15 +130,20 @@ public class DataSeriesDouble extends AbstractDataSeries<Double> {
 		this.setDataChanged(DataSeriesChange.ValuesChanged);
 	}
 	
-
 	@Override
 	public void resize(int newLength) {
+		resize(newLength, getEmptyValue());
+	}
+	
+	@Override
+	public void resize(int newLength, Double padValue) {
 		if (newLength < size) {
 			size = newLength;
 			this.setDataChanged(DataSeriesChange.ValuesRemoved);
 		}
 		else if (newLength > size) {
 			elements = Arrays.copyOf(elements, newLength);
+			Arrays.fill(elements, size, newLength, padValue);
 			size = newLength;
 			this.setDataChanged(DataSeriesChange.ValuesAdded);
 		}
@@ -160,6 +170,42 @@ public class DataSeriesDouble extends AbstractDataSeries<Double> {
 	@Override
 	public DataSeriesDouble getNewSeries() {
 		return new DataSeriesDouble();
+	}
+	
+
+	@Override
+	public SeriesView<Double> sort() {
+		return new Sorted(this);
+	}
+	
+	@Override
+	public SeriesView<Double> sort(Comparator<Double> comparator) {
+		return new Sorted(this, comparator);
+	}
+	
+	/**
+	 * Subclass of SortedSeries optimised for doubles.
+	 */
+	public static class Sorted extends SortedSeries<Double> {
+		DataSeriesDouble cache = new DataSeriesDouble();
+		public Sorted(DataSeries<Double> source) { super(source); }
+		public Sorted(DataSeries<Double> source, Comparator<Double> comp) { super(source, comp); }
+		@Override
+		public void update(DataEvent cause) {
+			super.update(cause);
+			cache.elements = Arrays.stream(elements).mapToDouble(i->i).toArray();
+			cache.size = cache.elements.length;
+		}
+		@Override
+		public double getDouble(int index) {
+			if (recalc) update(null);
+			return cache.getDouble(index);
+		}
+		@Override
+		public double[] asDoubleArray() {
+			if (recalc) update(null);
+			return cache.asDoubleArray();
+		}
 	}
 
 //	@Override

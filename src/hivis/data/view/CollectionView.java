@@ -13,17 +13,15 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307 USA
  */
+package hivis.data.view;
 
-package hivis.data.reader;
-
-import hivis.data.Data;
-import hivis.data.DataDefault;
+import hivis.data.DataSeries;
 
 /**
- * Interface for classes that provide a {@link DataDefault} from an external source.
- * 
+ * Interface for classes that present a view of a DataSeries.
+ *
  * @author O. J. Coleman
  */
-public interface DataSetSource<D extends Data> {
-	public D getData();
+public interface CollectionView<V> extends DataSeries<V>, View {
+
 }

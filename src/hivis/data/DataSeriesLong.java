@@ -17,14 +17,20 @@
 package hivis.data;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Random;
+
+import hivis.data.DataSeriesDouble.Sorted;
+import hivis.data.view.AbstractSeriesView;
+import hivis.data.view.SeriesView;
+import hivis.data.view.SortedSeries;
 
 /**
  * Data series storing long numbers (represented as long for efficiency).
  * 
  * @author O. J. Coleman
  */
-public class DataSeriesLong extends AbstractDataSeries<Long> {
+public class DataSeriesLong extends AbstractModifiableDataSeries<Long> {
 	protected long[] elements;
 	int size;
 	
@@ -96,7 +102,7 @@ public class DataSeriesLong extends AbstractDataSeries<Long> {
 	@Override
 	public synchronized void remove(int index) {
 		try {
-			for (int i = index; i < size; i++) {
+			for (int i = index; i < size-1; i++) {
 				elements[i] = elements[i+1];
 			}
 		}
@@ -123,12 +129,18 @@ public class DataSeriesLong extends AbstractDataSeries<Long> {
 	
 	@Override
 	public void resize(int newLength) {
+		resize(newLength, getEmptyValue());
+	}
+	
+	@Override
+	public void resize(int newLength, Long padValue) {
 		if (newLength < size) {
 			size = newLength;
 			this.setDataChanged(DataSeriesChange.ValuesRemoved);
 		}
 		else if (newLength > size) {
 			elements = Arrays.copyOf(elements, newLength);
+			Arrays.fill(elements, size, newLength, padValue);
 			size = newLength;
 			this.setDataChanged(DataSeriesChange.ValuesAdded);
 		}
@@ -137,5 +149,41 @@ public class DataSeriesLong extends AbstractDataSeries<Long> {
 	@Override
 	public DataSeriesLong getNewSeries() {
 		return new DataSeriesLong();
+	}
+	
+
+	@Override
+	public SeriesView<Long> sort() {
+		return new Sorted(this);
+	}
+	
+	@Override
+	public SeriesView<Long> sort(Comparator<Long> comparator) {
+		return new Sorted(this, comparator);
+	}
+	
+	/**
+	 * Subclass of SortedSeries optimised for longs.
+	 */
+	public static class Sorted extends SortedSeries<Long> {
+		DataSeriesLong cache = new DataSeriesLong();
+		public Sorted(DataSeries<Long> source) { super(source); }
+		public Sorted(DataSeries<Long> source, Comparator<Long> comp) { super(source, comp); }
+		@Override
+		public void update(DataEvent cause) {
+			super.update(cause);
+			cache.elements = Arrays.stream(elements).mapToLong(i->i).toArray();
+			cache.size = cache.elements.length;
+		}
+		@Override
+		public long getLong(int index) {
+			if (recalc) update(null);
+			return cache.getLong(index);
+		}
+		@Override
+		public long[] asLongArray() {
+			if (recalc) update(null);
+			return cache.asLongArray();
+		}
 	}
 }

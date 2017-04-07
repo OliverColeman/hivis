@@ -36,7 +36,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-import hivis.data.AbstractDataSeries;
+import hivis.data.AbstractModifiableDataSeries;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesInteger;
