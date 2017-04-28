@@ -22,7 +22,7 @@ import hivis.data.view.CalcSeries;
 import hivis.data.view.SeriesView;
 
 /**
- * Default implementation of {@link DataTable}.
+ * Default implementation of {@link DataMap}.
  * 
  * @author O. J. Coleman
  */

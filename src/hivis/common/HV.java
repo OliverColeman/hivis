@@ -22,6 +22,8 @@ import java.util.Random;
 
 import hivis.data.AbstractModifiableDataSeries;
 import hivis.data.DataEvent;
+import hivis.data.DataMap;
+import hivis.data.DataMapDefault;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesInteger;
@@ -82,6 +84,14 @@ public class HV {
 	 */
 	public static DataTable newTable() {
 		return new DataTableDefault();
+	}
+	
+	
+	/**
+	 * Create a new DataMap.
+	 */
+	public static <K, V> DataMap newMap() {
+		return new DataMapDefault<K, V>();
 	}
 	
 	

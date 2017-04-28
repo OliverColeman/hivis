@@ -98,8 +98,8 @@ public class DataDefault implements Data {
 	 * Notifies all change listeners of a change event.
 	 */
 	protected synchronized void fireChangeEvent(DataEvent event) {
-		for (DataListener listener : changeListeners) {
-			listener.dataChanged(event);
+		for (int i = 0; i < changeListeners.size(); i++) {
+			changeListeners.get(i).dataChanged(event);
 		}
 	}
 	

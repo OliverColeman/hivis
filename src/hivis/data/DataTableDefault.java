@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 import hivis.common.LSListMap;
 import hivis.common.ListMap;
 import hivis.data.view.SeriesView;
+import hivis.data.view.TableView;
 
 
 /**

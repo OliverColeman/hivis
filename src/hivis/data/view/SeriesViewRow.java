@@ -72,7 +72,8 @@ public class SeriesViewRow<V> extends AbstractSeriesView<V, V> {
 			
 			// See if a value has changed (if we haven't already established this).
 			if (!changedValues && i < rowMap.length) {
-				if (!get(map[i]).equals(get(rowMap[i]))) {
+				//if (get(map[i]) == null) System.err.println(this);
+				if (!inputSeries().get(map[i]).equals(inputSeries().get(rowMap[i]))) {
 					changedValues = true;
 				}
 			}

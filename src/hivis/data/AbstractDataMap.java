@@ -15,19 +15,47 @@
  */
 package hivis.data;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.base.Strings;
+
+import hivis.common.LSListMap;
+import hivis.common.ListMap;
+
 /**
- *
- * @author oliver
+ * Base class for {@link DataMap} implementations.
+ * 
+ * @author O. J. Coleman
  */
 public abstract class AbstractDataMap<K, V> extends DataDefault implements DataMap<K, V> {
 	@Override
 	public String toString() {
-		StringJoiner sj = new StringJoiner(",\n\t", "DataMap (" + size() + ") [ " + (size() > 1 ? "\n\t" : ""), (size() > 1 ? "\n" : "") + " ]");
+		ListMap<String, String[]> values = new LSListMap<>();
 		
+		boolean multiLineValues = false;
 		for (K key : keys()) {
-			sj.add(key + " => " + get(key));
+			String[] valLines = get(key).toString().split("\n");
+			values.put(key.toString(), valLines);
+			multiLineValues |= valLines.length > 1;
+		}
+		
+		String sep = multiLineValues ? ",\n\n\t" : ",\n\t";
+		
+		StringJoiner sj = new StringJoiner(sep, "DataMap (" + size() + ") [ " + (size() > 1 ? "\n\t" : ""), (size() > 1 ? "\n" : "") + " ]");
+		
+		for (String key : values.keySet()) {
+			String[] valLines = values.get(key);
+			String keyArrow = key + " => ";
+			StringJoiner valSJ = new StringJoiner("\n\t");
+			valSJ.add(keyArrow + valLines[0]);
+			String keyArrowPad = Strings.repeat(" ", keyArrow.length());
+			for (int i = 1; i < valLines.length; i++) {
+				valSJ.add(keyArrowPad + valLines[i]);
+			}
+			sj.add(valSJ.toString());
 		}
 		
 		return sj.toString();

@@ -28,6 +28,8 @@ import com.google.common.base.Objects;
 import hivis.common.ListSet;
 import hivis.common.Util;
 import hivis.data.view.CalcSeries;
+import hivis.data.view.Function;
+import hivis.data.view.GroupedTable;
 import hivis.data.view.RowFilter;
 import hivis.data.view.SeriesView;
 import hivis.data.view.TableFunction;
@@ -201,6 +203,21 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	@Override
 	public TableView selectRows(RowFilter filter) {
 		return new TableViewFilterRows(this, filter);
+	}
+	
+	@Override
+	public <K> DataMap<K, TableView> group(int groupingSeries) {
+		return new GroupedTable<>(this, groupingSeries);
+	}
+
+	@Override
+	public <K> DataMap<K, TableView> group(String groupingSeries) {
+		return new GroupedTable<>(this, groupingSeries);
+	}
+
+	@Override
+	public <K> DataMap<K, TableView> group(Function<DataRow, K> keyFunction) {
+		return new GroupedTable<>(this, keyFunction);
 	}
 
 	/**
@@ -452,6 +469,12 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 			checkValid();
 			return getSeries(label).getDouble(rowIndex);
 		}
+		
+		@Override
+		public String getString(String label) {
+			checkValid();
+			return "" + getSeries(label).get(rowIndex);
+		}
 
 		@Override
 		public Object get(int index) {
@@ -489,6 +512,12 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 			return getSeries(index).getDouble(rowIndex);
 		}
 		
+		@Override
+		public String getString(int index) {
+			checkValid();
+			return "" + getSeries(index).get(rowIndex);
+		}
+
 		@Override
 		public void dataChanged(DataEvent event) {
 			if (rowIndex < AbstractDataTable.this.length()) {

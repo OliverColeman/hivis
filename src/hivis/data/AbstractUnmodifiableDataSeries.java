@@ -15,16 +15,11 @@
  */
 package hivis.data;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import com.google.common.reflect.TypeToken;
-
 import hivis.data.view.SeriesView;
 
 /**
- *
+ * Base class for DataSeries that cannot be directly modified.
+ * 
  * @author O. J. Coleman
  */
 public abstract class AbstractUnmodifiableDataSeries<V> extends AbstractDataSeries<V> implements SeriesView<V> {

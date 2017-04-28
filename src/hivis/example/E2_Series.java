@@ -19,8 +19,10 @@ package hivis.example;
 
 import java.awt.Point;
 import java.time.LocalDate;
+import java.util.Comparator;
 
 import hivis.common.HV;
+import hivis.data.DataMap;
 import hivis.data.DataSeries;
 import hivis.data.DataValue;
 import hivis.data.view.CalcValue;
@@ -31,7 +33,7 @@ import hivis.data.view.Function;
  * 
  * @author O. J. Coleman
  */
-public class Series {
+public class E2_Series {
 	public static void main(String[] args) {
 		// DataSeries represent a sequence (or vector or list) of data items. The data represented by a DataSeries
 		// may be numeric, strings, dates/times or any other type of object.
@@ -237,5 +239,57 @@ public class Series {
 		// Note that a nicer way to achieve the above is:
 		DataValue dotProductNice = vector1.multiply(vector2).sum();
 		System.out.println("\ndotProductNice = vector1.multiply(vector2).sum() => " + dotProductNice);
+		
+		
+		// We can obtain sorted views over a series (the sorted view will be updated when the source series changes).
+		DataSeries randomInts = HV.randomIntegerSeries(25, 0, 10);
+		System.out.println("\nrandomInts => " + randomInts);
+		// We can sort by the "natural" ordering of the values:
+		DataSeries randomIntsSortedNatural = randomInts.sort(); 
+		System.out.println("\nrandomIntsSortedNatural = randomInts.sort() => " + randomIntsSortedNatural);
+		// Or we can sort using a custom Comparator (see https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html)
+		DataSeries stringSeries = HV.newSeries("Charles Babbage", "George Boole", "Ada Lovelace", "Konrad Zuse", "Alan Turing");
+		System.out.println("\nstringSeries => " + stringSeries);
+		DataSeries stringSeriesSortedCustom = stringSeries.sort(new Comparator<String>() {
+			public int compare(String v1, String v2) {
+				// Sort by last name, then first, in reverse order.
+				String[] v1FirstLast = v1.split(" ");
+				String[] v2FirstLast = v2.split(" ");
+				int lastResult = v1FirstLast[1].compareTo(v2FirstLast[1]);
+				if (lastResult != 0) {
+					return -lastResult;
+				}
+				return -v1FirstLast[0].compareTo(v2FirstLast[0]);
+			}
+		}); 
+		System.out.println("\nstringSeriesSortedCustom => " + stringSeriesSortedCustom);
+		stringSeries.appendAll("Sophie Wilson", "Margaret Hamilton");
+		System.out.println("\nstringSeriesSortedCustom (updated with values added to stringSeries) => " + stringSeriesSortedCustom);
+		
+		
+		// We can obtain "grouped" views over a series. A grouping over a series is represented
+		// as a DataMap (which represents a mapping from keys to values, see the Maps example). 
+		// The values of the DataMap are DataSeries containing the values in that group.
+		// We can group by the values' own equality, in which case the key for each 
+		// group is a value such that key.equals(v) for all values in the group:
+		DataMap randomIntsGrouped = randomInts.group();
+		System.out.println("\nrandomIntsGrouped = randomInts.group() => " + randomIntsGrouped);
+		// Or we can group using a custom "key function" (the same kind of function used in the apply() method previously),
+		// in which case the key for each group is a value such that key.equals(keyFunction(v)) for all values in the group:
+		DataMap randomIntsGroupedCustom = randomInts.group(new Function() {
+			public String apply(int value) {
+				// Group into "even"s and "odd"s. 
+				return value % 2 == 0 ? "even" : "odd";
+			}
+		});
+		System.out.println("\nrandomIntsGroupedCustom => " + randomIntsGroupedCustom);
+		// The output of the key function can be any kind of value (we used strings above, 
+		// but could just have easily returned the raw value given by "value % 2").
+		// The ordering of the values in the groups matches the ordering of those values in the original series.
+		// The group view will be updated when the source series changes:
+		randomInts.resize(5);
+		randomInts.appendAll(15, 20, 15);
+		System.out.println("\nrandomIntsGrouped (reflecting changed source) => " + randomIntsGrouped);
+		System.out.println("\nrandomIntsGroupedCustom (reflecting changed source) => " + randomIntsGroupedCustom);
 	}
 }

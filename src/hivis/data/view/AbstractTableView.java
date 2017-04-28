@@ -31,6 +31,7 @@ import com.google.common.collect.Sets;
 import hivis.common.LSListMap;
 import hivis.common.ListMap;
 import hivis.data.AbstractDataTable;
+import hivis.data.AbstractUnmodifiableDataTable;
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataSeries;
@@ -38,12 +39,11 @@ import hivis.data.DataTable;
 import hivis.data.DataTableChange;
 
 /**
- * Base class for {@link DataTable} views. Provides a convenient interface for
- * doing so and handles and produces the necessary events.
+ * Base class for {@link DataTable} views that are (optionally) based on another DataTable. 
  * 
  * @author O. J. Coleman
  */
-public abstract class AbstractTableView<S extends DataSeries<?>> extends AbstractDataTable implements DataListener, TableView {
+public abstract class AbstractTableView<S extends DataSeries<?>> extends AbstractUnmodifiableDataTable<S> implements DataListener, TableView {
 	protected int rowKeySeries = Integer.MIN_VALUE;
 	
 	
@@ -51,19 +51,19 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 	 * The source data table for this view.
 	 */
 	protected final List<DataTable> inputTables;
-
+	
 	/**
 	 * The data series this view presents, keyed by label.
 	 */
 	protected ListMap<String, S> series;
-
+	
 	/**
 	 * Create a ViewTable that is not derived from a source DataTable.
 	 */
 	public AbstractTableView() {
 		this(null);
 	}
-
+	
 	/**
 	 * Create a ViewTable that is derived from the given source DataTable.
 	 */
@@ -87,45 +87,24 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 		return (ListMap<String, DataSeries<?>>) series.unmodifiableView();
 	}
 	
-
+	
 	@Override
 	public void setRowKey(int index) {
 		rowKeySeries = index;
 	}
-
+	
 	@Override
 	public int getRowKeyIndex() {
 		return rowKeySeries;
 	}
 	
-
-	@Override
-	public DataTable addSeries(String label, DataSeries<?> newSeries) {
-		throw new UnsupportedOperationException("Can not add a series to a view.");
-	}
-
-	@Override
-	public DataTable addSeries(DataTable table) {
-		throw new UnsupportedOperationException("Can not add series to a view.");
-	}
-
-	@Override
-	public DataTable removeSeries(String label) {
-		throw new UnsupportedOperationException("Can not remove a series from a view.");
-	}
-
-	@Override
-	public DataTable removeSeries(int index) {
-		throw new UnsupportedOperationException("Can not remove a series from a view.");
-	}
-
 	@Override
 	public void dataChanged(DataEvent event) {
 		if (inputTables.contains(event.affected)) {
 			updateSeriesWrapper(new ArrayList<>(event.getTypes()));
 		}
 	}
-
+	
 	/**
 	 * If and when an implementation changes the list of series that it presents
 	 * then this method should be called to update the selected series data.
@@ -134,7 +113,7 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 	protected void updateSeries() {
 		updateSeriesWrapper(new ArrayList<>());
 	}
-
+	
 	/**
 	 * Implementations must update the {@link #series}, and/or update the values
 	 * in the series. This is called when the source DataTable has changed.
@@ -149,7 +128,7 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 	 *            this is useful.
 	 */
 	protected abstract void updateSeries(List<Object> eventTypes);
-
+	
 	private void updateSeriesWrapper(List<Object> eventTypes) {
 		ListMap<String, S> origSeries = new LSListMap<>(series);
 

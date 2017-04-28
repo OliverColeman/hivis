@@ -89,6 +89,12 @@ public interface DataRow extends DataSequence {
 	 */
 	double getDouble(String label);
 	
+	/**
+	 * Get the element at the specified column as a String.
+	 * @throws IllegalStateException If the row no longer exists in the underlying table.
+	 */
+	public String getString(String label);
+	
 	// Overridden methods to change javadoc.
 	
 
@@ -142,4 +148,10 @@ public interface DataRow extends DataSequence {
 	 * @throws IllegalStateException If the row no longer exists in the underlying table.
 	 */
 	double getDouble(int index);
+
+	/**
+	 * Get the element at the specified column index as a String.
+	 * @throws IllegalStateException If the row no longer exists in the underlying table.
+	 */
+	public String getString(int index);
 }

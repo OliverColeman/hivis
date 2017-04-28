@@ -18,9 +18,11 @@ package hivis.example;
 
 
 import hivis.common.HV;
+import hivis.data.DataMap;
 import hivis.data.DataRow;
 import hivis.data.DataSeries;
 import hivis.data.DataTable;
+import hivis.data.view.Function;
 import hivis.data.view.RowFilter;
 
 /**
@@ -28,12 +30,15 @@ import hivis.data.view.RowFilter;
  * 
  * @author O. J. Coleman
  */
-public class Tables {
+public class E3_Tables {
 	public static void main(String[] args) {
-		// Get a new empty table.
+		// DataTables represent an ordered, labelled set of DataSeries, typically of the same length.
+		// The series may store different data types.
+		
+		// Make a new empty table.
 		DataTable myTable = HV.newTable();
 		
-		// Make a couple of new series.
+		// Make some new series.
 		// HV.randomIntegerSeries(length, min, max) creates a new series containing randomly generated integer values.
 		// HV.randomUniformSeries(length, min, max) creates a new series containing randomly generated real values.
 		DataSeries<Integer> ints = HV.randomIntegerSeries(5, 0, 10);
@@ -51,9 +56,9 @@ public class Tables {
 		
 		// Add some of the series from the random table to the first table.
 		// Selecting series by label.
-		myTable.addSeries("rand", randomTable.getSeries("real normal"));
+		myTable.addSeries("rand", randomTable.get("real normal"));
 		// Selecting series by index (counting from 0).
-		myTable.addSeries("date", randomTable.getSeries(3));
+		myTable.addSeries("date", randomTable.get(3));
 		
 		
 		// Print out our table.
@@ -131,7 +136,7 @@ public class Tables {
 		
 		// Changes to the values in the original series/table are reflected in the views:
 		ints.set(0, -10);
-		myTable.getSeries("reals").set(0, 100); 
+		myTable.get("reals").set(0, 100); 
 		System.out.println("\nmyTable modified values\n" + myTable);
 		System.out.println("\nselectGlob table reflecting modified values\n" + selectGlob);
 		
@@ -145,7 +150,7 @@ public class Tables {
 		DataTable mtCarsTran = mtCars.transpose();
 		
 		//  The transpose() method provides a view of the underlying DataTable, so changes to this table are reflected in the view: 
-		mtCars.getSeries("cyl").set(1, 12);
+		mtCars.get("cyl").set(1, 12);
 		
 		// The "Mazda RX4 Wag" now has 12 cylinders.
 		System.out.println("\nTransposed mtCars table, reflecting changed value for Mazda RX4 wag/cyl in original table:\n" + mtCarsTran);
@@ -162,9 +167,43 @@ public class Tables {
 		DataTable mtFiltered = mtCars.selectRows(new RowFilter() {
 			public boolean excludeRow(DataTable input, int index) {
 				// Exclude cars with 6 cylinders whose horsepower is less than 120.
-				return input.getSeries("cyl").getInt(index) == 6 && input.getSeries("hp").getInt(index) < 120;
+				return input.get("cyl").getInt(index) == 6 && input.get("hp").getInt(index) < 120;
 			}
 		});
 		System.out.println("\nmtCars table with rows filtered out (cars with 6 cylinders whose horsepower is less than 120):\n" + mtFiltered);
+		
+		
+		// We can obtain "grouped" views over a table. A grouping over a table is represented
+		// as a DataMap (which represents a mapping from keys to values, see the Maps example). 
+		// The values of the DataMap are DataTables containing the rows belonging to that group.
+		// We can group by the values in a series, in which case the key for each group is a 
+		// value such that key.equals(seriesValue) for all values in the grouping series:
+		mtCars = HV.mtCars();
+		DataMap mtCarsGroupedByCyl = mtCars.group("cyl");
+		System.out.println("\nmtCars grouped by \"cyl\" series => \n" + mtCarsGroupedByCyl);
+		// Note: the index of a series may also be used to specify the grouping series.
+		
+		// Or we can group using a custom "key function" which takes a row of the 
+		// table and produces a key representing the group that row belongs to),
+		// in which case the key for each group is a value such that 
+		// key.equals(keyFunction(row)) for all table rows in the group:
+		DataMap mtCarsGroupedCustom = mtCars.group(new Function<DataRow, String>() {
+			public String apply(DataRow row) {
+				// Group by first word of the model series.
+				String[] words = row.getString(0).split(" ", 2);
+				return words[0];
+			}
+		});
+		System.out.println("\nmtCars grouped by first word in \"model\" series => \n" + mtCarsGroupedCustom);
+		
+		// Changes in the source table are reflected in the groups:
+		for (int row = 0; row < mtCars.length(); row++) {
+			int cyl = mtCars.get("cyl").getInt(row);
+			if (cyl == 6) {
+				mtCars.get("cyl").set(row, cyl * 2);
+			}
+		}
+		System.out.println("\nmtCars grouped by \"cyl\" series (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedByCyl);
+		System.out.println("\nmtCars grouped by first word in \"model\" series (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedCustom);
 	}
 }

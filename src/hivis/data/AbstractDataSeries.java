@@ -612,6 +612,19 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 		return min().get();
 	}
 	
+	@Override
+	public void appendAllValues(V... values) {
+		for (V v : values) {
+			appendValue(v);
+		}
+	}
+	
+	@Override
+	public void appendAll(Object... values) {
+		for (Object v : values) {
+			append(v);
+		}
+	}
 	
 	@Override
 	public SeriesView<V> append(DataSeries<V> otherSeries) {

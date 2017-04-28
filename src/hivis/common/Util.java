@@ -175,7 +175,6 @@ public class Util {
 			if (c1.equals(Long.class) || c2.equals(Long.class)) {
 				if (dataLossWarnMessage) {
 					System.err.println("Warning: conversion from long integers to real numbers, possible data loss on long integer data.");
-					throw new RuntimeException();
 				}
 			}
 			return Double.class;
@@ -186,7 +185,6 @@ public class Util {
 			if (c1.equals(Long.class) || c2.equals(Long.class)) {
 				if (dataLossWarnMessage) {
 					System.err.println("Warning: conversion from long integers to real numbers, possible data loss on long integer data.");
-					throw new RuntimeException();
 				}
 				return Double.class;
 			}

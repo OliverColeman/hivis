@@ -29,7 +29,7 @@ import hivis.data.view.TableViewTranspose;
  * 
  * @author O. J. Coleman
  */
-public class Values {
+public class E1_Values {
 	public static void main(String[] args) {
 		// A DataValue represents a single data item. The data represented  
 		// may be numeric, strings, dates/times or any other type of object.

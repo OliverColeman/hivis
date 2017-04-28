@@ -62,6 +62,11 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	void appendValue(V value);
 
 	/**
+	 * Adds the given elements to the end of the series.
+	 */
+	void appendAllValues(V... values);
+
+	/**
 	 * Set the element at the specified index. Attempts to cast the given object to the type stored by this series.
 	 * For typed value setting use {@link DataSeries#setValue(int, Object)}.
 	 * @throws IndexOutOfBoundsException if the index is invalid.
@@ -71,9 +76,15 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 
 	/**
 	 * Adds the given element to the end of the series. Attempts to cast the given object to the type stored by this series.
-	 * @throws IllegalArgumentException if the given object cannot be cast to the type stored by this series.
+	 * @throws IllegalArgumentException if the given objects cannot be cast to the type stored by this series.
 	 */
 	void append(Object value);
+
+	/**
+	 * Adds the given element(s) to the end of the series. Attempts to cast the given objects to the type stored by this series.
+	 * @throws IllegalArgumentException if the given objects cannot be cast to the type stored by this series.
+	 */
+	void appendAll(Object... values);
 
 	/**
 	 * Removes the element at the given index. 
@@ -412,23 +423,19 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	
 	/**
 	 * Create a view of a DataSeries containing the values in the DataSeries
-	 * grouped according to the "natural" grouping, based on the natural
-	 * ordering, of the values. A group consists of all the elements in the
-	 * series which are considered equal according {@link Comparable#compareTo}
-	 * .All values must implement the Comparable interface and must be mutually
-	 * comparable (that is, v1.compareTo(v2) must not throw a ClassCastException
-	 * for any values v1 and v2).
+	 * grouped according to their mutual equality. Groups are formed by placing all values
+	 * for which v1.equals(v2) into the same group (and values where !v1.equals(v2)
+	 * into different groups). The key for each group is a value such that
+	 * key.equals(v) for all values in the group.
 	 */
 	public DataMap<V, SeriesView<V>> group();
 
 	/**
 	 * Create a view of a DataSeries containing the values in the DataSeries
-	 * grouped according to the ordering induced by the specified comparator. A
-	 * group consists of all the elements in the series which are considered
-	 * equal according {@link Comparator#compareTo}. All values must implement
-	 * the Comparable interface and must be mutually comparable (that is,
-	 * v1.compareTo(v2) must not throw a ClassCastException for any values v1
-	 * and v2).
+	 * grouped according to the given key function. A key is generated for each value in the
+	 * series with the given key function. Groups are then formed such that the keys for all values in a group
+	 * satisfy k1.equals(k2). The key for each group is a value such that
+	 * key.equals(keyFuntion(v)) for any value, v, in the group.
 	 */
 	public <K> DataMap<K, SeriesView<V>> group(Function<V, K> keyFuntion);
 	
