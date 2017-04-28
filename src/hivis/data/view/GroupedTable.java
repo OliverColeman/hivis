@@ -15,44 +15,32 @@
  */
 package hivis.data.view;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import hivis.common.HV;
 import hivis.data.DataRow;
-import hivis.data.DataSeries;
 import hivis.data.DataTable;
 
 /**
  * <p>
- * Create a view of a DataSeries containing the values in the DataSeries
- * collected into groups.
+ * Create a view of a DataTable containing the rows collected into groups. The
+ * grouping is represented as a {@link DataMap} where the map keys represent the
+ * group identifier and the map values are DataTable views containing the rows
+ * belonging to that group. See the various constructors for details on how
+ * groups are formed.
  * </p>
  * <p>
- * If no key function is provided then groups are formed by placing all values
- * for which v1.equals(v2) into the same group (and values where !v1.equals(v2)
- * into different groups). The key for each group is a value such that
- * key.equals(v) for all values in the group.
+ * The rows in the group table views appear in the same order as their order in
+ * the input table.
  * </p>
  * <p>
- * If a key function is provided then a key is generated for each value in the
- * series, and groups formed such that the keys for all values in a group
- * satisfy k1.equals(k2).
- * </p>
- * <p>
- * The values in the groups appear in the same order as their order in the
- * series.
- * </p>
- * <p>
- * The series returned by {@link #get(Object)} and {@link #values()} will be
- * emptied (set to length 0) if the group size becomes zero (and calls to
- * {@link #get(Object)} for groups that do not yet exist will create empty
- * series, but not add them to the list of groups returned by {@link #values()}
- * ). If the group size subsequently becomes non-zero this same series will be
- * reused. This allows external observers to monitor the size of a group (even
- * before it has existed in the input series).
+ * The group table views returned by {@link #get(Object)} and {@link #values()}
+ * will be emptied (set to length 0) if the group size becomes zero (and calls
+ * to {@link #get(Object)} for groups that do not yet exist will return empty
+ * group table views, but not add them to the list of groups returned by
+ * {@link #values()} ). If the group size subsequently becomes non-zero this
+ * same group table view will be reused. This allows external observers to
+ * monitor the size of a group (even before it has existed in the input table).
  * </p>
  *
  * @author O. J. Coleman
@@ -62,12 +50,22 @@ public class GroupedTable<K> extends CalcMap<K, TableView, DataTable> {
 	 * The function used to generate group keys from values.
 	 */
 	protected Function<DataRow, K> keyFunction;
-	
+
 	/**
 	 * A map of all groups ever produced. Allows re-use of groups.
 	 */
 	protected Map<K, TableViewFilterRows> allGroups = new HashMap<>();
-	
+
+	/**
+	 * Create a grouping where the key for a row is based on the value of the
+	 * specified series in that row. More specifically, groups are formed by
+	 * placing all rows for which
+	 * input.getRow(x).get(groupingSeries).equals(input.getRow(y).get(
+	 * groupingSeries)), for all rows x and y, into the same group (and rows
+	 * where this is false into different groups). The key for each group is a
+	 * value such that key.equals(group.getRow(z).get(groupingSeries)) for all
+	 * rows z in the group table.
+	 */
 	public GroupedTable(DataTable input, int groupingSeries) {
 		super(input);
 		keyFunction = new Function<DataRow, K>() {
@@ -77,7 +75,17 @@ public class GroupedTable<K> extends CalcMap<K, TableView, DataTable> {
 			}
 		};
 	}
-	
+
+	/**
+	 * Create a grouping where the key for a row is based on the value of the
+	 * specified series in that row. More specifically, groups are formed by
+	 * placing all rows for which
+	 * input.getRow(x).get(groupingSeries).equals(input.getRow(y).get(
+	 * groupingSeries)), for all rows x and y, into the same group (and rows
+	 * where this is false into different groups). The key for each group is a
+	 * value such that key.equals(group.getRow(z).get(groupingSeries)) for all
+	 * rows z in the group table.
+	 */
 	public GroupedTable(DataTable input, String groupingSeries) {
 		super(input);
 		keyFunction = new Function<DataRow, K>() {
@@ -87,12 +95,28 @@ public class GroupedTable<K> extends CalcMap<K, TableView, DataTable> {
 			}
 		};
 	}
-	
+
+	/**
+	 * Create a grouping where the key for a row is calculated using the given
+	 * key function, which should accept a row from the table and return a group
+	 * key (identifier) for that row. Groups are formed by placing all rows for
+	 * which keyFunction(input.getRow(x)).equals(keyFunction(input.getRow(y)),
+	 * for all rows x and y, into the same group (and rows where this is false
+	 * into different groups). The key for each group is a value such that
+	 * key.equals(keyFunction(group.getRow(z)) for all rows z in the group
+	 * table.
+	 */
 	public GroupedTable(DataTable input, Function<DataRow, K> keyFuntion) {
 		super(input);
 		this.keyFunction = keyFuntion;
 	}
-	
+
+	/**
+	 * Get the group table view for the specified key. If the key does not
+	 * currently exist then an empty group table view will be returned. If the
+	 * group for that key subsequently becomes non-empty then the previously
+	 * returned table view will be populated accordingly.
+	 */
 	@Override
 	public TableView get(K key) {
 		if (!allGroups.containsKey(key)) {
@@ -101,12 +125,12 @@ public class GroupedTable<K> extends CalcMap<K, TableView, DataTable> {
 		}
 		return allGroups.get(key);
 	}
-	
+
 	@Override
 	public void update() {
 		// Determine current groups.
 		Map<K, TableView> newGroups = new HashMap<>();
-		
+
 		for (DataRow row : input) {
 			K key = keyFunction.apply(row);
 			if (!newGroups.containsKey(key)) {
@@ -114,14 +138,14 @@ public class GroupedTable<K> extends CalcMap<K, TableView, DataTable> {
 				newGroups.put(key, group);
 			}
 		}
-				
+
 		// Remove groups that no longer exist.
 		for (K key : cache.keys().asArray()) {
 			if (!newGroups.containsKey(key)) {
 				cache.remove(key);
 			}
 		}
-		
+
 		// Add new groups.
 		for (K key : newGroups.keySet()) {
 			if (!cache.containsKey(key)) {
@@ -129,12 +153,14 @@ public class GroupedTable<K> extends CalcMap<K, TableView, DataTable> {
 			}
 		}
 	}
-	
+
 	private class GroupRowFilter implements RowFilter {
 		K key;
+
 		GroupRowFilter(K key) {
 			this.key = key;
 		}
+
 		@Override
 		public boolean excludeRow(DataTable input, int index) {
 			return !keyFunction.apply(input.getRow(index)).equals(key);

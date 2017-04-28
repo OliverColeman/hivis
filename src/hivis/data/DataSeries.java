@@ -422,7 +422,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	public SeriesView<V> sort(Comparator<V> comparator);
 	
 	/**
-	 * Create a view of a DataSeries containing the values in the DataSeries
+	 * Create a view of this DataSeries containing the values in the DataSeries
 	 * grouped according to their mutual equality. Groups are formed by placing all values
 	 * for which v1.equals(v2) into the same group (and values where !v1.equals(v2)
 	 * into different groups). The key for each group is a value such that
@@ -431,7 +431,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	public DataMap<V, SeriesView<V>> group();
 
 	/**
-	 * Create a view of a DataSeries containing the values in the DataSeries
+	 * Create a view of this DataSeries containing the values in the DataSeries
 	 * grouped according to the given key function. A key is generated for each value in the
 	 * series with the given key function. Groups are then formed such that the keys for all values in a group
 	 * satisfy k1.equals(k2). The key for each group is a value such that
