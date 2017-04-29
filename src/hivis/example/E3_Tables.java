@@ -17,6 +17,8 @@
 package hivis.example;
 
 
+import java.util.Comparator;
+
 import hivis.common.HV;
 import hivis.data.DataMap;
 import hivis.data.DataRow;
@@ -173,12 +175,41 @@ public class E3_Tables {
 		System.out.println("\nmtCars table with rows filtered out (cars with 6 cylinders whose horsepower is less than 120):\n" + mtFiltered);
 		
 		
-		// We can obtain "grouped" views over a table. A grouping over a table is represented
+		// Get a fresh copy of the mt cars table for sorting and grouping examples below.
+		mtCars = HV.mtCars();
+		
+		
+		// We can obtain sorted views of a table.
+		// A view of the table sorted by the values in one of the series:
+		DataTable mtCarsSortedByMPG = mtCars.sort("mpg");
+		System.out.println("\nmtCarsSortedByMPG = mtCars.sort(\"mpg\") => \n" + mtCarsSortedByMPG);
+		// Note: the index of a series may also be used to specify the sorting series.
+		
+		// Or we can sort using a custom Comparator (see https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html)
+		// The Comparator compares the rows of the table to determine their ordering:
+		DataTable mtCarsSortedByCylThenHP = mtCars.sort(new Comparator<DataRow>() {
+			public int compare(DataRow row1, DataRow row2) {
+				int row1Cyl = row1.getInt("cyl");
+				int row2Cyl = row2.getInt("cyl");
+				
+				if (row1Cyl < row2Cyl) return -1;
+				if (row1Cyl > row2Cyl) return 1;
+				
+				// Same number of cylinders, compare by hp.
+				double row1HP = row1.getDouble("hp");
+				double row2HP = row2.getDouble("hp");
+				return Double.compare(row1HP, row2HP); // Use utility method provided by Java standard library.
+				
+			}
+		});
+		System.out.println("\nmtCars sorted by \"cyl\" then \"hp\" => \n" + mtCarsSortedByCylThenHP);
+		
+		
+		// We can also obtain "grouped" views over a table. A grouping over a table is represented
 		// as a DataMap (which represents a mapping from keys to values, see the Maps example). 
 		// The values of the DataMap are DataTables containing the rows belonging to that group.
 		// We can group by the values in a series, in which case the key for each group is a 
 		// value such that key.equals(seriesValue) for all values in the grouping series:
-		mtCars = HV.mtCars();
 		DataMap mtCarsGroupedByCyl = mtCars.group("cyl");
 		System.out.println("\nmtCars grouped by \"cyl\" series => \n" + mtCarsGroupedByCyl);
 		// Note: the index of a series may also be used to specify the grouping series.
@@ -196,13 +227,18 @@ public class E3_Tables {
 		});
 		System.out.println("\nmtCars grouped by first word in \"model\" series => \n" + mtCarsGroupedCustom);
 		
-		// Changes in the source table are reflected in the groups:
+		
+		// Changes in the source table are reflected in the sorted and grouped views:
 		for (int row = 0; row < mtCars.length(); row++) {
 			int cyl = mtCars.get("cyl").getInt(row);
 			if (cyl == 6) {
 				mtCars.get("cyl").set(row, cyl * 2);
 			}
 		}
+		
+		System.out.println("\nmtCarsSortedByMPG (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsSortedByMPG);
+		System.out.println("\nmtCarsSortedByCylThenHP (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsSortedByCylThenHP);
+		
 		System.out.println("\nmtCars grouped by \"cyl\" series (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedByCyl);
 		System.out.println("\nmtCars grouped by first word in \"model\" series (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedCustom);
 	}

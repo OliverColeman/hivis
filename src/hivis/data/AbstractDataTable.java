@@ -17,13 +17,12 @@
 package hivis.data;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-
-import com.google.common.base.Objects;
 
 import hivis.common.ListSet;
 import hivis.common.Util;
@@ -32,6 +31,7 @@ import hivis.data.view.Function;
 import hivis.data.view.GroupedTable;
 import hivis.data.view.RowFilter;
 import hivis.data.view.SeriesView;
+import hivis.data.view.SortedTable;
 import hivis.data.view.TableFunction;
 import hivis.data.view.TableView;
 import hivis.data.view.TableViewAppend;
@@ -205,6 +205,23 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 		return new TableViewFilterRows(this, filter);
 	}
 	
+	
+	@Override
+	public TableView sort(int sortingSeries) {
+		return new SortedTable(this, sortingSeries);
+	}
+
+	@Override
+	public TableView sort(String sortingSeries) {
+		return new SortedTable(this, sortingSeries);
+	}
+
+	@Override
+	public TableView sort(Comparator<DataRow> comparator) {
+		return new SortedTable(this, comparator);
+	}
+	
+	
 	@Override
 	public <K> DataMap<K, TableView> group(int groupingSeries) {
 		return new GroupedTable<>(this, groupingSeries);
@@ -220,6 +237,7 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 		return new GroupedTable<>(this, keyFunction);
 	}
 
+	
 	/**
 	 * Returns a human-readable tabulated view of this DataTable.
 	 */
