@@ -17,7 +17,17 @@ A DataValue may represent numeric values or any other type of object. For DataVa
 
 If a DataValue represents a numeric type then it's value can be obtained as a _primitive_ java numeric type using methods such as `getFloat()` and `getInt()`.
 
-You can see [examples of working with DataValues](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/Values.java).
+You can see [examples of working with DataValues](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/E1_Values.java).
+
+## New DataMap data type
+
+`DataMap`s represent a mapping from keys to values. Keys are always unique with respect to each other, values may be duplicated. 
+
+The keys and values may be any type of Object, however typically a key will be "simple", such as numbers, strings, and dates, but values may be simple or more complex, for example other data structures such as DataSeries. Note that a DataTable is a specialised kind of DataMap where the keys (labels) are Strings and the values are DataSeries.
+
+At the moment DataMaps are primarily used to support the grouping functions over DataSeries and DataTables (more info on this below), so do not have much in the way of built-in functionality.
+
+Here are some [examples of working with DataMaps](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/E4_Maps.java).
 
 ## Statistical operations on DataSeries
 
@@ -50,7 +60,94 @@ There are several things to note about the above code:
 * If the `myData` series changes the DataValues provided by the `min()` and `max()` methods will be updated automatically, and the `myDataUnitRange` series accordingly. Similarly if `vector1` or `vector2` change, the calculated DataSeries returned by the `multiply` method will be updated automatically, and then the `sum()` method as a result of that.
 * we are calling `min()` twice, however the  minimum is not actually calculated twice as the same _min_ DataValue is cached and reused by subsequent calls to the `min()` method. The same is true for the other statistical methods - and even within the methods where possible, eg `mean()` will create a cache of the _sum_ DataValue as well as the _mean_ DataValue.
 
-You can see more [examples of working with DataSeries](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/Series.java).
+You can see more [examples of working with DataSeries](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/E2_Series.java).
+
+## Soring and grouping series and tables
+
+There is now built-in support for obtaining Views of DataSeries and DataTables that sort the values/rows, or group the values/rows. A quick synopsis is provided below, but you can see [more in depth examples and information about sorting and grouping DataSeries](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/E2_Series.java) and [more in depth examples and information about sorting and grouping DataTables](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/E3_Tables.java).
+
+### Sorting
+
+``` java
+// Sort a series according to the "natural" ordering of the values, in ascending order.
+DataSeries sortedSeriesNatural = mySeries.sort();
+// Sort a series with a custom Comparator (see examples linked above for more info on Comparator usage).
+DataSeries sortedSeriesCustom = mySeries.sort(new Comparator() { ...  } );
+
+// Sort the rows of a table according to the "natural" ordering of the values in the "name" series in the table.
+DataTable sortedTableNaturalName = myTable.sort("name");
+// Sort the rows of a table according to a custom Comparator (see examples linked above for more info on Comparator usage).
+DataTable sortedTableCustom = myTable.sort(new Comparator<DataRow>() { ... });
+```
+
+### Grouping Series
+
+A grouping over a series is represented as a DataMap (see above). The values of the DataMap are DataSeries containing the values for a group. 
+
+We can group by the values' own equality (values that are equal are grouped together), in which case the key for each group is a value such that key.equals(v) for all values in the group:
+``` java
+		DataMap randomIntsGrouped = randomInts.group();
+```
+Will produce a grouping something like (depending on the actual values in the series):
+```
+	1 => DataSeries (1) [  1 ],
+	2 => DataSeries (3) [  2 ; 2 ; 2 ],
+	3 => DataSeries (2) [  3 ; 3 ],
+	...
+```
+The numbers on the left are the keys of the map, and the DataSeries are the groups (showing the values they contain). If we called `group()` on a series containing Strings or dates then the keys would be Strings or dates.
+
+We can also group using a custom "key function", in which case the key for each group is a value such that `key.equals(keyFunction(v))` for all values `v` in the group:
+``` java
+DataMap randomIntsGroupedCustom = randomInts.group(new Function<[SeriesType], [TypeOfTheKey]>() { });
+```
+The output of the key function can be any kind of value. 
+
+The ordering of the values in the groups matches the ordering of those values in the original series. Note that because the grouping is a View it will be updated when the source series changes.
+
+### Grouping Tables
+
+A grouping over a table is also represented as a DataMap. The values of the DataMap are DataTables containing the rows for a group. 
+
+We can group by the values in a series, in which case the key for each group is a value such that `key.equals(v)` for all values `v` in the grouping series. For example:
+``` java
+// Make a table of peoples' names and their ages.
+DataSeries name = HV.newSeries("Genevieve", "Charlotte", "Roberto", "Stefan", "Franklin", "Amelia");
+DataSeries age = HV.newSeries(7, 8, 7, 6, 8, 7);
+DataTable nameAge = HV.newTable().addSeries("name", name).addSeries("age", age);
+// Group by "age" series.
+DataMap ageGrouping = nameAge.group("age");
+System.out.println(ageGrouping);
+```
+Will output:
+```
+DataMap (3) [ 
+	6 => |   name | age | 
+	     ----------------
+	     | Stefan |   6 | 
+	     ----------------,
+
+	7 => |      name | age | 
+	     -------------------
+	     | Genevieve |   7 | 
+	     |   Roberto |   7 | 
+	     |    Amelia |   7 | 
+	     -------------------,
+
+	8 => |      name | age | 
+	     -------------------
+	     | Charlotte |   8 | 
+	     |  Franklin |   8 | 
+	     -------------------
+ ]
+
+```
+
+Or we can group using a custom "key function" which, given a row of the table, produces a key representing the group that row belongs to.
+Then the key for each group is a value such that `key.equals(keyFunction(row))` for all table rows in the group:
+``` java
+DataMap groupedTableByNameCustom = myTable.group(new Function<DataRow, [TypeOfTheKey]>() { ... });
+```
 
 # Loading data from spreadsheets
 
