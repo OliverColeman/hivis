@@ -23,7 +23,7 @@ import hivis.data.DataSeries;
 
 /**
  * Examples of working with {@link DataMap}s.
- * TODO
+ * 
  * @author O. J. Coleman
  */
 public class E4_Maps {
@@ -35,6 +35,7 @@ public class E4_Maps {
 		// DataSeries. (Note that a DataTable is a specialised kind of DataMap where the keys (labels) are Strings 
 		// and the values are DataSeries.)
 		// DataMaps are currently primarily used to support the grouping functions over DataSeries and DataTables.
+		// For the complete API see https://olivercoleman.github.io/hivis/reference/hivis/data/DataMap.html
 		
 		// (Advanced Java developers: DataMaps have a generic type parameter for the key and values they represent, 
 		// however this can generally be safely ignored. This is done here for readability and simplicity (one of the 

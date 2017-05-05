@@ -170,10 +170,10 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	
 	/**
 	 * Get the element at the specified index as a DataValue. The returned 
-	 * DataValue is a view of the specified element value: DataValue's value 
+	 * DataValue is a view of the specified element value: the DataValue's value 
 	 * will reflect changes made to the referenced element in this series.
 	 * If the given index becomes out of range of the length of the series
-	 * The empty value will be returned by DataValue ({@link DataSeries#getEmptyValue()}).
+	 * the empty value will be returned by the DataValue ({@link DataSeries#getEmptyValue()}).
 	 */
 	DataValue<V> getDataValue(int index);
 	
@@ -295,6 +295,13 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * @return An array containing the values in this series (the passed in array if possible).
 	 */
 	String[] asStringArray(String[] data);
+	
+	/**
+	 * Get a copy of this DataSeries. The returned series will contain
+	 * the same values as this series, copied by reference. Changes to
+	 * this series will not be reflected in the returned series.
+	 */
+	public DataSeries<V> copy();
 	
 	/**
 	 * Get an unmodifiable view of this series.

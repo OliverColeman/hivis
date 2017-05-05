@@ -172,7 +172,11 @@ public class DataSeriesFloat extends AbstractModifiableDataSeries<Float> {
 		return new DataSeriesFloat();
 	}
 
-
+	@Override
+	public DataSeriesFloat copy() {
+		return new DataSeriesFloat(this);
+	}
+	
 	@Override
 	public SeriesView<Float> sort() {
 		return new Sorted(this);

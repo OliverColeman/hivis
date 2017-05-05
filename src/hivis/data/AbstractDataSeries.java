@@ -47,7 +47,11 @@ import hivis.data.view.SortedSeries;
  */
 public abstract class AbstractDataSeries<V> extends DataDefault implements DataSeries<V> {
 	private TypeToken<V> typeToken = new TypeToken<V>(getClass()) {};
-	private Class<?> type = typeToken.getRawType();
+	
+	/**
+	 * The data type represented by this series, if available.
+	 */
+	protected Class<?> type = typeToken.getRawType();
 	
 	Map<SeriesOp, DataValue<V>> dataValueOp;
 	
@@ -468,6 +472,13 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 			data[i] = get(i).toString();
 		}
 		return data;
+	}
+	
+	@Override
+	public DataSeries<V> copy(){
+		DataSeries<V> copy = getNewSeries();
+		copy.appendAllValues(this.asArray());
+		return copy;
 	}
 
 	public SeriesView<V> unmodifiableView() {
@@ -1169,8 +1180,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	}
 	
 	
-	// A CalcSeries that scales the values in a given input series to unit
-	// values [0, 1].
+	// A CalcSeries that scales the values in a given input series to unit values [0, 1].
 	// When the input series changes the scaled values are also updated.
 	class UnitSeries extends CalcSeries<Object, Double> {
 		public UnitSeries(DataSeries input) {
@@ -1182,49 +1192,15 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 		// We override this rather than calc() because we need to know the min
 		// and max over the series before we can convert values to unit range.
 		@Override
-		public void update(DataEvent cause) {
-			// Suppress change events occurring until we've finished updating
-			// the values.
-			this.beginChanges(this);
-			
-			// Make sure cache series is the right length.
-			cache.resize(length());
-
+		public void update() {
 			DataSeries<?> input = inputSeries.get(0);
-			Number minObj = (Number) input.min().get();
-			Number maxObj = (Number) input.max().get();
-
-			if (minObj instanceof Float || minObj instanceof Double) {
-				double min = ((Number) minObj).doubleValue();
-				double max = ((Number) maxObj).doubleValue();
-				double range = max - min;
-
-				// Then set values.
-				for (int i = 0; i < length(); i++) {
-					// Convert to unit range.
-					double value = (input.getDouble(i) - min) / range;
-					cache.setValue(i, value);
-				}
-			} else {
-				long min = ((Number) minObj).longValue();
-				long max = ((Number) maxObj).longValue();
-				double range = max - min;
-
-				// Then set values.
-				for (int i = 0; i < length(); i++) {
-					// Convert to unit range.
-					double value = (input.getLong(i) - min) / range;
-					cache.setValue(i, value);
-				}
+			double min = input.min().getDouble();
+			double max = input.max().getDouble();
+			double range = max - min;
+			for (int i = 0; i < length(); i++) {
+				double value = (input.getDouble(i) - min) / range;
+				cache.setValue(i, value);
 			}
-
-			this.finishChanges(this);
-		}
-
-		// Not used but must implement from abstract class.
-		@Override
-		public Double calc(int index) {
-			return 0.0d;
 		}
 	}
 }

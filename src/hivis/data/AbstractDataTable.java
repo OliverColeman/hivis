@@ -20,16 +20,21 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import hivis.common.ListMap;
 import hivis.common.ListSet;
 import hivis.common.Util;
 import hivis.data.view.CalcSeries;
 import hivis.data.view.Function;
 import hivis.data.view.GroupedTable;
 import hivis.data.view.RowFilter;
+import hivis.data.view.SeriesFunction;
 import hivis.data.view.SeriesView;
 import hivis.data.view.SortedTable;
 import hivis.data.view.TableFunction;
@@ -122,6 +127,15 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 		return getSeriesLabel(getRowKeyIndex());
 	}
 	
+	@Override
+	public DataTable copy() {
+		DataTable copy = new DataTableDefault();
+		for (Entry<String, DataSeries<?>> series : this.getLabelledSeries().entrySet()) {
+			copy.addSeries(series.getKey(), series.getValue().copy());
+		}
+		return copy;
+	}
+	
 
 	@Override
 	public TableView selectSeries(int... series) {
@@ -168,9 +182,34 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 		return new TableViewFunction(function, includeOriginalSeries, this);
 	}
 	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public TableView apply(final SeriesFunction function) {
+		return new TableViewFunction(new TableFunction() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public void getSeries(List<DataTable> input, ListMap<String, DataSeries<?>> outputSeries) {
+				for (Map.Entry<String, DataSeries<?>> series : input.get(0).getLabelledSeries().entrySet()) {
+					outputSeries.put(series.getKey(), function.apply(series.getValue()));
+				}
+			}
+		}, this);
+	}
+	
 	@Override 
 	public TableView transpose() {
 		return new TableViewTranspose(this);
+	}
+	
+	@Override
+	public TableView combine(DataTable table) {
+		return new TableViewFunction(new TableFunction() {
+			@Override
+			public void getSeries(List<DataTable> input, ListMap<String, DataSeries<?>> outputSeries) {
+				outputSeries.putAll(input.get(0).getLabelledSeries());
+				outputSeries.putAll(input.get(1).getLabelledSeries());
+			}
+		}, true, this, table);
 	}
 
 	@Override 

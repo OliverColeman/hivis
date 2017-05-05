@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.Date;
 import java.util.Random;
 
+import hivis.data.AbstractDataSeries;
 import hivis.data.AbstractModifiableDataSeries;
 import hivis.data.DataEvent;
 import hivis.data.DataMap;
@@ -196,56 +197,54 @@ public class HV {
 	 */
 	public static <V> DataSeries<V> newSeries(V... items) {
 		// First check if all the values are numeric, and which type.
-		boolean isNumeric = true;
-		boolean isDouble = true;
-		boolean isInt = true;
-		boolean isLong = true;
-		boolean isFloat = true;
+		boolean isNumeric = false;
+		Class<?> type = null;
 		for (Object o : items) {
-			if (!(o instanceof Number)) {
-				isNumeric = false;
-				break;
+			if (o == null) continue;
+			
+			Class<?> oType = o.getClass();
+			if (type == null) {
+				type = oType;
+				isNumeric = o instanceof Number;
 			}
-			else if (!(o instanceof Integer)) {
-				isInt = false;
-			}
-			else if (!(o instanceof Long)) {
-				isLong = false;
-			}
-			else if (!(o instanceof Float)) {
-				isFloat = false;
-			}
-			else if (!(o instanceof Double)) {
-				isDouble = false;
+			else {
+				if (!type.equals(oType)) {
+					if (isNumeric && o instanceof Number) {
+						type = Util.getEnvelopeNumberType((Class<Number>) type, (Class<Number>) oType, false); 
+					}
+					else {
+						throw new IllegalArgumentException("Cannot append series with incompatible types.");
+					}
+				}
 			}
 		}
 		
 		if (isNumeric) {
-			if (isInt) {
+			if (type.equals(Integer.class)) {
 				int[] vals = new int[items.length];
 				for (int i = 0; i < items.length; i++) {
-					vals[i] = ((Number) items[i]).intValue();
+					vals[i] = items[i] == null ? 0 : ((Number) items[i]).intValue();
 				}
 				return (DataSeries<V>) new DataSeriesInteger(vals);
 			}
-			if (isLong) {
+			if (type.equals(Long.class)) {
 				long[] vals = new long[items.length];
 				for (int i = 0; i < items.length; i++) {
-					vals[i] = ((Number) items[i]).longValue();
+					vals[i] = items[i] == null ? 0 : ((Number) items[i]).longValue();
 				}
 				return (DataSeries<V>) new DataSeriesLong(vals);
 			}
-			if (isFloat) {
+			if (type.equals(Float.class)) {
 				float[] vals = new float[items.length];
 				for (int i = 0; i < items.length; i++) {
-					vals[i] = ((Number) items[i]).floatValue();
+					vals[i] = items[i] == null ? Float.NaN : ((Number) items[i]).floatValue();
 				}
 				return (DataSeries<V>) new DataSeriesFloat(vals);
 			}
-			if (isDouble) {
+			if (type.equals(Double.class)) {
 				double[] vals = new double[items.length];
 				for (int i = 0; i < items.length; i++) {
-					vals[i] = ((Number) items[i]).doubleValue();
+					vals[i] = items[i] == null ? Float.NaN : ((Number) items[i]).doubleValue();
 				}
 				return (DataSeries<V>) new DataSeriesDouble(vals);
 			}

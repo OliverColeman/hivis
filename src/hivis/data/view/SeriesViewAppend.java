@@ -16,6 +16,7 @@
 
 package hivis.data.view;
 
+import hivis.common.Util;
 import hivis.data.DataEvent;
 import hivis.data.DataSeries;
 
@@ -24,7 +25,10 @@ import hivis.data.DataSeries;
  * 
  * @author O. J. Coleman
  */
-public class SeriesViewAppend<V> extends AbstractSeriesView<V, V> {
+public class SeriesViewAppend<V> extends CalcSeries<V, V> {
+	private boolean determinedType = false;
+	private boolean isNumeric;
+	
 	/**
 	 * Create a new ViewSeriesAppend that appends the given input series in the order given.
 	 */
@@ -42,65 +46,109 @@ public class SeriesViewAppend<V> extends AbstractSeriesView<V, V> {
 	}
 	@Override
 	public V getEmptyValue() {
-		return inputSeries.get(0).getEmptyValue();
+		return getNewSeries().getEmptyValue();
 	}
 	@Override
 	public Class<?> getType() {
-		return inputSeries.get(0).getType();
+		if (!determinedType) {
+			type = inputSeries.get(0).getType();
+			isNumeric = inputSeries.get(0).isNumeric();
+			for (int s = 1; s < inputSeries.size(); s++) {
+				Class<?> sType = inputSeries.get(s).getType();
+				if (!type.equals(sType)) {
+					if (isNumeric && inputSeries.get(s).isNumeric()) {
+						type = Util.getEnvelopeNumberType((Class<Number>) type, (Class<Number>) sType, true); 
+					}
+					else {
+						throw new IllegalArgumentException("Cannot append series with incompatible types.");
+					}
+				}
+				
+			}
+			determinedType = true;
+		}
+		return type;
 	}
 	
 	@Override
-	public synchronized V get(int index) {
-		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
-			int len = inputSeries.get(seriesIndex).length();
-			if (index < len) return inputSeries.get(seriesIndex).get(index);
-			index -= len;
+	public boolean isNumeric() {
+		if (!determinedType) {
+			getType();
 		}
-		return getEmptyValue();
+		return isNumeric;
 	}
 	
 	@Override
-	public synchronized boolean getBoolean(int index) {
-		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
-			int len = inputSeries.get(seriesIndex).length();
-			if (index < len) return inputSeries.get(seriesIndex).getBoolean(index);
-			index -= len;
+	public void update() {
+		int idx = 0;
+		for (DataSeries<V> series : inputSeries) {
+			for (V val : series) {
+				cache.set(idx++, val);
+			}
 		}
-		return (boolean) (Boolean) getEmptyValue();
 	}
-
-	@Override
-	public synchronized int getInt(int index) {
-		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
-			int len = inputSeries.get(seriesIndex).length();
-			if (index < len) return inputSeries.get(seriesIndex).getInt(index);
-			index -= len;
-		}
-		return (int) (Integer) getEmptyValue();
-	}
-
-	@Override
-	public synchronized long getLong(int index) {
-		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
-			int len = inputSeries.get(seriesIndex).length();
-			if (index < len) return inputSeries.get(seriesIndex).getLong(index);
-			index -= len;
-		}
-		return (long) (Long) getEmptyValue();
-	}
-
-	@Override
-	public synchronized double getDouble(int index) {
-		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
-			int len = inputSeries.get(seriesIndex).length();
-			if (index < len) return inputSeries.get(seriesIndex).getDouble(index);
-			index -= len;
-		}
-		return (double) (Double) getEmptyValue();
-	}
-
-	@Override
-	public void update(DataEvent cause) {
-		// Nothing to do, view is not cached.
-	}
+	
+//	@Override
+//	public synchronized V get(int index) {
+//		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
+//			int len = inputSeries.get(seriesIndex).length();
+//			if (index < len) {
+//				V val = inputSeries.get(seriesIndex).get(index);
+//				
+//				// We cast to the determined numeric type to ensure consistency with getType() 
+//				// in the case of the input series being of different numeric types.
+//				if (isNumeric) {
+//					return (V) type.cast(val);
+//				}
+//				return val;
+//			}
+//			index -= len;
+//		}
+//		return (V) getEmptyValue();
+//	}
+//	
+//	@Override
+//	public synchronized boolean getBoolean(int index) {
+//		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
+//			int len = inputSeries.get(seriesIndex).length();
+//			if (index < len) return inputSeries.get(seriesIndex).getBoolean(index);
+//			index -= len;
+//		}
+//		return (boolean) (Boolean) getEmptyValue();
+//	}
+//
+//	@Override
+//	public synchronized int getInt(int index) {
+//		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
+//			int len = inputSeries.get(seriesIndex).length();
+//			if (index < len) return inputSeries.get(seriesIndex).getInt(index);
+//			index -= len;
+//		}
+//		return (int) (Integer) getEmptyValue();
+//	}
+//
+//	@Override
+//	public synchronized long getLong(int index) {
+//		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
+//			int len = inputSeries.get(seriesIndex).length();
+//			if (index < len) return inputSeries.get(seriesIndex).getLong(index);
+//			index -= len;
+//		}
+//		return (long) (Long) getEmptyValue();
+//	}
+//
+//	@Override
+//	public synchronized double getDouble(int index) {
+//		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
+//			int len = inputSeries.get(seriesIndex).length();
+//			if (index < len) return inputSeries.get(seriesIndex).getDouble(index);
+//			index -= len;
+//		}
+//		return (double) (Double) getEmptyValue();
+//	}
+//
+//	@Override
+//	public void update(DataEvent cause) {
+//		// Nothing to do, view is not cached.
+//	}
 }

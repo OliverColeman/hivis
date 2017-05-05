@@ -121,4 +121,9 @@ public class DataSeriesGeneric<V> extends AbstractModifiableDataSeries<V> {
 	public DataSeries<V> getNewSeries() {
 		return new DataSeriesGeneric<V>();
 	}
+	
+	@Override
+	public DataSeriesGeneric<V> copy() {
+		return new DataSeriesGeneric<>(this);
+	}
 }

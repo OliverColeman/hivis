@@ -7,6 +7,7 @@ import hivis.data.view.*;
 void setup() {
 	// A DataValue represents a single data item. The data represented  
 	// may be numeric, strings, dates/times or any other type of object.
+	// For the complete API see https://olivercoleman.github.io/hivis/reference/hivis/data/DataValue.html
 	
 	// Create some DataValues with specific initial values.
 	// Integer values.

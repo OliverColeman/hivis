@@ -151,7 +151,11 @@ public class DataSeriesLong extends AbstractModifiableDataSeries<Long> {
 		return new DataSeriesLong();
 	}
 	
-
+	@Override
+	public DataSeriesLong copy() {
+		return new DataSeriesLong(this);
+	}
+	
 	@Override
 	public SeriesView<Long> sort() {
 		return new Sorted(this);

@@ -38,6 +38,7 @@ public class E2_Series {
 		// DataSeries represent a sequence (or vector or list) of data items. The data represented by a DataSeries
 		// may be numeric, strings, dates/times or any other type of object.
 		// Numeric DataSeries have numerous built-in methods for performing arithmetic operations over the data.
+		// For the complete API see https://olivercoleman.github.io/hivis/reference/hivis/data/DataSeries.html
 		
 		// (Advanced Java developers: DataSeries have a generic type parameter for the data they represent, however 
 		// this can generally be safely ignored. This is done here for readability and simplicity (one of the core 
@@ -149,13 +150,13 @@ public class E2_Series {
 		System.out.println("\nrealNumbersAppendPlus1 = realNumbers.append(plus1) =>\n" + realNumbersAppendPlus1);
 		
 		
-		// The series created above, starting with 'plus1', are "views" of the original series but with the operation 
+		// The series created above, starting with 'plus1', are "Views" of the original series but with the operation 
 		// performed on each element, so changes in the original series will be reflected in the new series.
 		
 		// NOTE: These DataSeries that are calculated from other data sets (DataSeries or otherwise) cannot have their 
 		// values directly manipulated via the set() method.  
 		
-		// Also note that the customFunc series is a view of the plus1 series, which in turn is a view of realNumbers; 
+		// Also note that the customFunc series is a View of the plus1 series, which in turn is a View of realNumbers; 
 		// changes to the underlying data will "bubble up" through the chain of views.
 		realNumbers.append(55.55);
 		System.out.println("\nrealNumbersUnitRangeSorted reflecting appended value in realNumbers =>\n" + realNumbersUnitRangeSorted);

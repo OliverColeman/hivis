@@ -53,8 +53,12 @@ public class TableViewAppend extends AbstractTableView<SeriesViewAppend<?>> {
 						throw new IllegalArgumentException("Cannot append tables with differing series labels.");
 					}
 					
-					if (!first.getSeries(si).getType().equals(table.getSeries(si).getType())) {
-						throw new IllegalArgumentException("Cannot append tables with differing series types.");
+					// Check series types are compatible.
+					DataSeries<?> s1 = first.get(si);
+					DataSeries<?> s2 = table.get(si);
+					// If they're not (exactly) the same type and not both numeric.
+					if (!s1.getType().equals(s2.getType()) && !(s1.isNumeric() && s2.isNumeric())) {
+						throw new IllegalArgumentException("Cannot append tables with incompatible series types.");
 					}
 				}
 			}
@@ -75,7 +79,7 @@ public class TableViewAppend extends AbstractTableView<SeriesViewAppend<?>> {
 					// Get the corresponding series from each table.
 					DataSeries<?>[] seriesToAppend = new DataSeries[inputTables.size()];
 					for (int ti = 0; ti < inputTables.size(); ti++) {
-						seriesToAppend[ti] = inputTables.get(ti).getSeries(label);
+						seriesToAppend[ti] = inputTables.get(ti).get(label);
 					}
 					// Create new series appender and add to series in this view.
 					SeriesViewAppend<?> appendedSeries = new SeriesViewAppend(seriesToAppend);

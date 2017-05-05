@@ -172,6 +172,12 @@ public class DataSeriesDouble extends AbstractModifiableDataSeries<Double> {
 		return new DataSeriesDouble();
 	}
 	
+	
+	@Override
+	public DataSeriesDouble copy() {
+		return new DataSeriesDouble(this);
+	}
+	
 
 	@Override
 	public SeriesView<Double> sort() {

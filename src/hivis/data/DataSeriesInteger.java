@@ -150,7 +150,11 @@ public class DataSeriesInteger extends AbstractModifiableDataSeries<Integer> imp
 		return new DataSeriesInteger();
 	}
 	
-
+	@Override
+	public DataSeriesInteger copy() {
+		return new DataSeriesInteger(this);
+	}
+	
 	@Override
 	public SeriesView<Integer> sort() {
 		return new Sorted(this);
