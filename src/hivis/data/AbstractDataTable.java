@@ -402,7 +402,7 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	@Override
 	public Iterator<DataRow> iterator() {
 		System.out.println("itr 1");
-		final DataTable me = this.copy();
+		final DataTable me = this;
 		System.out.println("itr 2");
 		
 		// Current index into table.
@@ -411,18 +411,31 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 		//System.err.println("itr 3");
 		
 		return new Iterator<DataRow>() {
+			// When hasNext() is called retrieve and store the next item
+			// (subsequent calls before next() is called have no effect).
+			DataRow next = null;
+			boolean nextObtained = false;
+			
 			@Override
-			public boolean hasNext() {
+			public synchronized boolean hasNext() {
 				//System.err.println("itr hasnext " + rowIndex.get());
-				
-				return rowIndex.get() < me.length();
+				if (nextObtained == false && rowIndex.get() < me.length()) {
+					next = new Row(rowIndex.getAndIncrement());
+					nextObtained = true;
+				}
+				return nextObtained;
 			}
 
 			@Override
-			public DataRow next() {
+			public synchronized DataRow next() {
 				//System.err.println("itr next " + rowIndex.get());
-
-				return new Row(rowIndex.getAndIncrement());
+				if (hasNext()) {
+					DataRow ret = next;
+					next = null;
+					nextObtained = false;
+					return ret;
+				}
+				return null;
 			}
 		};
 	}

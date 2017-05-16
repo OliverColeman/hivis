@@ -1145,7 +1145,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 
 	@Override
 	public Iterator<V> iterator() {
-		return copy().asList().iterator();
+		return asList().iterator();
 	}
 
 	

@@ -120,12 +120,12 @@ public class DataTableDefault extends AbstractDataTable {
 		this.setDataChanged(DataTableChange.SeriesRemoved);
 		return this;
 	}
-
+	
 	@Override
 	public void setRowKey(int index) {
 		rowKeySeries = index;
 	}
-
+	
 	@Override
 	public int getRowKeyIndex() {
 		return rowKeySeries;
@@ -133,15 +133,21 @@ public class DataTableDefault extends AbstractDataTable {
 	
 	@Override
 	public int length() {
-		if (length == -1) {
-			length = 0;
-			for (DataSeries<?> s : getLabelledSeries().values()) {
-				if (s.length() > length) {
-					length = s.length();
+		lock();
+		try {
+			if (length == -1) {
+				length = 0;
+				for (DataSeries<?> s : getLabelledSeries().values()) {
+					if (s.length() > length) {
+						length = s.length();
+					}
 				}
 			}
+			return length;
 		}
-		return length;
+		finally {
+			unlock();
+		}
 	}
 	
 	private class LengthChangeListener implements DataListener {
@@ -153,7 +159,7 @@ public class DataTableDefault extends AbstractDataTable {
 		}
 	}
 	
-
+	
 	private ReentrantLock lock = new ReentrantLock();
 	@Override
 	public void lock() {

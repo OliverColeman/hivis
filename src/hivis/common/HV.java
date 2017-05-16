@@ -49,28 +49,6 @@ import hivis.data.view.AbstractSeriesViewMultiple;
  * @author O. J. Coleman
  */
 public class HV {
-	private static boolean behaveGracefully = false;
-	
-	/**
-	 * Set the hint for some parts of HiVis about how to behave when an error occurs.
-	 * @see #behaveGracefully()
-	 */
-	public static void behaveGracefully(boolean graceful) {
-		behaveGracefully = graceful;
-	}
-	
-	/**
-	 * A hint for some parts of HiVis about how to behave when an error occurs.
-	 * For example instead of throwing an exception when some requested data is,
-	 * or becomes, unavailable - which will likely cause a user program in
-	 * Processing to fail - behaving gracefully might entail returning an empty
-	 * result.
-	 */
-	public static boolean behaveGracefully() {
-		return behaveGracefully;
-	}
-	
-	
 	/**
 	 * Create a new DataValue with the specified value.
 	 */
