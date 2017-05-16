@@ -1,5 +1,6 @@
 import hivis.common.*;
 import hivis.data.*;
+import java.util.*;
 
 // Example of drawing a scatter plot of two columns in a spreadsheet. 
 // Exercises:
@@ -8,10 +9,6 @@ import hivis.data.*;
 
 // Stores the data to plot.
 DataTable data;
-
-// The series containing the data we want to plot.
-DataSeries xSeries;
-DataSeries ySeries;
 
 // Method containing one-off setup code.
 void setup() {
@@ -32,37 +29,37 @@ void fileSelected(File selection) {
     println("No file selected.");
   } 
   else {
-    // Get data from spread sheet. 
-    // The SpreadSheetReader will automatically update the DataTable it provides if the source file is changed.
-	data = HV.loadSpreadSheet(
-	  HV.loadSSConfig().sourceFile(selection)
-	);
-  
-    // Get the series containing the data we want to plot. 
-    // Note that the first series starts at index 0 (column A in the spreadsheet).
-    // We scale the values in the series to be in the unit range [0, 1] with the method toUnitRange(). This will make it easier to work with.
-    xSeries = data.get(1).toUnitRange();
-    ySeries = data.get(2).toUnitRange();
+    // Get data from the spread sheet. 
+    // The spread sheet reader will automatically update the DataTable if the source file is changed.
+  	data = HV.loadSpreadSheet(
+  	  HV.loadSSConfig().sourceFile(selection)
+  	);
   }
+  
+  // Convert the numeric series to the unit range [0, 1] with the method toUnitRange(). 
+  // This will make it easier to work with when we plot it.
+  data = data.toUnitRange();
 }
 
 
 // Draws the plot.
 void draw() {
   background(255);
+  noStroke();
+  fill(0, 0, 255);
   
   // If the data is ready to plot.
-  if (ySeries != null) {
-    noStroke();
-    fill(0, 0, 255);
-    
-  	// Draw a dot for each data point.
-    for (int row = 0; row < data.length(); row++) {
-      
-      // Get values from the series. The method getFloat(x) returns the value stored at index x as a 'float', which is what Processing works with. 
-      // We multiply x and y by width and height respectively to convert the values to the canvas pixel size (the data was scaled to unit range).
-      float x = xSeries.getFloat(row) * width;
-      float y = ySeries.getFloat(row) * height;
+  if (data != null) {
+    // Draw a dot for each data point/row in the table.
+    for (DataRow row : data) {
+      // Get values from the data point. The method getFloat(x) returns the value for 
+      // the series with index x as a 'float' number, which is what Processing works with. 
+      // We multiply x and y by the canvas width and height respectively to convert the 
+      // values to the canvas pixel size (remember the data was scaled to unit range).
+      float x = row.getFloat(1) * width;
+      float y = row.getFloat(2) * height;
+      // Note that we could also have used the labels/headings of the series/columns instead 
+      // of their indexes with the getFloat method, eg row.getFloat("Sepal.Length")
       
       // Draw a dot. 
       ellipse(x, y, 30, 30);

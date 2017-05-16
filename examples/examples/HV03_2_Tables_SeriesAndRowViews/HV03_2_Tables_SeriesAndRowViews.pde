@@ -85,7 +85,9 @@ void setup() {
     }
   });
   println("\nunitRange = seriesRelabelledPrePost.combine(myRandomTable).append(customCars).apply([unit range function]) => \n" + unitRange);
-  
+  // Note that there is a built-in method for tables called toUnitRange(), 
+  // so the above could also be achieved with allCars.toUnitRange().  
+  	
   
   // Tables can be transposed. If the table contains a "row key" series containing 
   // no duplicate values it will be used for the series labels in the transposed table.

@@ -45,7 +45,7 @@ void draw() {
     // For each series in the table.
     for (int s = 0; s < data.seriesCount(); s++) {
       // Get the series from table.
-      DataSeries series = data.getSeries(s);
+      DataSeries series = data.get(s);
       
       // If this series contains numeric data.
       if (series.isNumeric()) {
