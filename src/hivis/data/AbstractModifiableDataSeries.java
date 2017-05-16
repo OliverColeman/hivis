@@ -21,13 +21,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import hivis.data.view.CalcSeries;
 import hivis.data.view.CollectionView;
 import hivis.data.view.SeriesView;
 import hivis.common.ListMap;
 import hivis.common.Util;
-import hivis.data.view.AbstractSeriesView;
+import hivis.data.view.AbstractSeriesViewMultiple;
 import hivis.data.view.CalcMap;
 import hivis.data.view.SeriesViewAppend;
 
@@ -68,6 +69,16 @@ public abstract class AbstractModifiableDataSeries<V> extends AbstractDataSeries
 		catch (ClassCastException ex) {
 			throw new IllegalArgumentException("The given value of type " + value.getClass().getSimpleName() + " can not be cast to the type stored by " + this.getClass().getSimpleName());
 		}
+	}
+	
+	private ReentrantLock lock = new ReentrantLock();
+	@Override
+	public void lock() {
+		lock.lock();
+	}
+	@Override
+	public void unlock() {
+		lock.unlock();
 	}
 }
 

@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
 
-import hivis.data.view.AbstractSeriesView;
+import hivis.data.view.AbstractSeriesViewMultiple;
 import hivis.data.view.SeriesView;
 import hivis.data.view.SortedSeries;
 
@@ -71,12 +71,12 @@ public class DataSeriesInteger extends AbstractModifiableDataSeries<Integer> imp
 	}
 	
 	@Override
-	public synchronized int length() {
+	public int length() {
 		return size;
 	}
 
 	@Override
-	public synchronized void setValue(int index, Integer value) {
+	public void setValue(int index, Integer value) {
 		try {
 			if (elements[index] != value) {
 				elements[index] = value;
@@ -89,7 +89,7 @@ public class DataSeriesInteger extends AbstractModifiableDataSeries<Integer> imp
 	}
 
 	@Override
-	public synchronized void appendValue(Integer value) {
+	public void appendValue(Integer value) {
 		if (elements.length == size) {
 			elements = Arrays.copyOf(elements, (int) (size * 1.5) + 1);
 		}
@@ -99,7 +99,7 @@ public class DataSeriesInteger extends AbstractModifiableDataSeries<Integer> imp
 	}
 
 	@Override
-	public synchronized void remove(int index) {
+	public void remove(int index) {
 		try {
 			for (int i = index; i < size-1; i++) {
 				elements[i] = elements[i+1];

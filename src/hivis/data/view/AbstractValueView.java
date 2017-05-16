@@ -23,6 +23,7 @@ import java.util.List;
 import com.google.common.reflect.TypeToken;
 
 import hivis.data.AbstractDataValue;
+import hivis.data.Data;
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataSeries;
@@ -44,11 +45,14 @@ public abstract class AbstractValueView<I, O> extends AbstractDataValue<O> imple
 	 * The (optional) input series on which this view is based. Null if no input series are used.
 	 */
 	protected List<DataSeries<I>> inputSeries;
+	
+	final Data primarySource;
 
 	/**
 	 * Create a DataValue for the given input value(s).
 	 */
 	public AbstractValueView(DataValue<I>... input) {
+		primarySource = input[0];
 		inputValues = Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(input, input.length)));
 		for (DataValue<I> s : inputValues) {
 			s.addChangeListener(this);
@@ -59,6 +63,7 @@ public abstract class AbstractValueView<I, O> extends AbstractDataValue<O> imple
 	 * Create a DataValue for the given input series.
 	 */
 	public AbstractValueView(DataSeries<I>... input) {
+		primarySource = input[0];
 		inputSeries = Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(input, input.length)));
 		for (DataSeries<I> s : inputSeries) {
 			s.addChangeListener(this);
@@ -69,6 +74,7 @@ public abstract class AbstractValueView<I, O> extends AbstractDataValue<O> imple
 	 * Create a DataValue that is not based on input values.
 	 */
 	public AbstractValueView() {
+		primarySource = this;
 	}
 	
 	/**
@@ -114,4 +120,16 @@ public abstract class AbstractValueView<I, O> extends AbstractDataValue<O> imple
 		}
 	}
 
+	@Override
+	public void lock() {
+		if (primarySource != null) {
+			primarySource.lock();
+		}
+	}
+	@Override
+	public void unlock() {
+		if (primarySource != null) {
+			primarySource.unlock();
+		}
+	}
 }

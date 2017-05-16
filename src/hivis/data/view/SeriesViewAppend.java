@@ -89,7 +89,7 @@ public class SeriesViewAppend<V> extends CalcSeries<V, V> {
 	}
 	
 //	@Override
-//	public synchronized V get(int index) {
+//	public V get(int index) {
 //		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
 //			int len = inputSeries.get(seriesIndex).length();
 //			if (index < len) {
@@ -108,7 +108,7 @@ public class SeriesViewAppend<V> extends CalcSeries<V, V> {
 //	}
 //	
 //	@Override
-//	public synchronized boolean getBoolean(int index) {
+//	public boolean getBoolean(int index) {
 //		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
 //			int len = inputSeries.get(seriesIndex).length();
 //			if (index < len) return inputSeries.get(seriesIndex).getBoolean(index);
@@ -118,7 +118,7 @@ public class SeriesViewAppend<V> extends CalcSeries<V, V> {
 //	}
 //
 //	@Override
-//	public synchronized int getInt(int index) {
+//	public int getInt(int index) {
 //		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
 //			int len = inputSeries.get(seriesIndex).length();
 //			if (index < len) return inputSeries.get(seriesIndex).getInt(index);
@@ -128,7 +128,7 @@ public class SeriesViewAppend<V> extends CalcSeries<V, V> {
 //	}
 //
 //	@Override
-//	public synchronized long getLong(int index) {
+//	public long getLong(int index) {
 //		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
 //			int len = inputSeries.get(seriesIndex).length();
 //			if (index < len) return inputSeries.get(seriesIndex).getLong(index);
@@ -138,7 +138,7 @@ public class SeriesViewAppend<V> extends CalcSeries<V, V> {
 //	}
 //
 //	@Override
-//	public synchronized double getDouble(int index) {
+//	public double getDouble(int index) {
 //		for (int seriesIndex = 0; seriesIndex < inputSeries.size(); seriesIndex++) {
 //			int len = inputSeries.get(seriesIndex).length();
 //			if (index < len) return inputSeries.get(seriesIndex).getDouble(index);

@@ -15,6 +15,7 @@
  */
 package hivis.data.view;
 
+import hivis.data.Data;
 import hivis.data.DataEvent;
 
 /**

@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import hivis.common.Util;
-import hivis.data.view.AbstractSeriesView;
+import hivis.data.view.AbstractSeriesViewMultiple;
 import hivis.data.view.SeriesView;
 
 

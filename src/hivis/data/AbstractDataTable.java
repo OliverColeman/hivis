@@ -23,10 +23,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import hivis.common.HV;
 import hivis.common.ListMap;
 import hivis.common.ListSet;
 import hivis.common.Util;
@@ -60,7 +62,7 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	}
 
 	@Override
-	public synchronized int length() {
+	public int length() {
 		int l = 0;
 		for (DataSeries<?> s : getLabelledSeries().values()) {
 			if (s.length() > l) {
@@ -83,11 +85,13 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 
 	@Override
 	public DataSeries<?> get(int index) {
+		if (index >= seriesCount()) throw new IllegalArgumentException("Series " + index + " does not exist.");
 		return getLabelledSeries().get(index).getValue();
 	}
 
 	@Override
 	public DataSeries<?> get(String label) {
+		if (!hasSeries(label)) throw new IllegalArgumentException("Series " + label + " does not exist.");
 		return getLabelledSeries().get(label);
 	}
 
@@ -129,14 +133,20 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	
 	@Override
 	public DataTable copy() {
-		DataTable copy = new DataTableDefault();
-		for (Entry<String, DataSeries<?>> series : this.getLabelledSeries().entrySet()) {
-			copy.addSeries(series.getKey(), series.getValue().copy());
+		lock();
+		try {
+			DataTable copy = new DataTableDefault();
+			for (Entry<String, DataSeries<?>> entry : this.getLabelledSeries().entrySet()) {
+				copy.addSeries(entry.getKey(), entry.getValue().copy());
+			}
+			return copy;
 		}
-		return copy;
+		finally {
+			unlock();
+		}
 	}
 	
-
+	
 	@Override
 	public TableView selectSeries(int... series) {
 		return (new TableViewSeries(this)).setSeries(series);
@@ -194,6 +204,15 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 				}
 			}
 		}, this);
+	}
+	
+	@Override
+	public TableView toUnitRange() {
+		return this.apply(new SeriesFunction() {
+			public DataSeries apply(DataSeries input) {
+				return input.isNumeric() ? input.toUnitRange() : input;
+			}
+		});
 	}
 	
 	@Override 
@@ -282,7 +301,10 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	 */
 	@Override
 	public String toString() {
-		return Util.dataTableToString(this);
+		lock();
+		String out = Util.dataTableToString(this);
+		unlock();
+		return out;
 	}
 	
 
@@ -373,104 +395,59 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	
 	
 	/**
-	 * Returns an iterator that presents a row-based ({@link DataRow}) view of the table.
-	 * The iterator will throw a ConcurrentModificationException if the table 
-	 * is structurally modified while iteration is in progress. 
+	 * Returns an iterator that presents a row-based (see {@link DataRow}) 
+	 * view of a copy of the table. A copy if used to avoid concurrency issues
+	 * if the original table is modified during iteration.
 	 */
 	@Override
 	public Iterator<DataRow> iterator() {
-		final AbstractDataTable me = this;
-		
-		// Current length of table.
-		final int originalLength = me.length();
-		
-		// Ensure the table isn't modified structurally between iterations.
-		AtomicBoolean modified = new AtomicBoolean(false);
-		final DataListener listener = new DataListener() {
-			@Override
-			public void dataChanged(DataEvent event) {
-				// If series were added, removed or reordered, or the length has changed.
-				if (event.isType(DataTableChange.SeriesAdded) || 
-						event.isType(DataTableChange.SeriesRemoved) || 
-						event.isType(DataTableChange.SeriesReordered) || 
-						me.length() != originalLength) {
-					modified.set(true);
-				}
-				
-			}
-		};
-		this.addChangeListener(listener);
-		for (DataSeries<?> s : getAll()) {
-			s.addChangeListener(listener);
-		}
-		
-		// If the table is empty then we've already finished.
-		AtomicBoolean finished = new AtomicBoolean(me.length() == 0);
+		System.out.println("itr 1");
+		final DataTable me = this.copy();
+		System.out.println("itr 2");
 		
 		// Current index into table.
 		AtomicInteger rowIndex = new AtomicInteger(0);
 		
+		//System.err.println("itr 3");
+		
 		return new Iterator<DataRow>() {
 			@Override
 			public boolean hasNext() {
-				synchronized (me) {
-					if (modified.get()) {
-						throw new ConcurrentModificationException("The table has been structurally modified, cannot continue iteration.");
-					}
-					return !finished.get();
-				}
+				//System.err.println("itr hasnext " + rowIndex.get());
+				
+				return rowIndex.get() < me.length();
 			}
 
 			@Override
 			public DataRow next() {
-				synchronized (me) {
-					if (modified.get()) {
-						throw new ConcurrentModificationException("The table has been structurally modified, cannot continue iteration.");
-					}
-					if (finished.get()) {
-						return null;
-					}
-					Row row = new Row(rowIndex.getAndIncrement());
-					if (rowIndex.get() == me.length()) {
-						finished.set(true);
-					}
-					return row;
-				}
+				//System.err.println("itr next " + rowIndex.get());
+
+				return new Row(rowIndex.getAndIncrement());
 			}
 		};
 	}
 	
-	private class Row extends DataDefault implements DataRow, DataListener {
+	private class Row extends DataDefault implements DataRow {
 		int rowIndex;
 		int hash;
 		
 		public Row(int index) {
 			rowIndex = index;
 			updateHash();
-			AbstractDataTable.this.addChangeListener(this);
-		}
-		
-		private void checkValid() {
-			if (rowIndex >= AbstractDataTable.this.length()) {
-				throw new IllegalStateException("The DataRow for index " + rowIndex + " no longer exists in the DataTable. DataTable length is " + AbstractDataTable.this.length() + ".");
-			}
 		}
 
 		@Override
 		public int length() {
-			checkValid();
 			return seriesCount();
 		}
 		
 		@Override
 		public boolean isNumeric(int index) {
-			checkValid();
 			return getSeries(index).isNumeric();
 		}
 
 		@Override
 		public boolean isNumeric(String label) {
-			checkValid();
 			return getSeries(label).isNumeric();
 		}
 
@@ -481,109 +458,82 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 
 		@Override
 		public Class<?> getType(int index) {
-			checkValid();
 			return getSeries(index).getType();
 		}
 
 		@Override
 		public Class<?> getType(String label) {
-			checkValid();
 			return getSeries(label).getType();
 		}
 		
 		@Override
 		public Object get(String label) {
-			checkValid();
 			return getSeries(label).get(rowIndex);
 		}
 
 		@Override
 		public boolean getBoolean(String label) {
-			checkValid();
 			return getSeries(label).getBoolean(rowIndex);
 		}
 
 		@Override
 		public int getInt(String label) {
-			checkValid();
 			return getSeries(label).getInt(rowIndex);
 		}
 
 		@Override
 		public long getLong(String label) {
-			checkValid();
 			return getSeries(label).getLong(rowIndex);
 		}
 
 		@Override
 		public float getFloat(String label) {
-			checkValid();
 			return getSeries(label).getFloat(rowIndex);
 		}
 
 		@Override
 		public double getDouble(String label) {
-			checkValid();
 			return getSeries(label).getDouble(rowIndex);
 		}
 		
 		@Override
 		public String getString(String label) {
-			checkValid();
 			return "" + getSeries(label).get(rowIndex);
 		}
 
 		@Override
 		public Object get(int index) {
-			checkValid();
 			return getSeries(index).get(rowIndex);
 		}
 
 		@Override
 		public boolean getBoolean(int index) {
-			checkValid();
 			return getSeries(index).getBoolean(rowIndex);
 		}
 
 		@Override
 		public int getInt(int index) {
-			checkValid();
 			return getSeries(index).getInt(rowIndex);
 		}
 
 		@Override
 		public long getLong(int index) {
-			checkValid();
 			return getSeries(index).getLong(rowIndex);
 		}
 
 		@Override
 		public float getFloat(int index) {
-			checkValid();
 			return getSeries(index).getFloat(rowIndex);
 		}
 
 		@Override
 		public double getDouble(int index) {
-			checkValid();
 			return getSeries(index).getDouble(rowIndex);
 		}
 		
 		@Override
 		public String getString(int index) {
-			checkValid();
 			return "" + getSeries(index).get(rowIndex);
-		}
-
-		@Override
-		public void dataChanged(DataEvent event) {
-			if (rowIndex < AbstractDataTable.this.length()) {
-				int oldHash = hash;
-				updateHash();
-				if (oldHash != hash) {
-					this.fireChangeEvent(new DataEvent(this, event));
-				}
-			}
 		}
 		
 		@Override

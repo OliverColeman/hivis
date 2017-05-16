@@ -82,4 +82,17 @@ public abstract class AbstractMapView<K, V, D extends Data> extends AbstractData
 			}
 		}
 	}
+	
+	@Override
+	public void lock() {
+		if (input != null) {
+			input.lock();
+		}
+	}
+	@Override
+	public void unlock() {
+		if (input != null) {
+			input.unlock();
+		}
+	}
 }

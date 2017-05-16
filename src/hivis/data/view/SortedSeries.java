@@ -38,7 +38,7 @@ import hivis.data.DataSeries;
  *
  * @author O. J. Coleman
  */
-public class SortedSeries<V> extends AbstractSeriesView<V, V> {
+public class SortedSeries<V> extends AbstractSeriesViewMultiple<V, V> {
 	protected DataSeries<V> source;
 	protected Comparator<V> comparator;
 	protected boolean recalc = true;
@@ -76,6 +76,8 @@ public class SortedSeries<V> extends AbstractSeriesView<V, V> {
 	
 	@Override
 	public void update(DataEvent cause) {
+		this.beginChanges(this);
+		
 		if (elements == null) {
 			elements = (V[]) Array.newInstance(this.getType(), length());
 		}
@@ -87,6 +89,8 @@ public class SortedSeries<V> extends AbstractSeriesView<V, V> {
 			Arrays.sort(elements, comparator);
 		}
 		recalc = false;
+		
+		this.finishChanges(this);
 	}
 
 	@Override

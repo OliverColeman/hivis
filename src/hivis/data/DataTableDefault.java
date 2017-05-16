@@ -17,6 +17,7 @@
 package hivis.data;
 
 import java.util.Map.Entry;
+import java.util.concurrent.locks.ReentrantLock;
 
 import hivis.common.LSListMap;
 import hivis.common.ListMap;
@@ -47,7 +48,7 @@ public class DataTableDefault extends AbstractDataTable {
 	}
 	
 	@Override
-	public synchronized DataTable addSeries(String label, DataSeries<?> newSeries) {
+	public DataTable addSeries(String label, DataSeries<?> newSeries) {
 		if (hasSeries(label)) {
 			throw new IllegalArgumentException("There is an existing DataSeries in this DataTable with the label " + label);
 		}
@@ -69,7 +70,7 @@ public class DataTableDefault extends AbstractDataTable {
 	
 	
 	@Override
-	public synchronized DataTable addSeries(DataTable table) {
+	public DataTable addSeries(DataTable table) {
 		if (table.seriesCount() == 0) {
 			return this;
 		}
@@ -98,7 +99,7 @@ public class DataTableDefault extends AbstractDataTable {
 	}
 	
 	@Override
-	public synchronized DataTable removeSeries(String label) {
+	public DataTable removeSeries(String label) {
 		if (!hasSeries(label)) {
 			throw new IllegalArgumentException("The specified DataSeries, " + label + ", does not exist in this DataTable.");
 		}
@@ -111,7 +112,7 @@ public class DataTableDefault extends AbstractDataTable {
 	}
 	
 	@Override
-	public synchronized DataTable removeSeries(int index) {
+	public DataTable removeSeries(int index) {
 		DataSeries<?> s = series.remove(index).getValue();
 		s.removeContainer(this);
 		s.removeChangeListener(lengthChangeListener);
@@ -121,17 +122,17 @@ public class DataTableDefault extends AbstractDataTable {
 	}
 
 	@Override
-	public synchronized void setRowKey(int index) {
+	public void setRowKey(int index) {
 		rowKeySeries = index;
 	}
 
 	@Override
-	public synchronized int getRowKeyIndex() {
+	public int getRowKeyIndex() {
 		return rowKeySeries;
 	}
 	
 	@Override
-	public synchronized int length() {
+	public int length() {
 		if (length == -1) {
 			length = 0;
 			for (DataSeries<?> s : getLabelledSeries().values()) {
@@ -150,5 +151,16 @@ public class DataTableDefault extends AbstractDataTable {
 				length = -1;
 			}
 		}
+	}
+	
+
+	private ReentrantLock lock = new ReentrantLock();
+	@Override
+	public void lock() {
+		lock.lock();
+	}
+	@Override
+	public void unlock() {
+		lock.unlock();
 	}
 }

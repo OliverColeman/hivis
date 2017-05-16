@@ -22,6 +22,7 @@ import java.util.Random;
 
 import hivis.data.AbstractDataSeries;
 import hivis.data.AbstractModifiableDataSeries;
+import hivis.data.AbstractUnmodifiableDataSeries;
 import hivis.data.DataEvent;
 import hivis.data.DataMap;
 import hivis.data.DataMapDefault;
@@ -40,7 +41,7 @@ import hivis.data.DataValueInteger;
 import hivis.data.DataValueLong;
 import hivis.data.reader.SpreadSheetReader;
 import hivis.data.reader.SpreadSheetReader.Config;
-import hivis.data.view.AbstractSeriesView;
+import hivis.data.view.AbstractSeriesViewMultiple;
 
 /**
  * Collection of factory and utility methods.
@@ -48,10 +49,26 @@ import hivis.data.view.AbstractSeriesView;
  * @author O. J. Coleman
  */
 public class HV {
-	public static final int FLOAT = 0;
-	public static final int DOUBLE = 1;
+	private static boolean behaveGracefully = false;
 	
-	public static int defaultFloatingPointPrecision = FLOAT;
+	/**
+	 * Set the hint for some parts of HiVis about how to behave when an error occurs.
+	 * @see #behaveGracefully()
+	 */
+	public static void behaveGracefully(boolean graceful) {
+		behaveGracefully = graceful;
+	}
+	
+	/**
+	 * A hint for some parts of HiVis about how to behave when an error occurs.
+	 * For example instead of throwing an exception when some requested data is,
+	 * or becomes, unavailable - which will likely cause a user program in
+	 * Processing to fail - behaving gracefully might entail returning an empty
+	 * result.
+	 */
+	public static boolean behaveGracefully() {
+		return behaveGracefully;
+	}
 	
 	
 	/**
@@ -259,7 +276,7 @@ public class HV {
 	 * @param step The step between values, may be positive or negative.
 	 */
 	public static DataSeries<Integer> integerSequence(final int length, final int start, final int step) {
-		return new AbstractSeriesView<Object, Integer>() {
+		return new AbstractUnmodifiableDataSeries<Integer>() {
 			public int length() {
 				return length;
 			}
@@ -281,7 +298,7 @@ public class HV {
 	 * @param step The step between values, may be positive or negative.
 	 */
 	public static DataSeries<Double> realSequence(final int length, final double start, final double step) {
-		return new AbstractSeriesView<Object, Double>() {
+		return new AbstractUnmodifiableDataSeries<Double>() {
 			public int length() {
 				return length;
 			}

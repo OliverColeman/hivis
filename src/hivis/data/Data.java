@@ -61,6 +61,7 @@ public interface Data {
 	
 	/**
 	 * Notify this DataSet that changes are about to be made to it.
+	 * {@link #lock()} should generally be called at the beginning of this method.
 	 * 
 	 * @param changer The object making the changes.
 	 */
@@ -80,9 +81,17 @@ public interface Data {
 	boolean hasDataChanged();
 
 	/**
+	 * Returns true iff any <em>changers</em> have indicated that they will modify the data.
+	 * 
+	 * @see #beginChanges(Object)
+	 */
+	boolean changeInProgress();
+
+	/**
 	 * Notify this DataSet that a set of changes to the data have been completed. 
 	 * If the data was changed and no other objects are modifying the data then a
 	 * DataChangeEvent will be fired.
+	 * {@link #unlock()} should generally be called at the end of this method.
 	 */
 	void finishChanges(Object changer);
 
@@ -98,4 +107,8 @@ public interface Data {
 	 * @see #beginChanges(Object)
 	 */
 	List<Object> getCurrentChangers();
+	
+	void lock();
+	
+	void unlock();
 }

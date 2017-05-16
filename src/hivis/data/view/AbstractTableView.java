@@ -32,6 +32,7 @@ import hivis.common.LSListMap;
 import hivis.common.ListMap;
 import hivis.data.AbstractDataTable;
 import hivis.data.AbstractUnmodifiableDataTable;
+import hivis.data.Data;
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataSeries;
@@ -57,6 +58,8 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 	 */
 	protected ListMap<String, S> series;
 	
+	private final Data primarySource;
+	
 	/**
 	 * Create a ViewTable that is not derived from a source DataTable.
 	 */
@@ -70,6 +73,8 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 	public AbstractTableView(DataTable... inputTables) {
 		super();
 		
+		primarySource = inputTables[0] == null ? this : inputTables[0];
+		
 		if (inputTables == null) {
 			this.inputTables = new ArrayList<>();
 		}
@@ -81,6 +86,7 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 			s.addChangeListener(this);
 		}
 	}
+	
 	
 	@Override
 	public ListMap<String, DataSeries<?>> getLabelledSeries() {
@@ -184,5 +190,18 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 		List<Object> events = new ArrayList<>();
 		events.add(cause);
 		updateSeriesWrapper(events);
+	}
+	
+	@Override
+	public void lock() {
+		if (primarySource != null) {
+			primarySource.lock();
+		}
+	}
+	@Override
+	public void unlock() {
+		if (primarySource != null) {
+			primarySource.unlock();
+		}
 	}
 }

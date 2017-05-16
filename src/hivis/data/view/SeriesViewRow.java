@@ -24,7 +24,7 @@ import hivis.data.DataSeriesChange;
  *
  * @author O. J. Coleman
  */
-public class SeriesViewRow<V> extends AbstractSeriesView<V, V> {
+public class SeriesViewRow<V> extends AbstractSeriesViewMultiple<V, V> {
 	/**
 	 * Mapping from the row indices in this Series to the input series.
 	 * <code>rowMap[view_series_index] = input_series_index<code>.
@@ -60,7 +60,7 @@ public class SeriesViewRow<V> extends AbstractSeriesView<V, V> {
 	 * 			<code>map[view_series_index] = input_series_index<code>. 
 	 * 			The given array should not be changed after calling this method.
 	 */
-	public synchronized void setRowMap(int... map) {
+	public void setRowMap(int... map) {
 		// See if any value changes result from the change, and check the new indices.
 		boolean changedValues = false;
 		

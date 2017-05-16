@@ -21,7 +21,7 @@ package hivis.data;
  * 
  * @author O. J. Coleman
  */
-public class DataValueInteger extends AbstractDataValue<Integer> {
+public class DataValueInteger extends AbstractModifiableDataValue<Integer> {
 	protected int value;
 	
 	
@@ -44,7 +44,7 @@ public class DataValueInteger extends AbstractDataValue<Integer> {
 	}
 	
 	@Override
-	public synchronized void setValue(Integer value) {
+	public void setValue(Integer value) {
 		if (this.value != value) {
 			this.value = value;
 			this.setDataChanged(null);

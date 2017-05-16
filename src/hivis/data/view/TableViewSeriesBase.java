@@ -65,7 +65,7 @@ public abstract class TableViewSeriesBase extends AbstractTableView<DataSeries<?
 	}
 	
 	@Override
-	protected synchronized void updateSeries(List<Object> eventTypes) {
+	protected void updateSeries(List<Object> eventTypes) {
 		// If this was called manually or as a result of a series event, update the list of selected series
 		// (which will trigger a change event if necessary).
 		if (eventTypes.isEmpty() || eventTypes.contains(DataTableChange.SeriesAdded) || eventTypes.contains(DataTableChange.SeriesRemoved) || eventTypes.contains(DataTableChange.SeriesReordered)) {
@@ -76,8 +76,8 @@ public abstract class TableViewSeriesBase extends AbstractTableView<DataSeries<?
 				String newLabel = newSelected[1].get(idx);
 				
 				if (inputTables.get(0).hasSeries(srcLabel)) {
-					series.put(newLabel, inputTables.get(0).getSeries(srcLabel));
-					inputTables.get(0).getSeries(srcLabel).addContainer(this);
+					series.put(newLabel, inputTables.get(0).get(srcLabel));
+					inputTables.get(0).get(srcLabel).addContainer(this);
 				}
 			}
 		}

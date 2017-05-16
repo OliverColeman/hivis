@@ -448,6 +448,13 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	TableView apply(SeriesFunction<?, ?> function);
 	
 	/**
+	 * Get a view of this table where the numeric series are converted to the 
+	 * unit range.
+	 * @see DataSeries#toUnitRange()
+	 */
+	TableView toUnitRange();
+	
+	/**
 	 * Get a transposed view of this table. If a row key series is set in this
 	 * table and it contains no duplicate values it will be used for the series
 	 * labels in the transposed table, otherwise the row index will be used for

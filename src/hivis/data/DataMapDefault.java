@@ -16,8 +16,11 @@
 
 package hivis.data;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import hivis.common.LSListMap;
 import hivis.common.ListMap;
+import hivis.data.view.AbstractSeriesView;
 import hivis.data.view.CalcSeries;
 import hivis.data.view.SeriesView;
 
@@ -30,7 +33,8 @@ public class DataMapDefault<K, V> extends AbstractDataMap<K, V> {
 	private ListMap<K, V> map;
 	private SeriesView<K> keys;
 	private SeriesView<V> values;
-
+	
+	
 	public DataMapDefault() {
 		map = new LSListMap<>();
 		keys = new KeySeries();
@@ -39,6 +43,7 @@ public class DataMapDefault<K, V> extends AbstractDataMap<K, V> {
 	
 	@Override
 	public void beginChanges(Object changer) {
+		lock();
 		super.beginChanges(changer);
 		keys.beginChanges(changer);
 		values.beginChanges(changer);
@@ -49,41 +54,54 @@ public class DataMapDefault<K, V> extends AbstractDataMap<K, V> {
 		super.finishChanges(changer);
 		keys.finishChanges(changer);
 		values.finishChanges(changer);
+		unlock();
 	}
 
 	@Override
-	public synchronized V put(K key, V value) {
-		boolean keyExists = map.containsKey(key);
-
-		V existing = map.get(key);
-
-		if (keyExists && (existing == null ? value == null : existing.equals(value))) {
-			return existing;
-		}
-
-		map.put(key, value);
-		if (keyExists) {
-			this.setDataChanged(MapChange.Changed);
-			values.setDataChanged(DataSeriesChange.ValuesChanged);
-		} else {
-			this.setDataChanged(MapChange.Added);
-			keys.setDataChanged(DataSeriesChange.ValuesAdded);
-			values.setDataChanged(DataSeriesChange.ValuesAdded);
-		}
-		return existing;
-	}
-
-	@Override
-	public synchronized V remove(K key) {
-		if (map.containsKey(key)) {
+	public V put(K key, V value) {
+		lock();
+		try {
+			boolean keyExists = map.containsKey(key);
+	
 			V existing = map.get(key);
-			map.remove(key);
-			this.setDataChanged(MapChange.Removed);
-			keys.setDataChanged(DataSeriesChange.ValuesRemoved);
-			values.setDataChanged(DataSeriesChange.ValuesRemoved);
+	
+			if (keyExists && (existing == null ? value == null : existing.equals(value))) {
+				return existing;
+			}
+	
+			map.put(key, value);
+			if (keyExists) {
+				this.setDataChanged(MapChange.Changed);
+				values.setDataChanged(DataSeriesChange.ValuesChanged);
+			} else {
+				this.setDataChanged(MapChange.Added);
+				keys.setDataChanged(DataSeriesChange.ValuesAdded);
+				values.setDataChanged(DataSeriesChange.ValuesAdded);
+			}
 			return existing;
 		}
-		return null;
+		finally {
+			unlock();
+		}
+	}
+
+	@Override
+	public V remove(K key) {
+		lock();
+		try {
+			if (map.containsKey(key)) {
+				V existing = map.get(key);
+				map.remove(key);
+				this.setDataChanged(MapChange.Removed);
+				keys.setDataChanged(DataSeriesChange.ValuesRemoved);
+				values.setDataChanged(DataSeriesChange.ValuesRemoved);
+				return existing;
+			}
+			return null;
+		}
+		finally {
+			unlock();
+		}
 	}
 
 	@Override
@@ -114,7 +132,10 @@ public class DataMapDefault<K, V> extends AbstractDataMap<K, V> {
 		return values;
 	}
 
-	private class KeySeries extends AbstractUnmodifiableDataSeries<K> {
+	private class KeySeries extends AbstractSeriesView<K> {
+		public KeySeries() {
+			super(DataMapDefault.this);
+		}
 		@Override
 		public int length() {
 			return DataMapDefault.this.map.size();
@@ -129,7 +150,10 @@ public class DataMapDefault<K, V> extends AbstractDataMap<K, V> {
 		}
 	};
 
-	private class ValueSeries extends AbstractUnmodifiableDataSeries<V> {
+	private class ValueSeries extends AbstractSeriesView<V> {
+		public ValueSeries() {
+			super(DataMapDefault.this);
+		}
 		@Override
 		public int length() {
 			return DataMapDefault.this.map.size();
@@ -144,4 +168,14 @@ public class DataMapDefault<K, V> extends AbstractDataMap<K, V> {
 		}
 	};
 
+
+	private ReentrantLock lock = new ReentrantLock();
+	@Override
+	public void lock() {
+		lock.lock();
+	}
+	@Override
+	public void unlock() {
+		lock.unlock();
+	}
 }

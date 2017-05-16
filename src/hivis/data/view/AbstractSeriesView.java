@@ -16,186 +16,53 @@
 
 package hivis.data.view;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import hivis.data.AbstractUnmodifiableDataSeries;
+import hivis.data.Data;
 import hivis.data.DataEvent;
-import hivis.data.DataListener;
-import hivis.data.DataMap;
 import hivis.data.DataSeries;
-import hivis.data.DataTable;
-import hivis.data.DataValue;
 
 /**
- * Base class for creating {@link DataSeries} that are based on other
- * DataSeries, and/or a DataValue, or a DataTable, or a DataMap. At minimum
- * sub-classes must implement {@link #get(int)}, and {@link #update(DataEvent)},
- * which will be called whenever one of the input data sets change.
+ * Base class for creating {@link DataSeries} that are based on some other {@link Data} set. 
+ * At minimum sub-classes must implement {@link #get(int)}, {@link #length()}, and {@link #update(DataEvent)}. 
  * {@link CalcSeries} provides the infrastructure for a cached view that
- * simplifies implementations of calculated views.
+ * simplifies implementations of calculated views. Also see {@link AbstractSeriesViewMultiple} which 
+ * provides more infrastructure than this class but less than {@link CalcSeries}.
  * 
  * @author O. J. Coleman
  *
  */
-public abstract class AbstractSeriesView<I, O> extends AbstractUnmodifiableDataSeries<O> implements DataListener, SeriesView<O> {
-	private int length = Integer.MIN_VALUE;
-
+public abstract class AbstractSeriesView<V> extends AbstractUnmodifiableDataSeries<V> implements SeriesView<V> {
 	/**
-	 * The (optional) input series on which this view is based. Null if no input
-	 * series are used.
+	 * The primary data source, to synchronise on when updating.
 	 */
-	public final List<DataSeries<I>> inputSeries;
-
-	/**
-	 * The (optional) input value on which this view is based. Null if no input
-	 * value is used.
-	 */
-	public final DataValue<?> inputValue;
-
-	/**
-	 * The (optional) input table on which this view is based. Null if no input
-	 * table is used.
-	 */
-	public final DataTable inputTable;
-
-	/**
-	 * The (optional) input map on which this view is based. Null if no input
-	 * map is used.
-	 */
-	public final DataMap<?, ?> inputMap;
-
-	/**
-	 * Create a ViewSeries for the given input series.
-	 */
-	public AbstractSeriesView(DataSeries<I>... input) {
-		inputSeries = Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(input, input.length)));
-		for (DataSeries<I> s : inputSeries) {
-			s.addChangeListener(this);
-		}
-		inputValue = null;
-		inputTable = null;
-		inputMap = null;
-	}
-
-	/**
-	 * Create a ViewSeries for the given value (may be null) and input series,
-	 * with length equal to the (first) input series.
-	 */
-	public AbstractSeriesView(DataValue<?> value, DataSeries<I>... input) {
-		inputSeries = Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(input, input.length)));
-		for (DataSeries<I> s : inputSeries) {
-			s.addChangeListener(this);
-		}
-		inputValue = value;
-		inputTable = null;
-		inputMap = null;
-		value.addChangeListener(this);
-	}
-
-	/**
-	 * Create a ViewSeries for the given table.
-	 */
-	public AbstractSeriesView(DataTable input) {
-		input.addChangeListener(this);
-		inputTable = input;
-		inputSeries = null;
-		inputValue = null;
-		inputMap = null;
-	}
-
-	/**
-	 * Create a ViewSeries for the given map.
-	 */
-	public AbstractSeriesView(DataMap<?, ?> input) {
-		input.addChangeListener(this);
-		inputMap = input;
-		inputSeries = null;
-		inputValue = null;
-		inputTable = null;
-	}
-
-	/**
-	 * Create a SeriesViewFunction function with the given length.
-	 */
-	public AbstractSeriesView(int length) {
-		super();
-		this.length = length;
-		inputSeries = null;
-		inputValue = null;
-		inputTable = null;
-		inputMap = null;
-	}
-
-	/**
-	 * Create a ViewSeries that is not based on any input and with the length manually calculated.
-	 */
-	public AbstractSeriesView() {
-		inputSeries = null;
-		inputValue = null;
-		inputTable = null;
-		inputMap = null;
-	}
-
-	/**
-	 * Get the list of input series for this view, or null if no input series
-	 * are used.
-	 */
-	public List<DataSeries<I>> getInputSeries() {
-		return inputSeries;
-	}
-
-	/**
-	 * Get the specified input series for this view.
-	 */
-	public DataSeries<I> getInputSeries(int index) {
-		return inputSeries.get(index);
-	}
-
-	@Override
-	public int length() {
-		if (length >= 0) {
-			return length;
-		}
-		if (inputSeries != null && !inputSeries.isEmpty()) {
-			return inputSeries.get(0).length();
-		}
-		if (inputTable != null) {
-			return inputTable.length();
-		}
-		if (inputMap != null) {
-			return inputMap.size();
-		}
-
-		throw new RuntimeException("If a SeriesViewFunction has no input series, table or map then either the length() method must be overridden or the length field set to provide the length of the calculated series.");
-	}
-
-	@Override
-	public O getEmptyValue() {
-		return getNewSeries().getEmptyValue();
-	}
+	private Data primarySource = null;
+	
 	
 	/**
-	 * Sub-classes may override this to return false if change
-	 * events in the input data should not forwarded from this
-	 * view.
+	 * Create an AbstractSeriesView that has the given (primary) data source.
 	 */
-	public boolean shouldChangeEventsBeForwarded() {
-		return true;
+	public AbstractSeriesView(Data source) {
+		primarySource = source;
 	}
 
+	/**
+	 * Create an AbstractSeriesView that is not based on any input.
+	 */
+	public AbstractSeriesView() {
+	}
+
+	
 	@Override
-	public void dataChanged(DataEvent event) {
-		if (inputSeries != null && inputSeries.contains(event.affected)
-				|| inputValue != null && inputValue == event.affected
-				|| inputTable != null && inputTable == event.affected) {
-			
-			update(event);
-			
-			if (shouldChangeEventsBeForwarded()) {
-				this.fireChangeEvent(new DataEvent(this, event, event.getTypes().toArray()));
-			}
+	public void lock() {
+		if (primarySource != null) {
+			primarySource.lock();
+		}
+	}
+	@Override
+	public void unlock() {
+		if (primarySource != null) {
+			primarySource.unlock();
 		}
 	}
 }

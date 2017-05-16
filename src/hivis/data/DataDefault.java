@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Default base class for any object representing data via a {@link Data}. For example a series, table or graph.
@@ -34,6 +35,8 @@ public class DataDefault implements Data {
 	private Set<Data> containers = new HashSet<>();
 	private Set<Data> containersUnmod = Collections.unmodifiableSet(containers);
 	
+	private Set<Data> contained = new HashSet<>();
+	
 	private List<DataListener> changeListeners = new ArrayList<>();
 	
 	// A list is used for currentChangers so that duplicates may occur.
@@ -45,7 +48,6 @@ public class DataDefault implements Data {
 	// of the occurrences of the DataTable will be removed.
 	private List<Object> currentChangers = new ArrayList<>();
 	private Set<Object> changeTypes = new HashSet<>();
-	
 	
 	public DataDefault() {
 	}
@@ -63,11 +65,17 @@ public class DataDefault implements Data {
 	public void addContainer(Data container) {
 		if (container == null) throw new IllegalArgumentException("Container to add may not be null.");
 		containers.add(container);
+		if (container instanceof DataDefault) {
+			((DataDefault) container).contained.add(this);
+		}
 	}
 	
 	@Override
 	public void removeContainer(Data container) {
 		containers.remove(container);
+		if (container instanceof DataDefault) {
+			((DataDefault) container).contained.remove(this);
+		}
 	}
 	
 	
@@ -112,7 +120,7 @@ public class DataDefault implements Data {
 	 * then a DataChangeEvent will be fired (see {@link #addChangeListener(DataListener)}).  
 	 */
 	@Override
-	public synchronized void setDataChanged(Object changeType) {
+	public void setDataChanged(Object changeType) {
 		changeTypes.add(changeType);
 		
 		for (Data c : containers) {
@@ -129,9 +137,19 @@ public class DataDefault implements Data {
 		return !changeTypes.isEmpty();
 	}
 	
+	@Override
+	public boolean changeInProgress() {
+		return !currentChangers.isEmpty();
+	}
 	
 	@Override
 	public void beginChanges(Object changer) {
+		lock();
+//		// Lock the contained Data sets, if any.
+//		for (Data c : contained) {
+//			c.lock();
+//		}
+		
 		currentChangers.add(changer);
 		
 		for (Data c : containers) {
@@ -158,10 +176,26 @@ public class DataDefault implements Data {
 		for (Data c : containers) {
 			c.finishChanges(changer);
 		}
+		
+//		// Unlock the contained Data sets, if any.
+//		for (Data c : contained) {
+//			c.unlock();
+//		}
+		unlock();
 	}
 	
 	@Override
 	public List<Object> getCurrentChangers() {
 		return Collections.unmodifiableList(currentChangers);
+	}
+	
+	@Override
+	public void lock() {
+		throw new UnsupportedOperationException("This Data set (" + this.getClass().getCanonicalName() + ") does not implement lock! This probably means you found a bug.");
+	}
+	
+	@Override
+	public void unlock() {
+		throw new UnsupportedOperationException("This Data set (" + this.getClass().getCanonicalName() + ") does not implement unlock. This probably means you found a bug.");
 	}
 }

@@ -192,7 +192,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 	
 	
 	
-	private synchronized void readData() {
+	private void readData() {
 		try {
 			if (conf.fileFormat == Config.EXCEL) {
 				Workbook wb = WorkbookFactory.create(conf.sourceFile);
@@ -251,6 +251,8 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			}
 			hasHeaderRow = conf.headerRowIndex >= 0;
 			
+			System.err.println("ssr 1");
+			
 			// Notify table we're going to make changes to it (to suppress events being fired
 			// every time we add or remove a series.
 			dataset.beginChanges(this);
@@ -296,43 +298,27 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			}
 			
 			columnCellTypes = newDataCellTypes;
-			
-
-			// Notify series that we're going to make changes to them 
-			// (to suppress events being fired every time we change the values).
-			for (DataSeries<?> s : series) {
-				s.beginChanges(this);
-			}
-			
-			// Remove series for which the columns have been removed from the sheet (or which were renamed),
-			// otherwise notify the series we're going to make changes to it (to suppress events being fired
-			// every time we change a value, and then remove values from series if the number of rows in the 
-			// sheet has been reduced.
+							
+			// Remove series for which the columns have been removed from the sheet (or which were renamed).
 			List<String> currentLabels = new ArrayList<>(dataset.getSeriesLabels());
 			for (String currentLabel : currentLabels) {
 				if (!columnLabels.contains(currentLabel)) {
 					dataset.removeSeries(currentLabel);
 				}
-				else {
-					DataSeries<?> s = dataset.getSeries(currentLabel);
-					
-					// If values have been removed from the sheet, remove them from the series.
-					if (s.length() > (lastRowIndexDesired - conf.firstDataRowIndex) + 1) {
-						while (s.length() > (lastRowIndexDesired - conf.firstDataRowIndex) + 1) {
-							s.remove(s.length() - 1);
-						}
-					}
-				}
 			}
 			
 			// Read the data and set in Dataset.
-			for (int row = conf.firstDataRowIndex, ri = 0; row <= lastRowIndexDesired; row++, ri++) {
-				for (int colLabelIdx = 0; colLabelIdx < columnLabels.size(); colLabelIdx++) {
-					int column = columnIndices.get(colLabelIdx);
-					String label = columnLabels.get(colLabelIdx);
-					
-					DataSeries<?> s = dataset.getSeries(label);
-					
+			for (int colLabelIdx = 0; colLabelIdx < columnLabels.size(); colLabelIdx++) {
+				int column = columnIndices.get(colLabelIdx);
+				String label = columnLabels.get(colLabelIdx);
+				
+				DataSeries<?> s = dataset.getSeries(label);
+				
+				s.beginChanges(this);
+				
+				s.resize((lastRowIndexDesired - conf.firstDataRowIndex) + 1);
+				
+				for (int row = conf.firstDataRowIndex, ri = 0; row <= lastRowIndexDesired; row++, ri++) {
 					try {
 						Object val = getCellValue(row, column, columnCellTypes.get(colLabelIdx));
 						
@@ -340,12 +326,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 							val = s.getEmptyValue();
 						}
 						
-						if (ri >= s.length()) {
-							s.append(val);
-						}
-						else {
-							s.set(ri, val);
-						}
+						s.set(ri, val);
 					}
 					catch (IllegalArgumentException ex) {
 						// Only emit warning if cell is not empty.
@@ -354,13 +335,12 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 						}
 					}
 				}
-			}
-			
-			// Notify series and table that changes are complete.
-			for (DataSeries<?> s : series) {
+				
 				s.finishChanges(this);
 			}
+			
 			dataset.finishChanges(this);
+			System.err.println("ssr 3");
 		} catch (EncryptedDocumentException | InvalidFormatException | IOException e) {
 			throw new DataReadException("Unable to read data from " + conf.sourceFile.getPath(), e);
 		}

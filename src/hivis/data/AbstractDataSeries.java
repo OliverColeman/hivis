@@ -29,6 +29,7 @@ import com.google.common.reflect.TypeToken;
 
 import hivis.common.Util;
 import hivis.data.view.AbstractSeriesView;
+import hivis.data.view.AbstractSeriesViewMultiple;
 import hivis.data.view.CalcSeries;
 import hivis.data.view.CalcSeries.Op;
 import hivis.data.view.CalcValue;
@@ -375,13 +376,19 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	 */
 	@Override
 	public V[] asArray(V[] data) {
-		if (data == null || data.length < length()) {
-			data = (V[]) Array.newInstance(this.getType(), length());
+		lock();
+		try {
+			if (data == null || data.length < length()) {
+				data = (V[]) Array.newInstance(this.getType(), length());
+			}
+			for (int i = 0; i < length(); i++) {
+				data[i] = get(i);
+			}
+			return data;
 		}
-		for (int i = 0; i < length(); i++) {
-			data[i] = get(i);
+		finally {
+			unlock();
 		}
-		return data;
 	}
 
 	/**
@@ -390,13 +397,19 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	 */
 	@Override
 	public boolean[] asBooleanArray(boolean[] data) {
-		if (data == null || data.length < length()) {
-			data = new boolean[length()];
+		lock();
+		try {
+			if (data == null || data.length < length()) {
+				data = new boolean[length()];
+			}
+			for (int i = 0; i < length(); i++) {
+				data[i] = getBoolean(i);
+			}
+			return data;
 		}
-		for (int i = 0; i < length(); i++) {
-			data[i] = getBoolean(i);
+		finally {
+			unlock();
 		}
-		return data;
 	}
 
 	/**
@@ -405,13 +418,19 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	 */
 	@Override
 	public int[] asIntArray(int[] data) {
-		if (data == null || data.length < length()) {
-			data = new int[length()];
+		lock();
+		try {
+			if (data == null || data.length < length()) {
+				data = new int[length()];
+			}
+			for (int i = 0; i < length(); i++) {
+				data[i] = getInt(i);
+			}
+			return data;
 		}
-		for (int i = 0; i < length(); i++) {
-			data[i] = getInt(i);
+		finally {
+			unlock();
 		}
-		return data;
 	}
 
 	/**
@@ -420,13 +439,19 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	 */
 	@Override
 	public long[] asLongArray(long[] data) {
-		if (data == null || data.length < length()) {
-			data = new long[length()];
+		lock();
+		try {
+			if (data == null || data.length < length()) {
+				data = new long[length()];
+			}
+			for (int i = 0; i < length(); i++) {
+				data[i] = getLong(i);
+			}
+			return data;
 		}
-		for (int i = 0; i < length(); i++) {
-			data[i] = getLong(i);
+		finally {
+			unlock();
 		}
-		return data;
 	}
 
 	/**
@@ -435,13 +460,19 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	 */
 	@Override
 	public float[] asFloatArray(float[] data) {
-		if (data == null || data.length < length()) {
-			data = new float[length()];
+		lock();
+		try {
+			if (data == null || data.length < length()) {
+				data = new float[length()];
+			}
+			for (int i = 0; i < length(); i++) {
+				data[i] = getFloat(i);
+			}
+			return data;
 		}
-		for (int i = 0; i < length(); i++) {
-			data[i] = getFloat(i);
+		finally {
+			unlock();
 		}
-		return data;
 	}
 
 	/**
@@ -450,13 +481,19 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	 */
 	@Override
 	public double[] asDoubleArray(double[] data) {
-		if (data == null || data.length < length()) {
-			data = new double[length()];
+		lock();
+		try {
+			if (data == null || data.length < length()) {
+				data = new double[length()];
+			}
+			for (int i = 0; i < length(); i++) {
+				data[i] = getDouble(i);
+			}
+			return data;
 		}
-		for (int i = 0; i < length(); i++) {
-			data[i] = getDouble(i);
+		finally {
+			unlock();
 		}
-		return data;
 	}
 
 	/**
@@ -465,13 +502,19 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	 */
 	@Override
 	public String[] asStringArray(String[] data) {
-		if (data == null || data.length < length()) {
-			data = new String[length()];
+		lock();
+		try {
+			if (data == null || data.length < length()) {
+				data = new String[length()];
+			}
+			for (int i = 0; i < length(); i++) {
+				data[i] = get(i).toString();
+			}
+			return data;
 		}
-		for (int i = 0; i < length(); i++) {
-			data[i] = get(i).toString();
+		finally {
+			unlock();
 		}
-		return data;
 	}
 	
 	@Override
@@ -484,7 +527,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	public SeriesView<V> unmodifiableView() {
 		if (unmodifiableView == null) {
 			final DataSeries<V> me = this;
-			unmodifiableView = new AbstractSeriesView<V, V>(this) {
+			unmodifiableView = new AbstractSeriesView<V>(this) {
 				@Override
 				public int length() {
 					return me.length();
@@ -983,74 +1026,64 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 
 	@Override
 	public String toString() {
-		int len = length();
-		
-		StringBuilder out = new StringBuilder();
-		out.append("DataSeries (").append(len).append(") [ ");
-		
-		if (len == 0) {
-			return out.append(" ]").toString();
-		}
-		
-		// Get minimum and maximum values for numeric series.
-		boolean numeric = false;
-		double magnitude = 0;
-		if ((Object) get(0) instanceof Number) {
-			numeric = true;
-			for (int r = 0; r < len; r++) {
-				magnitude = Math.max(magnitude, Math.abs(((Number) get(r)).doubleValue()));
+		lock();
+		try {
+			int len = length();
+			
+			StringBuilder out = new StringBuilder();
+			out.append("DataSeries (").append(len).append(") [ ");
+			
+			if (len == 0) {
+				return out.append(" ]").toString();
 			}
-		}
-		
-		String defaultFormat = numeric ? getFormat(magnitude, true) : getFormat(get(0), false);
-		int width = 0;
-		
-		if (numeric || (Object) get(0) instanceof Date) {
-			width = String.format(defaultFormat, get(0)).length();
-		}
-		else {
-			int s = Math.min(len, 25);
-			for (int i = 1; i < s; i++) {
-				int l = get(i).toString().length();
-				if (l > width) {
-					width = l;
+			
+			// Get minimum and maximum values for numeric series.
+			boolean numeric = false;
+			double magnitude = 0;
+			if ((Object) get(0) instanceof Number) {
+				numeric = true;
+				for (int r = 0; r < len; r++) {
+					magnitude = Math.max(magnitude, Math.abs(((Number) get(r)).doubleValue()));
 				}
 			}
-			int e = Math.max(s, len-25);
-			if (e < len) {
-				for (int i = e; i < len; i++) {
+			
+			String defaultFormat = numeric ? getFormat(magnitude, true) : getFormat(get(0), false);
+			int width = 0;
+			
+			if (numeric || (Object) get(0) instanceof Date) {
+				width = String.format(defaultFormat, get(0)).length();
+			}
+			else {
+				int s = Math.min(len, 25);
+				for (int i = 1; i < s; i++) {
 					int l = get(i).toString().length();
 					if (l > width) {
 						width = l;
 					}
 				}
-			}
-		}
-		
-		boolean wrap = width > 15;
-		
-		if (len > 0) {
-			if (wrap) {
-				out.append("\n\t").append(String.format(defaultFormat, get(0)));
-			}
-			else {
-				out.append(" ").append(String.format(getFormat(get(0), numeric), get(0)).trim());
+				int e = Math.max(s, len-25);
+				if (e < len) {
+					for (int i = e; i < len; i++) {
+						int l = get(i).toString().length();
+						if (l > width) {
+							width = l;
+						}
+					}
+				}
 			}
 			
-			int s = Math.min(len, 25);
-			for (int i = 1; i < s; i++) {
+			boolean wrap = width > 15;
+			
+			if (len > 0) {
 				if (wrap) {
-					out.append(" ;").append("\n\t").append(String.format(defaultFormat, get(i)));
+					out.append("\n\t").append(String.format(defaultFormat, get(0)));
 				}
 				else {
-					out.append(" ;").append(" ").append(String.format(getFormat(get(i), numeric), get(i)).trim());
+					out.append(" ").append(String.format(getFormat(get(0), numeric), get(0)).trim());
 				}
-			}
-			int e = Math.max(s, len-25);
-			if (e < len) {
-				if (e > s)
-					out.append(",").append(wrap ? "\n\t" : " ").append("...");
-				for (int i = e; i < len; i++) {
+				
+				int s = Math.min(len, 25);
+				for (int i = 1; i < s; i++) {
 					if (wrap) {
 						out.append(" ;").append("\n\t").append(String.format(defaultFormat, get(i)));
 					}
@@ -1058,9 +1091,25 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 						out.append(" ;").append(" ").append(String.format(getFormat(get(i), numeric), get(i)).trim());
 					}
 				}
+				int e = Math.max(s, len-25);
+				if (e < len) {
+					if (e > s)
+						out.append(",").append(wrap ? "\n\t" : " ").append("...");
+					for (int i = e; i < len; i++) {
+						if (wrap) {
+							out.append(" ;").append("\n\t").append(String.format(defaultFormat, get(i)));
+						}
+						else {
+							out.append(" ;").append(" ").append(String.format(getFormat(get(i), numeric), get(i)).trim());
+						}
+					}
+				}
 			}
+			return out.append(" ]").toString();
 		}
-		return out.append(" ]").toString();
+		finally {
+			unlock();
+		}
 	}
 
 	private String getFormat(Object v, boolean numeric) {
@@ -1096,15 +1145,20 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 
 	@Override
 	public Iterator<V> iterator() {
-		return asList().iterator();
+		return copy().asList().iterator();
 	}
 
+	
+	private DataSeries<Double> unitRangeView = null;
 	@Override
 	public DataSeries<Double> toUnitRange() {
 		if (!isNumeric()) {
 			throw new UnsupportedOperationException("Cannot perform toUnitRange operation on non-numeric DataSeries containing " + getType().getSimpleName());
 		}
-		return new UnitSeries(this);
+		if (unitRangeView == null) {
+			unitRangeView = new UnitSeries(this);
+		}
+		return unitRangeView;
 	}
 	
 	
@@ -1137,28 +1191,28 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	}
 	
 
-	class FloatSeriesView extends AbstractSeriesView<V, Float> implements DataSeries.FloatSeries {
+	class FloatSeriesView extends AbstractSeriesView<Float> implements DataSeries.FloatSeries {
 		@Override public int length() {	return AbstractDataSeries.this.length(); }
 		@Override public Float get(int index) { return AbstractDataSeries.this.getFloat(index); }
 		@Override public float getFloat(int index) { return AbstractDataSeries.this.getFloat(index); }
 		@Override public void update(DataEvent cause) {}
 	}
 	
-	class DoubleSeriesView extends AbstractSeriesView<V, Double> implements DataSeries.DoubleSeries {
+	class DoubleSeriesView extends AbstractSeriesView<Double> implements DataSeries.DoubleSeries {
 		@Override public int length() {	return AbstractDataSeries.this.length(); }
 		@Override public Double get(int index) { return AbstractDataSeries.this.getDouble(index); }
 		@Override public double getDouble(int index) { return AbstractDataSeries.this.getDouble(index); }
 		@Override public void update(DataEvent cause) {}
 	}
 	
-	class IntSeriesView extends AbstractSeriesView<V, Integer> implements DataSeries.IntSeries {
+	class IntSeriesView extends AbstractSeriesView<Integer> implements DataSeries.IntSeries {
 		@Override public int length() {	return AbstractDataSeries.this.length(); }
 		@Override public Integer get(int index) { return AbstractDataSeries.this.getInt(index); }
 		@Override public int getInt(int index) { return AbstractDataSeries.this.getInt(index); }
 		@Override public void update(DataEvent cause) {}
 	}
 	
-	class LongSeriesView extends AbstractSeriesView<V, Long> implements DataSeries.LongSeries {
+	class LongSeriesView extends AbstractSeriesView<Long> implements DataSeries.LongSeries {
 		@Override public int length() {	return AbstractDataSeries.this.length(); }
 		@Override public Long get(int index) { return AbstractDataSeries.this.getLong(index); }
 		@Override public long getLong(int index) { return AbstractDataSeries.this.getLong(index); }

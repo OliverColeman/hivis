@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Random;
 
 import hivis.data.DataSeriesDouble.Sorted;
-import hivis.data.view.AbstractSeriesView;
+import hivis.data.view.AbstractSeriesViewMultiple;
 import hivis.data.view.CalcSeries;
 import hivis.data.view.SeriesView;
 import hivis.data.view.SortedSeries;
@@ -74,12 +74,12 @@ public class DataSeriesFloat extends AbstractModifiableDataSeries<Float> {
 	}
 	
 	@Override
-	public synchronized int length() {
+	public int length() {
 		return size;
 	}
 
 	@Override
-	public synchronized void setValue(int index, Float value) {
+	public void setValue(int index, Float value) {
 		try {
 			if (elements[index] != value) {
 				elements[index] = value;
@@ -92,7 +92,7 @@ public class DataSeriesFloat extends AbstractModifiableDataSeries<Float> {
 	}
 
 	@Override
-	public synchronized void appendValue(Float value) {
+	public void appendValue(Float value) {
 		if (elements.length == size) {
 			elements = Arrays.copyOf(elements, (int) (size * 1.5) + 1);
 		}
@@ -102,7 +102,7 @@ public class DataSeriesFloat extends AbstractModifiableDataSeries<Float> {
 	}
 
 	@Override
-	public synchronized void remove(int index) {
+	public void remove(int index) {
 		try {
 			for (int i = index; i < size-1; i++) {
 				elements[i] = elements[i+1];

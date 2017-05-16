@@ -13,51 +13,22 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307 USA
  */
-
 package hivis.data;
 
-/**
- * Data series storing double-precision floating-point numbers (represented as primitive double for efficiency).
- * 
- * @author O. J. Coleman
- */
-public class DataValueDouble extends AbstractModifiableDataValue<Double> {
-	protected double value;
-	
-	
-	public DataValueDouble() {
-	}
-	
-	public DataValueDouble(double value) {
-		this.value = value;
-	}
-	
-	
-	@Override
-	public Double get() {
-		return getDouble();
-	}
-	
-	@Override
-	public double getDouble() {
-		return value;
-	}
-	
-	@Override
-	public void setValue(Double value) {
-		if (this.value != value) {
-			this.value = value;
-			this.setDataChanged(null);
-		}
-	}
+import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ *
+ * @author oliver
+ */
+public abstract class AbstractModifiableDataValue<V> extends AbstractDataValue<V> {
+	private ReentrantLock lock = new ReentrantLock();
 	@Override
-	public Double getEmptyValue() {
-		return Double.NaN;
+	public void lock() {
+		lock.lock();
 	}
-	
 	@Override
-	public DataValueDouble getNewDataValue() {
-		return new DataValueDouble();
+	public void unlock() {
+		lock.unlock();
 	}
 }

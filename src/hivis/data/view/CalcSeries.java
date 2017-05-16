@@ -19,10 +19,12 @@ package hivis.data.view;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import com.google.common.primitives.Primitives;
 
+import hivis.data.Data;
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataMap;
@@ -44,7 +46,7 @@ import hivis.data.DataSeriesFloat;
  * 
  * @author O. J. Coleman
  */
-public abstract class CalcSeries<I, O> extends AbstractSeriesView<I, O> {
+public abstract class CalcSeries<I, O> extends AbstractSeriesViewMultiple<I, O> {
 	boolean recalc = true;
 	/**
 	 * The cache of values. This is lazily calculated on the first call to
@@ -52,6 +54,7 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesView<I, O> {
 	 */
 	protected DataSeries<O> cache;
 
+	
 	/**
 	 * Create a DataSeries function of the given input series, with length equal
 	 * to the (first) input series.
@@ -93,7 +96,7 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesView<I, O> {
 		super(length);
 		setupCache();
 	}
-
+	
 	protected void setupCache() {
 		cache = getNewSeries();
 
@@ -286,7 +289,6 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesView<I, O> {
 
 		@Override
 		public void update() {
-
 			for (int i = 0; i < length(); i++) {
 				cache.setValue(i, calcFloat(i));
 			}

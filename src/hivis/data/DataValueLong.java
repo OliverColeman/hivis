@@ -21,7 +21,7 @@ package hivis.data;
  * 
  * @author O. J. Coleman
  */
-public class DataValueLong extends AbstractDataValue<Long> {
+public class DataValueLong extends AbstractModifiableDataValue<Long> {
 	protected long value;
 	
 	
@@ -44,7 +44,7 @@ public class DataValueLong extends AbstractDataValue<Long> {
 	}
 	
 	@Override
-	public synchronized void setValue(Long value) {
+	public void setValue(Long value) {
 		if (this.value != value) {
 			this.value = value;
 			this.setDataChanged(null);

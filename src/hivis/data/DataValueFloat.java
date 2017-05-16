@@ -21,7 +21,7 @@ package hivis.data;
  * 
  * @author O. J. Coleman
  */
-public class DataValueFloat extends AbstractDataValue<Float> {
+public class DataValueFloat extends AbstractModifiableDataValue<Float> {
 	protected float value;
 	
 	
@@ -44,7 +44,7 @@ public class DataValueFloat extends AbstractDataValue<Float> {
 	}
 	
 	@Override
-	public synchronized void setValue(Float value) {
+	public void setValue(Float value) {
 		if (this.value != value) {
 			this.value = value;
 			this.setDataChanged(null);
