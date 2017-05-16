@@ -251,8 +251,6 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			}
 			hasHeaderRow = conf.headerRowIndex >= 0;
 			
-			System.err.println("ssr 1");
-			
 			// Notify table we're going to make changes to it (to suppress events being fired
 			// every time we add or remove a series.
 			dataset.beginChanges(this);
@@ -340,7 +338,6 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 			}
 			
 			dataset.finishChanges(this);
-			System.err.println("ssr 3");
 		} catch (EncryptedDocumentException | InvalidFormatException | IOException e) {
 			throw new DataReadException("Unable to read data from " + conf.sourceFile.getPath(), e);
 		}

@@ -401,14 +401,9 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	 */
 	@Override
 	public Iterator<DataRow> iterator() {
-		System.out.println("itr 1");
 		final DataTable me = this;
-		System.out.println("itr 2");
-		
 		// Current index into table.
 		AtomicInteger rowIndex = new AtomicInteger(0);
-		
-		//System.err.println("itr 3");
 		
 		return new Iterator<DataRow>() {
 			// When hasNext() is called retrieve and store the next item
@@ -418,7 +413,6 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 			
 			@Override
 			public synchronized boolean hasNext() {
-				//System.err.println("itr hasnext " + rowIndex.get());
 				if (nextObtained == false && rowIndex.get() < me.length()) {
 					next = new Row(rowIndex.getAndIncrement());
 					nextObtained = true;
@@ -428,7 +422,6 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 
 			@Override
 			public synchronized DataRow next() {
-				//System.err.println("itr next " + rowIndex.get());
 				if (hasNext()) {
 					DataRow ret = next;
 					next = null;
