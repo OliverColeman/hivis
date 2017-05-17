@@ -1156,7 +1156,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 			throw new UnsupportedOperationException("Cannot perform toUnitRange operation on non-numeric DataSeries containing " + getType().getSimpleName());
 		}
 		if (unitRangeView == null) {
-			unitRangeView = new UnitSeries(this);
+			unitRangeView = (DataSeries<Double>) this.subtract(this.min()).divide(this.max().subtract(this.min()));
 		}
 		return unitRangeView;
 	}
@@ -1231,30 +1231,5 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 			return length();
 		}
 		
-	}
-	
-	
-	// A CalcSeries that scales the values in a given input series to unit values [0, 1].
-	// When the input series changes the scaled values are also updated.
-	class UnitSeries extends CalcSeries<Object, Double> {
-		public UnitSeries(DataSeries input) {
-			super(input);
-		}
-
-		// Updates the cache field in CalcSeries. This gets called whenever a
-		// change to the input DataSeries occurs.
-		// We override this rather than calc() because we need to know the min
-		// and max over the series before we can convert values to unit range.
-		@Override
-		public void update() {
-			DataSeries<?> input = inputSeries.get(0);
-			double min = input.min().getDouble();
-			double max = input.max().getDouble();
-			double range = max - min;
-			for (int i = 0; i < length(); i++) {
-				double value = (input.getDouble(i) - min) / range;
-				cache.setValue(i, value);
-			}
-		}
 	}
 }
