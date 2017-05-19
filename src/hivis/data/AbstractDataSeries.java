@@ -21,6 +21,7 @@ import java.util.AbstractList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1147,21 +1148,43 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	public Iterator<V> iterator() {
 		return asList().iterator();
 	}
-
 	
-	private DataSeries<Double> unitRangeView = null;
+	
+	private Map<String, DataSeries<Double>> rangeViews = null;
 	@Override
 	public DataSeries<Double> toUnitRange() {
-		if (!isNumeric()) {
-			throw new UnsupportedOperationException("Cannot perform toUnitRange operation on non-numeric DataSeries containing " + getType().getSimpleName());
-		}
-		if (unitRangeView == null) {
-			unitRangeView = (DataSeries<Double>) this.subtract(this.min()).divide(this.max().subtract(this.min()));
-		}
-		return unitRangeView;
+		return toRange(0, 1);
 	}
-	
-	
+	@Override
+	public DataSeries<Double> toRange(double min, double max) {
+		return toRange(new DataValueDouble(min), new DataValueDouble(max));
+	}
+	@Override
+	public DataSeries<Double> toRange(DataValue<?> min, DataValue<?> max) {
+		if (!isNumeric()) {
+			throw new UnsupportedOperationException("Cannot perform Range operation on non-numeric DataSeries containing " + getType().getSimpleName());
+		}
+		String key = min.getDouble() + ":" + max.getDouble();
+		DataSeries<Double> rangeView = null;
+		if (rangeViews == null || !rangeViews.containsKey(key)) {
+			if (rangeViews == null) {
+				rangeViews = new HashMap<>();
+			}
+			
+			DataValue<?> originalRange = max().subtract(min());
+			if (min.getDouble() == 0 && max.getDouble() == 1) {
+				rangeView = (DataSeries<Double>) subtract(min()).divide(originalRange);
+			}
+			else {
+				DataValue<?> specRange = max.subtract(min);
+				rangeView = (DataSeries<Double>) (((subtract(min())).multiply(specRange)).divide(originalRange)).add(min);
+			}
+		}
+		else {
+			rangeView = rangeViews.get(key);
+		}
+		return rangeView;
+	}
 
 	
 	class DataValueView extends AbstractDataValue<V> implements DataListener {

@@ -448,12 +448,29 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	TableView apply(SeriesFunction<?, ?> function);
 	
 	/**
-	 * Get a view of this table where the numeric series are converted to the 
+	 * Get a view of this table in which the numeric series are scaled to the
 	 * unit range.
+	 * 
 	 * @see DataSeries#toUnitRange()
 	 */
 	TableView toUnitRange();
-	
+
+	/**
+	 * Get a view of this table in which the numeric series are scaled to the
+	 * specified range.
+	 * 
+	 * @see DataSeries#toRange(double, double)
+	 */
+	TableView toRange(double min, double max);
+
+	/**
+	 * Get a view of this table in which the numeric series are scaled to the
+	 * specified range.
+	 * 
+	 * @see DataSeries#toRange(DataValue, DataValue)
+	 */
+	TableView toRange(DataValue<?> min, DataValue<?> max);
+
 	/**
 	 * Get a transposed view of this table. If a row key series is set in this
 	 * table and it contains no duplicate values it will be used for the series

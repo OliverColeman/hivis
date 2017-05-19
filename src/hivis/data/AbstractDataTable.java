@@ -19,6 +19,7 @@ package hivis.data;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -206,14 +207,36 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 		}, this);
 	}
 	
+	
+	private Map<String, TableView> rangeViews = null;
 	@Override
 	public TableView toUnitRange() {
-		return this.apply(new SeriesFunction() {
-			public DataSeries apply(DataSeries input) {
-				return input.isNumeric() ? input.toUnitRange() : input;
-			}
-		});
+		return toRange(0, 1);
 	}
+	@Override
+	public TableView toRange(double min, double max) {
+		return toRange(new DataValueDouble(min), new DataValueDouble(max));
+	}
+	@Override
+	public TableView toRange(DataValue<?> min, DataValue<?> max) {
+		String key = min.getDouble() + ":" + max.getDouble();
+		TableView rangeView = null;
+		if (rangeViews == null || !rangeViews.containsKey(key)) {
+			if (rangeViews == null) {
+				rangeViews = new HashMap<>();
+			}
+			rangeView = apply(new SeriesFunction() {
+				public DataSeries apply(DataSeries input) {
+					return input.isNumeric() ? input.toRange(min, max) : input;
+				}
+			});
+		}
+		else {
+			rangeView = rangeViews.get(key);
+		}
+		return rangeView;
+	}
+	
 	
 	@Override 
 	public TableView transpose() {

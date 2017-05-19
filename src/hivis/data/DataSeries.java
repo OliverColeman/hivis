@@ -455,6 +455,22 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 */
 	public DataSeries<Double> toUnitRange();
 	
+	/**
+	 * Create a view of this series containing the values in this 
+	 * series scaled to the specified range.
+	 * 
+	 * @throws UnsupportedOperationException if this series is non-numeric.
+	 */
+	public DataSeries<Double> toRange(double min, double max);
+	
+	/**
+	 * Create a view of this series containing the values in this 
+	 * series scaled to the specified range.
+	 * 
+	 * @throws UnsupportedOperationException if this series is non-numeric.
+	 */
+	public DataSeries<Double> toRange(DataValue<?> min, DataValue<?> max); 
+	
 
 	/**
 	 * Create a view of this series that contains the values of 

@@ -76,6 +76,7 @@ void setup() {
   // values in the original series scaled to the unit range [0, 1]:  
   DataSeries realNumbersUnitRange = realNumbers.toUnitRange();
   println("\nrealNumbersUnitRange = realNumbers.toUnitRange() =>\n\t" + realNumbersUnitRange);
+  // Note that there is also toRange(min, max) to allow specifying the range to scale the values to.
   
   // sort(), which creates a series containing the values in the original series sorted according to their "natural" ordering:
   DataSeries realNumbersUnitRangeSorted = realNumbersUnitRange.sort();
