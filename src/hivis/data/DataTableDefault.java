@@ -16,8 +16,13 @@
 
 package hivis.data;
 
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 import hivis.common.LSListMap;
 import hivis.common.ListMap;
@@ -33,12 +38,14 @@ import hivis.data.view.TableView;
 public class DataTableDefault extends AbstractDataTable {
 	private int length; // Cached length, -1 indicates it needs recalculating.
 	private ListMap<String, DataSeries<?>> series;
+	private Multimap<DataSeries<?>, String> seriesToKeys;
 	private int rowKeySeries = Integer.MIN_VALUE;
 	private LengthChangeListener lengthChangeListener;
 	
 	public DataTableDefault() {
 		super();
 		series = new LSListMap<>();
+		seriesToKeys = HashMultimap.create();
 		lengthChangeListener = new LengthChangeListener();
 	}
 	
@@ -52,14 +59,18 @@ public class DataTableDefault extends AbstractDataTable {
 		if (hasSeries(label)) {
 			throw new IllegalArgumentException("There is an existing DataSeries in this DataTable with the label " + label);
 		}
+		
 		series.put(label, newSeries);
-		newSeries.addContainer(this);
-		
-		if (rowKeySeries == Integer.MIN_VALUE && newSeries.length() > 0 && newSeries.get(0) instanceof String) {
-			rowKeySeries = series.size() - 1;
+		// If there are not yet other instances of the series in this table.
+		if (!seriesToKeys.containsKey(newSeries)) {
+			newSeries.addContainer(this);
+			newSeries.addChangeListener(lengthChangeListener);
+			
+			if (rowKeySeries == Integer.MIN_VALUE && newSeries.length() > 0 && newSeries.get(0) instanceof String) {
+				rowKeySeries = series.size() - 1;
+			}
 		}
-		
-		newSeries.addChangeListener(lengthChangeListener);
+		seriesToKeys.put(newSeries, label);
 		
 		length = -1;
 		
@@ -80,15 +91,20 @@ public class DataTableDefault extends AbstractDataTable {
 			if (hasSeries(s.getKey())) {
 				throw new IllegalArgumentException("There is an existing DataSeries in this DataTable with the label " + s.getKey());
 			}
-			DataSeries<?> newSeries = s.getValue();
-			series.put(label, newSeries);
-			newSeries.addContainer(this);
-		
-			if (rowKeySeries == Integer.MIN_VALUE && newSeries.length() > 0 && newSeries.get(0) instanceof String) {
-				rowKeySeries = series.size() - 1;
-			}
 			
-			newSeries.addChangeListener(lengthChangeListener);
+			DataSeries<?> newSeries = s.getValue();
+			
+			series.put(label, newSeries);
+			// If there are not yet other instances of the series in this table.
+			if (!seriesToKeys.containsKey(newSeries)) {
+				newSeries.addContainer(this);
+				newSeries.addChangeListener(lengthChangeListener);
+				
+				if (rowKeySeries == Integer.MIN_VALUE && newSeries.length() > 0 && newSeries.get(0) instanceof String) {
+					rowKeySeries = series.size() - 1;
+				}
+			}
+			seriesToKeys.put(newSeries, label);
 		}
 		
 		length = -1;
@@ -104,19 +120,32 @@ public class DataTableDefault extends AbstractDataTable {
 			throw new IllegalArgumentException("The specified DataSeries, " + label + ", does not exist in this DataTable.");
 		}
 		DataSeries<?> s = series.remove(label);
-		s.removeContainer(this);
-		s.removeChangeListener(lengthChangeListener);
-		length = -1;
+		seriesToKeys.remove(s, label);
+		
+		// If there are no other instances of the removed series in this table.
+		if (!seriesToKeys.containsKey(s)) {
+			s.removeContainer(this);
+			s.removeChangeListener(lengthChangeListener);
+			length = -1;
+		}
+		
 		this.setDataChanged(DataTableChange.SeriesRemoved);
 		return this;
 	}
 	
 	@Override
 	public DataTable removeSeries(int index) {
-		DataSeries<?> s = series.remove(index).getValue();
-		s.removeContainer(this);
-		s.removeChangeListener(lengthChangeListener);
-		length = -1;
+		Entry<String, DataSeries<?>> labelSeries = series.remove(index);
+		String label = labelSeries.getKey();
+		DataSeries<?> s = labelSeries.getValue();
+		
+		seriesToKeys.remove(s, label);
+		// If there are no other instances of the removed series in this table.
+		if (!seriesToKeys.containsKey(s)) {
+			s.removeContainer(this);
+			s.removeChangeListener(lengthChangeListener);
+			length = -1;
+		}
 		this.setDataChanged(DataTableChange.SeriesRemoved);
 		return this;
 	}

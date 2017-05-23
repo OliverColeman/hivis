@@ -499,6 +499,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 								}
 								catch (Exception ex) {
 									System.err.println("Error reading modified source file \"" + conf.sourceFile.getAbsolutePath() + "\". Will try again on next modification. Error was: " + ex.getMessage());
+									ex.printStackTrace();
 								}
 							}
 						}

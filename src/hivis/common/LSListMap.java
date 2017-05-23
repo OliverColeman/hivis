@@ -76,15 +76,15 @@ public class LSListMap<K, V> implements ListMap<K, V> {
 	private ListSet<Map.Entry<K, V>> list;
 	// This is maintained simply to support the values() method without 
 	// having to rebuild it every time. It is lazily constructed.
-	private ListSet<V> values;
+	private List<V> values;
 	
 	private ListSet<K> keysUnmod;
 	private ListSet<Map.Entry<K, V>> listUnmod;
-	private ListSet<V> valuesUnmod;
+	private List<V> valuesUnmod;
 	private ListMap<K, V> unmodView;
 	
 	/**
-	 * Creates an empty HashMapListMap.
+	 * Creates an empty LSListMap.
 	 */
 	public LSListMap() {
 		keys = new BMListSet<>();
@@ -209,13 +209,13 @@ public class LSListMap<K, V> implements ListMap<K, V> {
 	}
 
 	@Override
-	public ListSet<V> values() {
+	public List<V> values() {
 		if (values == null) {
-			values = new BMListSet<>();
+			values = new ArrayList<>();
 			for (Map.Entry<K, V> entry : list) {
 				values.add(entry.getValue());
 			}
-			valuesUnmod = values.unmodifiableView();
+			valuesUnmod = Collections.unmodifiableList(values);
 		}
 		return valuesUnmod;
 	}

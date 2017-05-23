@@ -308,7 +308,7 @@ public interface ListMap<K, V> extends Map<K, V> {
 	 * 
 	 * @return a collection view of the values contained in this list map
 	 */
-	ListSet<V> values();
+	List<V> values();
 
 	/**
 	 * Returns an unmodifiable {@link Set} view of the mappings contained in

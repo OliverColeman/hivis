@@ -37,6 +37,7 @@ import hivis.data.DataTableDefault;
 import hivis.data.DataValue;
 import hivis.data.DataValueDouble;
 import hivis.data.DataValueFloat;
+import hivis.data.DataValueGeneric;
 import hivis.data.DataValueInteger;
 import hivis.data.DataValueLong;
 import hivis.data.reader.SpreadSheetReader;
@@ -52,7 +53,7 @@ public class HV {
 	/**
 	 * Create a new DataValue with the specified value.
 	 */
-	public static DataValue<Integer> newIntegerValue(int v) {
+	public static DataValue<Integer> newValue(int v) {
 		return new DataValueInteger(v);
 	}
 	/**
@@ -70,8 +71,14 @@ public class HV {
 	/**
 	 * Create a new DataValue with the specified value.
 	 */
-	public static DataValue<Double> newRealValue(double v) {
+	public static DataValue<Double> newValue(double v) {
 		return new DataValueDouble(v);
+	}
+	/**
+	 * Create a new DataValue with the specified value.
+	 */
+	public static <V> DataValue<V> newValue(V v) {
+		return new DataValueGeneric<V>(v);
 	}
 	
 	

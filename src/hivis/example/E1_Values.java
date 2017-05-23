@@ -37,10 +37,10 @@ public class E1_Values {
 		
 		// Create some DataValues with specific initial values.
 		// Integer values.
-		DataValue int2 = HV.newIntegerValue(2);
-		DataValue int5 = HV.newIntegerValue(5); 
+		DataValue int2 = HV.newValue(2);
+		DataValue int5 = HV.newValue(5); 
 		// Real values.
-		DataValue pi = HV.newRealValue(3.141592653589793);
+		DataValue pi = HV.newValue(3.141592653589793);
 		
 		System.out.println("int2 => " + int2);
 		System.out.println("int5 => " + int5);

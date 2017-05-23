@@ -75,7 +75,7 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	
 
 	@Override
-	public ListSet<DataSeries<?>> getAll() {
+	public List<DataSeries<?>> getAll() {
 		return getLabelledSeries().values();
 	}
 
@@ -419,8 +419,21 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	
 	/**
 	 * Returns an iterator that presents a row-based (see {@link DataRow}) 
-	 * view of a copy of the table. A copy if used to avoid concurrency issues
-	 * if the original table is modified during iteration.
+	 * view of this table. If the table is modified while iteration
+	 * is in progress it will generally not cause an error or exception. The 
+	 * DataRows provided by this iterator store a row index that does not change;
+	 * calls to {@link DataRow#get(String)} and similar use the stored row index to 
+	 * retrieve the data from this table. Thus if the data changes in the table
+	 * it will be reflected on subsequent calls to the <code>get</code> methods
+	 * on the DataRow objects. If rows are added or removed then the iterator will continue
+	 * on to the last available row even if it was not present before iteration began (unless the
+	 * iterator is exhausted before the new rows are added). If the iterator has
+	 * progressed past the point of row removal then {@link Iterator#hasNext()} will 
+	 * begin returning false and calls to {@link Iterator#next()} will begin returning null,
+	 * and for any DataRows that have been provided for rows that no longer exist calls
+	 * to the <code>get</code> methods will begin returning the empty values for the 
+	 * requested column/series using the {@link DataSeries#getEmptyValue()} method
+	 * for the underlying series.
 	 */
 	@Override
 	public Iterator<DataRow> iterator() {
@@ -436,9 +449,15 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 			
 			@Override
 			public synchronized boolean hasNext() {
-				if (nextObtained == false && rowIndex.get() < me.length()) {
-					next = new Row(rowIndex.getAndIncrement());
-					nextObtained = true;
+				me.lock();
+				try {
+					if (nextObtained == false && rowIndex.get() < me.length()) {
+						next = new Row(rowIndex.getAndIncrement());
+						nextObtained = true;
+					}
+				}
+				finally {
+					me.unlock();
 				}
 				return nextObtained;
 			}

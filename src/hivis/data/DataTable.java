@@ -17,6 +17,7 @@
 package hivis.data;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import hivis.common.ListMap;
@@ -72,7 +73,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	/**
 	 * Get the series contained in this table.
 	 */
-	ListSet<DataSeries<?>> getAll();
+	List<DataSeries<?>> getAll();
 
 	/**
 	 * Get the specified series.
@@ -262,7 +263,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 *         they appear in this table, renamed according the renamePattern.
 	 */
 	TableView selectSeriesRE(Pattern pattern, String renamePattern);
-
+	
 	/**
 	 * Get a view of this table containing the series in this table renamed 
 	 * with the specified labels. The number of labels given must match
@@ -308,7 +309,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * </p>
 	 */
 	public TableView sort(int sortingSeries);
-
+	
 	/**
 	 * <p>
 	 * Create a view of this table containing the rows in this table sorted into
@@ -344,7 +345,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * </p>
 	 */
 	public TableView sort(Comparator<DataRow> comparator);
-
+	
 	/**
 	 * <p>
 	 * Create a view of this table containing the rows in the table grouped
@@ -367,7 +368,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * </p>
 	 */
 	<K> DataMap<K, TableView> group(int groupingSeries);
-
+	
 	/**
 	 * <p>
 	 * Create a view of this table containing the rows in the table grouped

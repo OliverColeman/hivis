@@ -142,8 +142,9 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 
 		updateSeries(eventTypes);
 
-		// Remove this view as a container for removed series.
-		for (DataSeries<?> s : Sets.difference(origSeries.values(), series.values())) {
+		// Remove this view as a container for the original series.
+		// If the series is in the new list this view will be re-added as a container.
+		for (DataSeries<?> s : origSeries.values()) {
 			s.removeContainer(this);
 		}
 
@@ -157,10 +158,10 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 				rowKeySeries = si;
 			}
 		}
-
+		
 		Set<String> allSeriesLabels = Sets.union(origSeries.keySet(), series.keySet());
 		int allSeriesLabelsSize = allSeriesLabels.size();
-
+		
 		// If one or more series were added.
 		if (origSeries.size() < allSeriesLabelsSize) {
 			this.setDataChanged(DataTableChange.SeriesAdded);
@@ -173,7 +174,7 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 		if (series.size() == allSeriesLabelsSize && !series.keySet().equals(origSeries.keySet())) {
 			this.setDataChanged(DataTableChange.SeriesReordered);
 		}
-
+		
 		// Forward any other non-series events.
 		for (Object et : eventTypes) {
 			if (et != DataTableChange.SeriesAdded && et != DataTableChange.SeriesRemoved
@@ -181,7 +182,7 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 				this.setDataChanged(et);
 			}
 		}
-
+		
 		this.finishChanges(this);
 	}
 	

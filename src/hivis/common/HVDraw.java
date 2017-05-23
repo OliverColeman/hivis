@@ -22,6 +22,8 @@ import java.util.Map;
 import hivis.data.DataSequence;
 import hivis.data.DataSeries;
 import hivis.data.DataTable;
+import hivis.data.DataValue;
+import hivis.data.DataValueDouble;
 import processing.core.PApplet;
 
 /**
@@ -60,6 +62,36 @@ public class HVDraw {
 		
 		return colours;
 	}
+	
+//	
+//	public static void drawAxis(PApplet applet, Config config) {
+//		applet.pushStyle();
+//		
+//		if (!config.hasParameter("xSeries") && (!config.hasParameter("xMin") || !config.hasParameter("xMax"))) {
+//			throw new IllegalArgumentException("You must specify either a series or a min and max value for the x axis.");
+//		}
+//		if (!config.hasParameter("ySeries") && (!config.hasParameter("yMin") || !config.hasParameter("yMax"))) {
+//			throw new IllegalArgumentException("You must specify either a series or a min and max value for the y axis.");
+//		}
+//		
+//		float min, max;
+//		if (config.hasParameter("series")) {
+//			DataSeries<?> s =  config.get("series");
+//			min = s.min().getFloat();
+//			max = s.max().getFloat();
+//		}
+//		else {
+//			min = config.getFloat("min");
+//			max = config.getFloat("max");
+//		}
+//		
+//		float x = config.getFloat("x");
+//		float y = config.getFloat("y");
+//		
+//		
+//		
+//		applet.popStyle();
+//	}
 
 
 	/**

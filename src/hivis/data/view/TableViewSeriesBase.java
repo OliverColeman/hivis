@@ -52,18 +52,6 @@ public abstract class TableViewSeriesBase extends AbstractTableView<DataSeries<?
 	protected abstract ListSet<String>[] getSelected();
 	
 	
-	/**
-	 * If and when an implementation changes the list of series that should be 
-	 * selected according to {@link #getSelected(String)} then this method 
-	 * should be called to update the selected series data.
-	 * This method should also be called at the end of a constructor if a 
-	 * call to getSelected would return a non-empty list.
-	 */
-	@Override
-	protected void updateSeries() {
-		super.updateSeries();
-	}
-	
 	@Override
 	protected void updateSeries(List<Object> eventTypes) {
 		// If this was called manually or as a result of a series event, update the list of selected series

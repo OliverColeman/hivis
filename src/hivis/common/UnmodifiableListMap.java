@@ -92,7 +92,7 @@ public class UnmodifiableListMap<K, V> implements ListMap<K, V> {
 	}
 
 	@Override
-	public ListSet<V> values() {
+	public List<V> values() {
 		return lm.values();
 	}
 

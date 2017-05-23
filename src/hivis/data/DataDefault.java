@@ -16,8 +16,11 @@
 
 package hivis.data;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,7 +49,9 @@ public class DataDefault implements Data {
 	// beginChanges on the container DataTable) before calling finishChanges on the
 	// DataSeries and then the DataTable. In each call to finishChanges only one
 	// of the occurrences of the DataTable will be removed.
-	private List<Object> currentChangers = new ArrayList<>();
+	private Deque<Object> currentChangers = new ArrayDeque<>();
+	private Deque<Collection<Data>> containersAtChanger = new ArrayDeque<>();
+	
 	private Set<Object> changeTypes = new HashSet<>();
 	
 	public DataDefault() {
@@ -145,35 +150,34 @@ public class DataDefault implements Data {
 	@Override
 	public void beginChanges(Object changer) {
 		lock();
-//		// Lock the contained Data sets, if any.
-//		for (Data c : contained) {
-//			c.lock();
-//		}
+
+		currentChangers.push(changer);
+		containersAtChanger.push(new ArrayList<>(containers)); 
 		
-		currentChangers.add(changer);
-		
-		for (Data c : containers) {
+		for (Data c : containersAtChanger.peek()) {
 			c.beginChanges(changer);
 		}
 	}
 	
 	@Override
 	public void finishChanges(Object changer) {
-		if (!currentChangers.contains(changer)) {
-			throw new IllegalStateException("The given object, of type '" + changer.getClass().getCanonicalName() + "', is not listed as making changes to this DataSet ('" + this.getClass().getCanonicalName() + "').");
+		if (currentChangers.peek() != changer) {
+			throw new IllegalStateException("The given object, of type '" + changer.getClass().getCanonicalName() + "', is not listed as the most recent to be making changes to this DataSet ('" + this.getClass().getCanonicalName() + "').");
 		}
 		
 		// Note: if the changer is listed multiple times in currentChangers 
-		// then only the first instance will be removed. This is what we want.
+		// then only the last instance will be removed. This is what we want.
 		// For example a process changing a DataTable may call beginChanges() 
 		// on the DataTable, and then beginChanges() on the individual DataSeries 
 		// of the DataTable before calling finishChanges on the DataTable.
-		currentChangers.remove(changer);
+		currentChangers.pop();
+		Collection<Data> containersAtThisChanger = containersAtChanger.pop();
+		
 		if (currentChangers.isEmpty()) {
 			fireChangeEvent();
 		}
 		
-		for (Data c : containers) {
+		for (Data c : containersAtThisChanger) {
 			c.finishChanges(changer);
 		}
 		
@@ -186,7 +190,7 @@ public class DataDefault implements Data {
 	
 	@Override
 	public List<Object> getCurrentChangers() {
-		return Collections.unmodifiableList(currentChangers);
+		return Collections.unmodifiableList(new ArrayList<>(currentChangers));
 	}
 	
 	@Override

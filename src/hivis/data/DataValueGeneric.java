@@ -23,25 +23,25 @@ import hivis.common.Util;
  * 
  * @author O. J. Coleman
  */
-public class DataValueGeneric extends AbstractModifiableDataValue<Object> {
-	protected Object value;
+public class DataValueGeneric<V> extends AbstractModifiableDataValue<V> {
+	protected V value;
 	
 	
 	public DataValueGeneric() {
 	}
 	
-	public DataValueGeneric(Object value) {
+	public DataValueGeneric(V value) {
 		this.value = value;
 	}
 	
 	
 	@Override
-	public Object get() {
+	public V get() {
 		return value;
 	}
 	
 	@Override
-	public void setValue(Object value) {
+	public void setValue(V value) {
 		if (!Util.equalsIncNull(this.value, value)) {
 			this.value = value;
 			this.setDataChanged(null);
@@ -49,12 +49,12 @@ public class DataValueGeneric extends AbstractModifiableDataValue<Object> {
 	}
 
 	@Override
-	public Double getEmptyValue() {
+	public V getEmptyValue() {
 		return null;
 	}
 	
 	@Override
-	public DataValueGeneric getNewDataValue() {
-		return new DataValueGeneric();
+	public DataValueGeneric<V> getNewDataValue() {
+		return new DataValueGeneric<V>();
 	}
 }
