@@ -16,6 +16,7 @@
 
 package hivis.data.view;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -53,7 +54,7 @@ public abstract class AbstractSeriesViewMultiple<I, O> extends AbstractSeriesVie
 	 * The (optional) input value on which this view is based. Null if no input
 	 * value is used.
 	 */
-	public final DataValue<?> inputValue;
+	public final List<DataValue<?>> inputValues;
 
 	/**
 	 * The (optional) input table on which this view is based. Null if no input
@@ -78,7 +79,7 @@ public abstract class AbstractSeriesViewMultiple<I, O> extends AbstractSeriesVie
 		for (DataSeries<I> s : inputSeries) {
 			s.addChangeListener(this);
 		}
-		inputValue = null;
+		inputValues = null;
 		inputTable = null;
 		inputMap = null;
 	}
@@ -93,10 +94,25 @@ public abstract class AbstractSeriesViewMultiple<I, O> extends AbstractSeriesVie
 		for (DataSeries<I> s : inputSeries) {
 			s.addChangeListener(this);
 		}
-		inputValue = value;
+		inputValues = new ArrayList<>();
+		inputValues.add(value);
 		inputTable = null;
 		inputMap = null;
 		value.addChangeListener(this);
+	}
+	
+	/**
+	 * Create a ViewSeries for the given values. You must override {@link #length()}.
+	 */
+	public AbstractSeriesViewMultiple(DataValue<?>... values) {
+		super(values[0]);
+		inputValues = Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(values, values.length)));
+		for (DataValue<?> s : inputValues) {
+			s.addChangeListener(this);
+		}
+		inputSeries = null;
+		inputTable = null;
+		inputMap = null;
 	}
 
 	/**
@@ -107,7 +123,7 @@ public abstract class AbstractSeriesViewMultiple<I, O> extends AbstractSeriesVie
 		input.addChangeListener(this);
 		inputTable = input;
 		inputSeries = null;
-		inputValue = null;
+		inputValues = null;
 		inputMap = null;
 	}
 
@@ -119,7 +135,7 @@ public abstract class AbstractSeriesViewMultiple<I, O> extends AbstractSeriesVie
 		input.addChangeListener(this);
 		inputMap = input;
 		inputSeries = null;
-		inputValue = null;
+		inputValues = null;
 		inputTable = null;
 	}
 
@@ -129,7 +145,7 @@ public abstract class AbstractSeriesViewMultiple<I, O> extends AbstractSeriesVie
 	public AbstractSeriesViewMultiple(int length) {
 		this.length = length;
 		inputSeries = null;
-		inputValue = null;
+		inputValues = null;
 		inputTable = null;
 		inputMap = null;
 	}
@@ -139,7 +155,7 @@ public abstract class AbstractSeriesViewMultiple<I, O> extends AbstractSeriesVie
 	 */
 	public AbstractSeriesViewMultiple() {
 		inputSeries = null;
-		inputValue = null;
+		inputValues = null;
 		inputTable = null;
 		inputMap = null;
 	}
@@ -195,8 +211,9 @@ public abstract class AbstractSeriesViewMultiple<I, O> extends AbstractSeriesVie
 	@Override
 	public void dataChanged(DataEvent event) {
 		if (inputSeries != null && inputSeries.contains(event.affected)
-				|| inputValue != null && inputValue == event.affected
-				|| inputTable != null && inputTable == event.affected) {
+				|| inputValues != null && inputValues.contains(event.affected)
+				|| inputTable != null && inputTable == event.affected
+				|| inputMap != null && inputMap == event.affected) {
 			
 			update(event);
 			

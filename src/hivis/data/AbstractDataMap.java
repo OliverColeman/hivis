@@ -16,6 +16,7 @@
 package hivis.data;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -24,6 +25,7 @@ import com.google.common.base.Strings;
 
 import hivis.common.LSListMap;
 import hivis.common.ListMap;
+import hivis.data.view.SeriesView;
 
 /**
  * Base class for {@link DataMap} implementations.
@@ -31,6 +33,40 @@ import hivis.common.ListMap;
  * @author O. J. Coleman
  */
 public abstract class AbstractDataMap<K, V> extends DataDefault implements DataMap<K, V> {
+	private int equalToHashCode = 0; // cached hashcode for equalToHashCode().
+	
+	@Override
+	public boolean equalTo(Data data) {
+		if (data == this) return true;
+		if (!(data instanceof DataMap)) return false;
+		DataMap<?, ?> map = (DataMap<?, ?>) data;
+		try {
+			this.lock();
+			try {
+				map.lock();
+				return this.keys().equalTo(map.keys()) && this.values().equalTo(map.values());
+			}
+			finally {
+				map.unlock();
+			}
+		}
+		finally {
+			this.unlock();
+		}
+	}
+
+	@Override
+	public int equalToHashCode() {
+		if (isMutable()) {
+			throw new IllegalStateException("equalToHashCode() called on a mutable Data set.");
+		}
+		if (equalToHashCode == 0) {
+			equalToHashCode = 31 * this.keys().equalToHashCode() + this.values().equalToHashCode();
+		}
+		return equalToHashCode;
+	}
+	
+	
 	@Override
 	public String toString() {
 		lock();
@@ -65,5 +101,51 @@ public abstract class AbstractDataMap<K, V> extends DataDefault implements DataM
 		finally {
 			unlock();
 		}
+	}
+	
+
+	@Override
+	public DataMap<K, V> immutableCopy() {
+		lock();
+		try {
+			// Get immutable copies of the key and value series so 
+			// that we get immutable copies of the elements therein,
+			// and can also return immutable series in the keys() and values() methods.
+			final DataSeries<K> keys = keys().immutableCopy();
+			final DataSeries<V> values = values().immutableCopy();
+			final Map<K, V> map = new HashMap<>();
+			for (int i = 0; i < keys.length(); i++) {
+				map.put(keys.get(i), values.get(i));
+			}
+			return new AbstractUnmodifiableDataMap<K, V>() {
+				@Override
+				public boolean isMutable() {
+					return false;
+				}
+				@Override
+				public V get(K key) {
+					return map.get(key);
+				}
+				@Override
+				public boolean containsKey(K key) {
+					return map.containsKey(key);
+				}
+				@Override
+				public int size() {
+					return keys.length();
+				}
+				@Override
+				public DataSeries<K> keys() {
+					return keys;
+				}
+				@Override
+				public DataSeries<V> values() {
+					return values;
+				}
+			};
+		}
+		finally {
+			unlock();
+		}	
 	}
 }

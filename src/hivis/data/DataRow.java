@@ -153,5 +153,10 @@ public interface DataRow extends DataSequence {
 	 * Get the element at the specified column index as a String.
 	 * @throws IllegalStateException If the row no longer exists in the underlying table.
 	 */
-	public String getString(int index);
+	String getString(int index);
+	
+	/**
+	 * Get an immutable copy of this DataRow.
+	 */
+	DataRow immutableCopy();
 }

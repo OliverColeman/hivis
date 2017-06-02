@@ -29,6 +29,22 @@ import java.util.Set;
  */
 public interface Data {
 	/**
+	 * Returns true iff the data represented by this Data set is mutable (either directly via setter methods or indirectly via other processes).
+	 * <strong>The result of this method should not change over time</strong>.
+	 */
+	boolean isMutable();
+	
+	/**
+	 * Return true iff this Data set represents the same data as the given Data set.
+	 */
+	boolean equalTo(Data data);
+	
+	/**
+	 * Return a hash code consistent with {@link #equalTo(Data)}.
+	 */
+	int equalToHashCode();
+	
+	/**
 	 * Get the DataSets that "contain" this DataSet as part of their own data. For example a {@link DataTable} contains {@link DataSeries}.
 	 */
 	Set<Data> getContainers();
@@ -111,4 +127,6 @@ public interface Data {
 	void lock();
 	
 	void unlock();
+	
+	Data immutableCopy();
 }

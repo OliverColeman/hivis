@@ -23,6 +23,7 @@ import java.util.List;
 import com.google.common.reflect.TypeToken;
 
 import hivis.data.AbstractDataValue;
+import hivis.data.AbstractUnmodifiableDataValue;
 import hivis.data.Data;
 import hivis.data.DataEvent;
 import hivis.data.DataListener;
@@ -35,7 +36,7 @@ import hivis.data.DataValue;
  *
  * @author O. J. Coleman
  */
-public abstract class AbstractValueView<I, O> extends AbstractDataValue<O> implements DataListener {
+public abstract class AbstractValueView<I, O> extends AbstractUnmodifiableDataValue<O> implements DataListener {
 	/**
 	 * The (optional) input values on which this view is based. Null if no input values are used.
 	 */
@@ -108,7 +109,7 @@ public abstract class AbstractValueView<I, O> extends AbstractDataValue<O> imple
 	
 	@Override
 	public void setValue(O value) {
-		throw new UnsupportedOperationException("Can not set value of a calculated DataValue.");
+		throw new UnsupportedOperationException("Can not set value of a DataValue view.");
 	}
 	
 	@Override

@@ -93,12 +93,6 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 		return (ListMap<String, DataSeries<?>>) series.unmodifiableView();
 	}
 	
-	
-	@Override
-	public void setRowKey(int index) {
-		rowKeySeries = index;
-	}
-	
 	@Override
 	public int getRowKeyIndex() {
 		return rowKeySeries;

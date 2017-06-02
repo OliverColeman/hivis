@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import hivis.common.HV;
+import hivis.common.LSListMap;
 import hivis.common.ListMap;
 import hivis.common.ListSet;
 import hivis.common.Util;
@@ -49,6 +50,10 @@ import hivis.data.view.TableViewSeries;
 import hivis.data.view.TableViewTranspose;
 
 public abstract class AbstractDataTable extends DataDefault implements DataTable {
+	private int equalToHashCode = 0; // cached hashcode for equalToHashCode().
+	
+	private AbstractDataTable immutableCopy = null;
+	
 	public AbstractDataTable() {
 		super();
 	}
@@ -65,10 +70,16 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	@Override
 	public int length() {
 		int l = 0;
-		for (DataSeries<?> s : getLabelledSeries().values()) {
-			if (s.length() > l) {
-				l = s.length();
+		lock();
+		try {
+			for (DataSeries<?> s : getLabelledSeries().values()) {
+				if (s.length() > l) {
+					l = s.length();
+				}
 			}
+		}
+		finally {
+			unlock();
 		}
 		return l;
 	}
@@ -145,6 +156,40 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 		finally {
 			unlock();
 		}
+	}
+	
+	
+	@Override
+	public DataTable immutableCopy() {
+		if (immutableCopy != null) return immutableCopy;
+		
+		lock();
+		try {
+			ListMap<String, DataSeries<?>> seriesCopies = new LSListMap<>();
+			for (Map.Entry<String, DataSeries<?>> e : this.getLabelledSeries().entrySet()) {
+				seriesCopies.put(e.getKey(), e.getValue().immutableCopy());
+			}
+			final ListMap<String, DataSeries<?>> seriesCopiesFinal = seriesCopies.unmodifiableView();
+			final int rowKeyIndex = this.getRowKeyIndex();
+			immutableCopy = new AbstractUnmodifiableDataTable<DataSeries<?>>() {
+				@Override
+				public boolean isMutable() {
+					return false;
+				}
+				@Override
+				public ListMap<String, DataSeries<?>> getLabelledSeries() {
+					return seriesCopiesFinal;
+				}
+				@Override
+				public int getRowKeyIndex() {
+					return rowKeyIndex;
+				}
+			};
+			return immutableCopy;
+		}
+		finally {
+			unlock();
+		}	
 	}
 	
 	
@@ -416,6 +461,51 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 		};
 	}
 	
+	@Override
+	public boolean equalTo(Data data) {
+		if (data == this) return true;
+		if (!(data instanceof DataTable)) return false;
+		DataTable otherTable = (DataTable) data;
+		// Check series labels are the same.
+		if (!this.getSeriesLabels().equals(otherTable.getSeriesLabels())) return false;
+		// Check series values are the same.
+		try {
+			this.lock();
+			try {
+				otherTable.lock();
+				for (int s = 0; s < this.seriesCount(); s++) {
+					if (!this.get(s).equals(otherTable.get(s))) return false;
+				}
+				return true;
+			}
+			finally {
+				otherTable.unlock();
+			}
+		}
+		finally {
+			this.unlock();
+		}
+	}
+	
+
+	@Override
+	public int equalToHashCode() {
+		if (isMutable()) {
+			throw new IllegalStateException("equalToHashCode() called on a mutable Data set.");
+		}
+		if (equalToHashCode == 0) {
+			// Hash code of list is based on contained elements.
+			equalToHashCode = this.getSeriesLabels().hashCode();
+			for (int s = 0; s < seriesCount(); s++) {
+				if (get(s).isMutable()) {
+					throw new IllegalStateException("equalToHashCode() called on a DataTable with mutable series.");
+				}
+				equalToHashCode = 31 * equalToHashCode + get(s).equalToHashCode();
+			}
+		}
+		return equalToHashCode;
+	}
+	
 	
 	/**
 	 * Returns an iterator that presents a row-based (see {@link DataRow}) 
@@ -476,12 +566,11 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	}
 	
 	private class Row extends DataDefault implements DataRow {
-		int rowIndex;
-		int hash;
+		private final int rowIndex;
+		private int equalToHashCode = 0;
 		
 		public Row(int index) {
 			rowIndex = index;
-			updateHash();
 		}
 
 		@Override
@@ -491,12 +580,12 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 		
 		@Override
 		public boolean isNumeric(int index) {
-			return getSeries(index).isNumeric();
+			return AbstractDataTable.this.get(index).isNumeric();
 		}
 
 		@Override
 		public boolean isNumeric(String label) {
-			return getSeries(label).isNumeric();
+			return AbstractDataTable.this.get(label).isNumeric();
 		}
 
 		@Override
@@ -506,95 +595,158 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 
 		@Override
 		public Class<?> getType(int index) {
-			return getSeries(index).getType();
+			return AbstractDataTable.this.get(index).getType();
 		}
 
 		@Override
 		public Class<?> getType(String label) {
-			return getSeries(label).getType();
+			return AbstractDataTable.this.get(label).getType();
 		}
 		
 		@Override
 		public Object get(String label) {
-			return getSeries(label).get(rowIndex);
+			return AbstractDataTable.this.get(label).get(rowIndex);
 		}
 
 		@Override
 		public boolean getBoolean(String label) {
-			return getSeries(label).getBoolean(rowIndex);
+			return AbstractDataTable.this.get(label).getBoolean(rowIndex);
 		}
 
 		@Override
 		public int getInt(String label) {
-			return getSeries(label).getInt(rowIndex);
+			return AbstractDataTable.this.get(label).getInt(rowIndex);
 		}
 
 		@Override
 		public long getLong(String label) {
-			return getSeries(label).getLong(rowIndex);
+			return AbstractDataTable.this.get(label).getLong(rowIndex);
 		}
 
 		@Override
 		public float getFloat(String label) {
-			return getSeries(label).getFloat(rowIndex);
+			return AbstractDataTable.this.get(label).getFloat(rowIndex);
 		}
 
 		@Override
 		public double getDouble(String label) {
-			return getSeries(label).getDouble(rowIndex);
+			return AbstractDataTable.this.get(label).getDouble(rowIndex);
 		}
 		
 		@Override
 		public String getString(String label) {
-			return "" + getSeries(label).get(rowIndex);
+			return "" + AbstractDataTable.this.get(label).get(rowIndex);
 		}
 
 		@Override
 		public Object get(int index) {
-			return getSeries(index).get(rowIndex);
+			return AbstractDataTable.this.get(index).get(rowIndex);
 		}
 
 		@Override
 		public boolean getBoolean(int index) {
-			return getSeries(index).getBoolean(rowIndex);
+			return AbstractDataTable.this.get(index).getBoolean(rowIndex);
 		}
 
 		@Override
 		public int getInt(int index) {
-			return getSeries(index).getInt(rowIndex);
+			return AbstractDataTable.this.get(index).getInt(rowIndex);
 		}
 
 		@Override
 		public long getLong(int index) {
-			return getSeries(index).getLong(rowIndex);
+			return AbstractDataTable.this.get(index).getLong(rowIndex);
 		}
 
 		@Override
 		public float getFloat(int index) {
-			return getSeries(index).getFloat(rowIndex);
+			return AbstractDataTable.this.get(index).getFloat(rowIndex);
 		}
 
 		@Override
 		public double getDouble(int index) {
-			return getSeries(index).getDouble(rowIndex);
+			return AbstractDataTable.this.get(index).getDouble(rowIndex);
 		}
 		
 		@Override
 		public String getString(int index) {
-			return "" + getSeries(index).get(rowIndex);
+			return "" + AbstractDataTable.this.get(index).get(rowIndex);
 		}
 		
 		@Override
-		public int hashCode() {
-			return hash;
+		public void lock() {
+			AbstractDataTable.this.lock();
+		}
+
+		@Override
+		public void unlock() {
+			AbstractDataTable.this.unlock();
+		}
+
+		@Override
+		public boolean equalTo(Data data) {
+			if (data == this) return true;
+			if (!(data instanceof DataRow)) return false;
+			DataRow row = (DataRow) data;
+			try {
+				this.lock();
+				try {
+					row.lock();
+					if (this.length() != row.length()) return false;
+					for (int i = 0; i < length(); i++) {
+						if (!Util.equalsIncData(get(i), row.get(i))) {
+							return false;
+						}
+					}
+					return true;
+				}
+				finally {
+					row.unlock();
+				}
+			}
+			finally {
+				this.unlock();
+			}
 		}
 		
-		private void updateHash() {
-			hash = 1;
-			for (int i = 0; i < length(); i++) {
-				Object element = get(i);
-				hash = 31 * hash + (element == null ? 0 : element.hashCode());
+		@Override
+		public int equalToHashCode() {
+			if (AbstractDataTable.this.isMutable()) {
+				throw new IllegalStateException("equalToHashCode() called on a DataRow for a mutable DataTable.");
 			}
+			if (equalToHashCode == 0) {
+				equalToHashCode = 1;
+				for (int s = 0; s < seriesCount(); s++) {
+					if (AbstractDataTable.this.get(s).isMutable()) {
+						throw new IllegalStateException("equalToHashCode() called on a DataRow for a DataTable containing mutable DataSeries.");
+					}
+					equalToHashCode = 31 * equalToHashCode + get(s).hashCode();
+				}
+			}
+			return equalToHashCode;
+		}
+
+		@Override
+		public DataRow immutableCopy() {
+			// To create immutable rows we re-use the immutable copy of the table.
+			AbstractDataTable.this.immutableCopy();
+			return immutableCopy.getImmutableRow(rowIndex);
+		}
+	}
+	
+	private ImmutableRow getImmutableRow(int index) {
+		return new ImmutableRow(index);
+	}
+	private class ImmutableRow extends Row {
+		public ImmutableRow(int rowIndex) {
+			super(rowIndex);
+			if (AbstractDataTable.this.isMutable()) {
+				throw new IllegalStateException("Created an ImmutableRow for a mutable table.");
+			}
+		}
+		@Override
+		public boolean isMutable() {
+			return false;
 		}
 	}
 }

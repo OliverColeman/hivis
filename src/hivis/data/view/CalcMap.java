@@ -21,6 +21,7 @@ import hivis.data.DataEvent;
 import hivis.data.DataListener;
 import hivis.data.DataMap;
 import hivis.data.DataMapDefault;
+import hivis.data.DataSeries;
 
 
 /**
@@ -105,13 +106,13 @@ public abstract class CalcMap<K, V, D extends Data> extends AbstractMapView<K, V
 	}
 
 	@Override
-	public SeriesView<K> keys() {
+	public DataSeries<K> keys() {
 		if (recalc) update(null);
 		return cache.keys();
 	}
 
 	@Override
-	public SeriesView<V> values() {
+	public DataSeries<V> values() {
 		if (recalc) update(null);
 		return cache.values();
 	}

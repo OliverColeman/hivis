@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Random;
 
 import hivis.data.AbstractModifiableDataSeries;
+import hivis.data.Data;
 import hivis.data.DataSeries;
 import hivis.data.DataSeriesGeneric;
 import hivis.data.DataSeriesInteger;
@@ -49,17 +50,21 @@ import hivis.data.DataTableDefault;
  */
 public class Util {
 	/**
-	 * Return true iff both objects are null, or if their equals method returns true. If one is null and the other is not returns false.
-	 * @param o1
-	 * @param o2
+	 * Returns true if both given objects are null, false if one is null and 
+	 * the other is not, true if both objects are instances of {@link Data} 
+	 * and o1.equalTo(o2) returns true (see {@link Data#equalTo}), otherwise 
+	 * the result of o1.equals(o2).
 	 */
-	public static boolean equalsIncNull(Object o1, Object o2) {
+	public static boolean equalsIncData(Object o1, Object o2) {
 		if (o1 == null && o2 == null) return true;
 		if (o1 == null && o2 != null || o1 != null && o2 == null) return false;
+		if (o1 instanceof Data && o2 instanceof Data) {
+			return ((Data) o1).equalTo((Data) o2);
+		}
 		return o1.equals(o2);
 	}
 	
-
+	
 	public static String dataTableToString(DataTable table) {
 		if (table.length() == 0) {
 			return "Empty DataTable with series " + table.getSeriesLabels().toString();

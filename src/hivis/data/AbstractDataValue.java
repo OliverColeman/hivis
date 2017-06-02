@@ -77,15 +77,41 @@ public abstract class AbstractDataValue<V> extends DataDefault implements DataVa
 		return get().equals(getEmptyValue());
 	}
 	
-
 	@Override
-	public boolean equals(Object o) {
+	public DataValue<V> immutableCopy() {
+		V v = get();
+		final V value = (v instanceof Data) ?  (V) ((Data) v).immutableCopy() : v;
+		return new AbstractUnmodifiableDataValue<V>() {
+			@Override
+			public V get() {
+				return value;
+			}
+			@Override
+			public boolean isMutable() {
+				return false;
+			}
+		};
+	}
+	
+	@Override
+	public boolean equalTo(Data o) {
 		if (o == this) return true;
 		if (!(o instanceof DataValue)) return false;
 		DataValue<?> v = (DataValue<?>) o;
-		if (!Util.equalsIncNull(v.getType(), this.getType())) return false;
-		return Util.equalsIncNull(this.get(), v.get());
+		if (!Util.equalsIncData(v.getType(), this.getType())) return false;
+		return Util.equalsIncData(this.get(), v.get());
 	}
+	
+	@Override
+	public int equalToHashCode() {
+		if (isMutable()) {
+			throw new IllegalStateException("equalToHashCode() called on a mutable Data set.");
+		}
+		V val = get();
+		if (val == null) return 0;
+		return val.hashCode();
+	}
+	
 	
 	@Override
 	public Class<?> getType() {

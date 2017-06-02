@@ -13,48 +13,19 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307 USA
  */
-
 package hivis.data;
 
-import hivis.common.Util;
-
 /**
- * Data series storing generic Objects.
- * 
+ *
  * @author O. J. Coleman
  */
-public class DataValueGeneric<V> extends AbstractModifiableDataValue<V> {
-	protected V value;
-	
-	
-	public DataValueGeneric() {
-	}
-	
-	public DataValueGeneric(V value) {
-		this.value = value;
-	}
-	
-	
+public abstract class AbstractUnmodifiableDataMap<K, V> extends AbstractDataMap<K, V> {
 	@Override
-	public V get() {
-		return value;
+	public V put(K key, V value) {
+		throw new UnsupportedOperationException("Can not set mapping for unmodifiable map.");
 	}
-	
 	@Override
-	public void setValue(V value) {
-		if (!Util.equalsIncData(this.value, value)) {
-			this.value = value;
-			this.setDataChanged(null);
-		}
-	}
-
-	@Override
-	public V getEmptyValue() {
-		return null;
-	}
-	
-	@Override
-	public DataValueGeneric<V> getNewDataValue() {
-		return new DataValueGeneric<V>();
+	public V remove(K key) {
+		throw new UnsupportedOperationException("Can not remove mapping from unmodifiable map.");
 	}
 }

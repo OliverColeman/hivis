@@ -36,13 +36,6 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * Get the number of elements in this series.
 	 */
 	int length();
-	
-	/**
-	 * Returns true iff the given object is a DataSeries storing the same type of data, 
-	 * is of the same length, and every element in this series {@link Object#equals(Object)}
-	 * the corresponding value in the given series (or both values are null). 
-	 */
-	boolean equals(Object o);
 
 	/**
 	 * Get the element at the specified index, or the empty value 
@@ -97,6 +90,11 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * For integer types it is Long.MIN_VALUE, Integer.MIN_VALUE, etc. For all other types this is usually null.
 	 */
 	V getEmptyValue();
+	
+	/**
+	 * Get an immutable copy of this DataValue.
+	 */
+	public DataSeries<V> immutableCopy();
 
 	/**
 	 * Resize this DataSeries, removing values from the end or padding with {@link #getEmptyValue()} as necessary;

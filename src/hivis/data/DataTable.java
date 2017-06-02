@@ -48,7 +48,6 @@ import hivis.data.view.TableView;
  * @author O. J. Coleman
  */
 public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<DataRow> {
-
 	/**
 	 * Get the number of series.
 	 */
@@ -184,6 +183,11 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * Changes to this table will not be reflected in the returned table.
 	 */
 	DataTable copy();
+	
+	/**
+	 * Get an immutable copy of this DataValue.
+	 */
+	DataTable immutableCopy();
 
 	// Views
 

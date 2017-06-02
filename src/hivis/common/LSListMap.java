@@ -443,7 +443,7 @@ public class LSListMap<K, V> implements ListMap<K, V> {
 					break;
 				case 5:
 					valL = (long) (r.nextBoolean() ? (double) r.nextInt() : (s1.isEmpty() ? 0L : s1.keySet().iterator().next()));
-					if (!Util.equalsIncNull(s1.get(valL), s2.get(valL))) throw new RuntimeException("get");
+					if (!Util.equalsIncData(s1.get(valL), s2.get(valL))) throw new RuntimeException("get");
 				case 6: 
 					if (s1.isEmpty() != s2.isEmpty()) throw new RuntimeException("isEmpty");
 				case 7: 

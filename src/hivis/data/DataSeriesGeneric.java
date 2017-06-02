@@ -78,7 +78,7 @@ public class DataSeriesGeneric<V> extends AbstractModifiableDataSeries<V> {
 	
 	@Override
 	public void setValue(int index, V value) {
-		if (!Util.equalsIncNull(elements.get(index), value)) {
+		if (!Util.equalsIncData(elements.get(index), value)) {
 			elements.set(index, value);
 			this.setDataChanged(DataSeriesChange.ValuesChanged);
 		}

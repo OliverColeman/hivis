@@ -18,6 +18,7 @@ package hivis.data;
 import java.lang.reflect.Array;
 import java.time.temporal.TemporalAccessor;
 import java.util.AbstractList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumMap;
@@ -62,6 +63,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	private DataSeries.IntSeries intSeriesView;
 	private DataSeries.LongSeries longSeriesView;
 	private SeriesView<V> unmodifiableView;
+	private int equalToHashCode = 0; // cached hashcode for equalToHashCode().
 	
 
 	public AbstractDataSeries() {
@@ -113,27 +115,82 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 		}
 		return get(index).equals(getEmptyValue());
 	}
-
+	
+	
+	@Override
+	public DataSeries<V> immutableCopy() {
+		V[] values = asArray();
+		for (int i = 0; i < values.length; i++) {
+			if (values[i] instanceof Data) {
+				values[i] = (V) ((Data) values[i]).immutableCopy();
+			}
+		}
+		return new AbstractUnmodifiableDataSeries<V>() {
+			@Override
+			public boolean isMutable() {
+				return false;
+			}
+			@Override
+			public int length() {
+				return values.length;
+			}
+			@Override
+			public V get(int index) {
+				if (index < 0 || index >= values.length) return getEmptyValue();
+				return values[index];
+			}
+			@Override
+			public void update(DataEvent cause) {}
+		};
+	}
+	
 	@Override
 	public boolean isNumeric(int index) {
 		return isNumeric();
 	}
-
+	
 	@Override
-	public boolean equals(Object o) {
+	public boolean equalTo(Data o) {
 		if (o == this) return true;
 		if (!(o instanceof DataSeries)) return false;
 		DataSeries<?> s = (DataSeries<?>) o;
 		if (s.length() != this.length()) return false;
-		if (!Util.equalsIncNull(s.getType(), this.getType())) return false;
+		if (!Util.equalsIncData(s.getType(), this.getType())) return false;
 		DataSeries<V> st = (DataSeries<V>) o;
-		Iterator<V> thisItr = this.iterator();
-		Iterator<V> stItr = st.iterator();
-		while (thisItr.hasNext()) {
-			if (!Util.equalsIncNull(thisItr.next(), stItr.next())) return false;
+		try {
+			this.lock();
+			try {
+				st.lock();
+				Iterator<V> thisItr = this.iterator();
+				Iterator<V> stItr = st.iterator();
+				while (thisItr.hasNext()) {
+					if (!Util.equalsIncData(thisItr.next(), stItr.next())) return false;
+				}
+				return true;
+			}
+			finally {
+				st.unlock();
+			}
 		}
-		return true;
+		finally {
+			this.unlock();
+		}
 	}
+	
+	@Override
+	public int equalToHashCode() {
+		if (isMutable()) {
+			throw new IllegalStateException("equalToHashCode() called on a mutable Data set.");
+		}
+		if (equalToHashCode == 0) {
+			equalToHashCode = 1;
+			for (V v : this) {
+				equalToHashCode = 31 * equalToHashCode + (v==null ? 0 : v.hashCode());
+			}
+		}
+		return equalToHashCode;
+	}
+	
 
 	@Override
 	public Class<?> getType() {
@@ -1206,7 +1263,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 		}
 		@Override
 		public void dataChanged(DataEvent event) {
-			if (!Util.equalsIncNull(currentValue, AbstractDataSeries.this.get(index))) {
+			if (!Util.equalsIncData(currentValue, AbstractDataSeries.this.get(index))) {
 				currentValue = AbstractDataSeries.this.get(index);
 				this.fireChangeEvent(new DataEvent(this, event));
 			}

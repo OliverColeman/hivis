@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * 
  * @author O. J. Coleman
  */
-public class DataDefault implements Data {
+public abstract class DataDefault implements Data {
 	private Set<Data> containers = new HashSet<>();
 	private Set<Data> containersUnmod = Collections.unmodifiableSet(containers);
 	
@@ -54,13 +54,15 @@ public class DataDefault implements Data {
 	
 	private Set<Object> changeTypes = new HashSet<>();
 	
+	
 	public DataDefault() {
 	}
 	
 	public DataDefault(Data container) {
 		addContainer(container);
 	}
-
+	
+	
 	@Override
 	public Set<Data> getContainers() {
 		return containersUnmod;
@@ -201,5 +203,58 @@ public class DataDefault implements Data {
 	@Override
 	public void unlock() {
 		throw new UnsupportedOperationException("This Data set (" + this.getClass().getCanonicalName() + ") does not implement unlock. This probably means you found a bug.");
+	}
+	
+	/**
+	 * Default implementation that always returns true. Immutable Data sets must override this to return false;
+	 */
+	@Override
+	public boolean isMutable() {
+		return true;
+	}
+	
+	/**
+	 * <p>
+	 * Final implementation of equals that returns true if the given object is
+	 * this object (the default Object.equals method behaviour), or returns true
+	 * if this Data set is immutable and the given object is an immutable Data
+	 * set (see {@link #isMutable()}) and this.equalTo(o) returns true,
+	 * otherwise returns false.
+	 * </p>
+	 * <p>
+	 * Rationale: when overriding equals the hashCode method should also be
+	 * overridden to be consistent with it. The hashCode method should always
+	 * return the same value for the same object. In almost all cases the equals
+	 * method would be overridden to be based on the values stored by the Data
+	 * set. However in most cases these values can change over time, meaning the
+	 * hashCode for the Data set will also change over time. Thus - to avoid the
+	 * likely introduction of bugs caused by either a hash code method
+	 * inconsistent with the equals method or a hash code that changes over time
+	 * - we prevent using the equals method for testing data set value equality.
+	 * </p>
+	 * <p>
+	 * Use {@link #equalTo(Data)} instead.
+	 * </p>
+	 */
+	@Override
+	public final boolean equals(Object o) {
+		if (this == o) return true;
+		if (o instanceof Data && !this.isMutable() && !((Data) o).isMutable()) {
+			return this.equalTo((Data) o);
+		}
+		return false;
+	}
+	
+	/**
+	 * Final implementation of hashCode() that returns the same value as the
+	 * default Object.hashCode() method if this Data set {@link #isMutable()}
+	 * otherwise returns {@link #equalToHashCode(Data)}. See
+	 * {@link #equals(Object)} for rationale.
+	 */
+	@Override
+	public final int hashCode() {
+		if (isMutable())
+			return System.identityHashCode(this);
+		return this.equalToHashCode();
 	}
 }

@@ -58,13 +58,6 @@ public interface DataValue<V> extends Data, Comparable<V> {
 	 */
 	boolean isEmpty();
 	
-
-	/**
-	 * Returns true iff the given object is a DataValue storing the same type of data 
-	 * and this.get().equals(o.get()) (or both values are null). 
-	 */
-	boolean equals(Object o);
-	
 	/**
 	 * Return the Class of the type stored.
 	 */
@@ -143,6 +136,10 @@ public interface DataValue<V> extends Data, Comparable<V> {
 	 */
 	public DataValue<V> getNewDataValue();
 	
+	/**
+	 * Get an immutable copy of this DataValue.
+	 */
+	public DataValue<V> immutableCopy();
 	
 	/**
 	 * Returns true iff this DataValue stores a numeric value.

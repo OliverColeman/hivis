@@ -15,7 +15,6 @@
  */
 package hivis.data;
 
-import hivis.data.view.SeriesView;
 
 /**
  * Represents a mapping from keys to (collections of) items. This is primarily
@@ -59,11 +58,16 @@ public interface DataMap<K, V> extends Data {
 	 * Get a view of the keys in this map. The keys will have the same order as
 	 * the values provided by {@link #values()}.
 	 */
-	SeriesView<K> keys();
+	DataSeries<K> keys();
 
 	/**
 	 * Get a view of the values in this map. The values will have the same order
 	 * as the keys provided by {@link #keys()}.
 	 */
-	SeriesView<V> values();
+	DataSeries<V> values();
+	
+	/**
+	 * Get an immutable copy of this DataMap.
+	 */
+	public DataMap<K, V> immutableCopy();
 }

@@ -59,6 +59,7 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesViewMultiple<I, O> 
 	 * Create a DataSeries function of the given input series, with length equal
 	 * to the (first) input series.
 	 */
+	@SafeVarargs
 	public CalcSeries(DataSeries<I>... input) {
 		super(input);
 		setupCache();
@@ -68,8 +69,17 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesViewMultiple<I, O> 
 	 * Create a DataSeries function of the given input value and series, with
 	 * length equal to the (first) input series.
 	 */
+	@SafeVarargs
 	public CalcSeries(DataValue<?> dv, DataSeries<I>... input) {
 		super(dv, input);
+		setupCache();
+	}
+	
+	/**
+	 * Create a DataSeries function of the given values. You must override {@link #length()}.
+	 */
+	public CalcSeries(DataValue<?>... input) {
+		super(input);
 		setupCache();
 	}
 
@@ -329,7 +339,7 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesViewMultiple<I, O> 
 			public void update() {
 
 				DataSeries<I> series = getInputSeries(0);
-				float v = inputValue != null ? inputValue.getFloat() : this.value;
+				float v = inputValues != null ? inputValues.get(0).getFloat() : this.value;
 				switch (op) {
 				case ADD:
 					for (int i = 0; i < length(); i++) {
@@ -454,7 +464,7 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesViewMultiple<I, O> 
 			public void update() {
 
 				DataSeries<I> series = getInputSeries(0);
-				double v = inputValue != null ? inputValue.getDouble() : this.value;
+				double v = inputValues != null ? inputValues.get(0).getDouble() : this.value;
 				switch (op) {
 				case ADD:
 					for (int i = 0; i < length(); i++) {
@@ -579,7 +589,7 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesViewMultiple<I, O> 
 			public void update() {
 
 				DataSeries<I> series = getInputSeries(0);
-				int v = inputValue != null ? inputValue.getInt() : this.value;
+				int v = inputValues != null ? inputValues.get(0).getInt() : this.value;
 				switch (op) {
 				case ADD:
 					for (int i = 0; i < length(); i++) {
@@ -704,7 +714,7 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesViewMultiple<I, O> 
 			public void update() {
 
 				DataSeries<I> series = getInputSeries(0);
-				long v = inputValue != null ? inputValue.getLong() : this.value;
+				long v = inputValues != null ? inputValues.get(0).getLong() : this.value;
 				switch (op) {
 				case ADD:
 					for (int i = 0; i < length(); i++) {

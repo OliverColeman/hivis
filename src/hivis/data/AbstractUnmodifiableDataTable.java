@@ -22,22 +22,26 @@ package hivis.data;
  */
 public abstract class AbstractUnmodifiableDataTable<S extends DataSeries<?>> extends AbstractDataTable {
 	@Override
-	public DataTable addSeries(String label, DataSeries<?> newSeries) {
+	public final DataTable addSeries(String label, DataSeries<?> newSeries) {
 		throw new UnsupportedOperationException("Can not add a series to unmodifiable table.");
 	}
 
 	@Override
-	public DataTable addSeries(DataTable table) {
+	public final DataTable addSeries(DataTable table) {
 		throw new UnsupportedOperationException("Can not add series to unmodifiable table.");
 	}
 
 	@Override
-	public DataTable removeSeries(String label) {
+	public final DataTable removeSeries(String label) {
 		throw new UnsupportedOperationException("Can not remove a series from unmodifiable table.");
 	}
 
 	@Override
-	public DataTable removeSeries(int index) {
+	public final DataTable removeSeries(int index) {
 		throw new UnsupportedOperationException("Can not remove a series from unmodifiable table.");
+	}
+	@Override
+	public final void setRowKey(int index) {
+		throw new UnsupportedOperationException("Can not set row key for an unmodifiable table.");
 	}
 }
