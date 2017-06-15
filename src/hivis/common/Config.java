@@ -16,40 +16,54 @@
 package hivis.common;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.Collections;
+import java.util.HashMap;
 
 import com.google.common.reflect.TypeToken;
 
 import hivis.data.DataValue;
 
 /**
- * Provides a flexible, user-friendly way of specifying the parameters for an operation.
+ * Provides a flexible way of specifying the parameters for an operation.
  * The parameters are stored as {@link DataValue}s. If the parameter values are given as
  * DataValues then this is stored directly, otherwise the given value is wrapped as a
- * DataValue.
+ * DataValue. Parameters cannot be changed via {@link #set(String, DataValue)} or {@link #set(String, Object) 
+ * once they have been set (this is to allow caching the result of operations based on a configuration). 
+ * However a parameter value set via {@link #set(String, DataValue)}
+ * may be changed by changing the value represented by the passed DataValue, assuming that it
+ * supports being modified (this can be supported because changes to a DataValue can be monitored
+ * and the results of a cached operation updated accordingly). 
  * 
  * @author O. J. Coleman
  */
 public class Config implements Cloneable {
-	private Map<String, DataValue<?>> values;
+	private Map<String, DataValue<?>> values = new HashMap<>();
 	
 	
 	public <V> Config set(String label, V value) {
-		values.put(label, HV.newValue(value));
+		if (values.containsKey(label)) {
+			throw new ParameterAlreadySetException("The parameter \"" + label + "\" has already been set.");
+		}
+		values.put(label, HV.newValue(value).immutableCopy());
 		return this;
 	}
 	
 	public <V> Config set(String label, DataValue<V> value) {
+		if (values.containsKey(label)) {
+			throw new ParameterAlreadySetException("The parameter \"" + label + "\" has already been set.");
+		}
 		values.put(label, value);
-		return this;
-	}
-	
-	public Config unset(String label) {
-		values.remove(label);
 		return this;
 	}
 	
 	public boolean hasParameter(String label) {
 		return values.containsKey(label);
+	}
+	
+	
+	public Set<String> getParameterLabels() {
+		return Collections.unmodifiableSet(values.keySet());
 	}
 	
 	
@@ -69,18 +83,22 @@ public class Config implements Cloneable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <V> V get(String label, Class<V> type) {
-		return get(label);
-	}
-	
-	@SuppressWarnings("unchecked")
 	public <T> T get(String label, T defaultValue) {
 		if (hasParameter(label)) {
-			return (T) get(label, defaultValue.getClass());
+			return (T) get(label);
 		}
 		return defaultValue;
 	}
 	
+	private boolean getBoolean(String label) {
+		return (Boolean) get(label); 
+	}
+	private boolean getBoolean(String label, boolean defaultValue) {
+		if (!hasParameter(label)) {
+			return defaultValue;
+		}
+		return getBoolean(label); 
+	}
 	
 	private Number getNumber(String label) {
 		return get(label); 
@@ -120,6 +138,63 @@ public class Config implements Cloneable {
 		return getNumber(label, defaultValue).doubleValue();
 	}
 	
+	
+	public DataValue<?> getDataValue(String label) {
+		if (!hasParameter(label)) {
+			throw new MissingParameterException("You must specify the parameter " + label);
+		}
+		return values.get(label);
+	}
+	public DataValue<?> getDataValue(String label, DataValue<?> defaultValue) {
+		if (hasParameter(label)) {
+			return values.get(label);
+		}
+		return defaultValue;
+	}
+	
+	public DataValue<?> getNumericDataValue(String label) {
+		DataValue<?> dv = getDataValue(label);
+		if (!dv.isNumeric()) {
+			throw new WrongParameterTypeException("The parameter " + label + " must be of type Number.");
+		}
+		return dv;
+	}
+	public DataValue<?> getNumericDataValue(String label, DataValue<?> defaultValue) {
+		if (hasParameter(label)) {
+			return getNumericDataValue(label);
+		}
+		return defaultValue;
+	}
+	
+
+	/**
+	 * Returns true iff the passed object is a Config object which represents
+	 * the same mappings as this Config object (according to the contract
+	 * defined by java.util.Map.equals(Object).
+	 */
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Config) {
+			return this.values.equals(((Config) o).values);
+		}
+		return false;
+	}
+
+	/**
+	 * Returns a hashCode consistent with that of the contract defined by
+	 * java.util.Map.equals(Object).
+	 */
+	@Override
+	public int hashCode() {
+		return values.hashCode();
+	}
+	
+	
+	public class ParameterAlreadySetException extends RuntimeException {
+		public ParameterAlreadySetException(String msg) {
+			super(msg);
+		}
+	}
 	
 	public class MissingParameterException extends RuntimeException {
 		public MissingParameterException(String msg) {

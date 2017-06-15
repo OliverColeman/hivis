@@ -24,6 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import com.google.common.reflect.TypeToken;
 
 import hivis.data.view.CalcValue;
@@ -43,9 +45,8 @@ public abstract class AbstractDataValue<V> extends DataDefault implements DataVa
 	private TypeToken<V> typeToken = new TypeToken<V>(getClass()) {};
 	private Class<?> type = typeToken.getRawType();
 	
-	Map<Op, DataValue<V>> dvOp;
-	Map<Op, DataValue<V>> rawOp;
-	
+	private Table<Op, DataValue<?>, DataValue<?>> opCacheDV;
+	private Table<Op, Number, DataValue<?>> opCachePrim;
 	
 	public AbstractDataValue() {
 		super();
@@ -354,48 +355,65 @@ public abstract class AbstractDataValue<V> extends DataDefault implements DataVa
 	}
 	
 	
-	private DataValue<V> op(Op op, Number value) {
-		if (!isNumeric()) {
-			throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation on non-numeric DataValue");
+	
+	private DataValue<?> op(Op op, Number value) {
+		if (opCachePrim == null) {
+			opCachePrim = HashBasedTable.create();
 		}
-		
-		Class<?> envelopeClass = Util.getEnvelopeNumberType((Class<Number>) getType(), (Class<Number>) value.getClass(), true);
-		
-		if (envelopeClass.equals(Float.class)) {
-			return new CalcValue.FloatValue.FuncRaw(op, this, value.floatValue());
+		if (!opCachePrim.contains(op,  value)) {
+			if (!isNumeric()) {
+				throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation on non-numeric DataValue");
+			}
+			
+			Class<?> envelopeClass = Util.getEnvelopeNumberType((Class<Number>) getType(), (Class<Number>) value.getClass(), true);
+			
+			if (envelopeClass.equals(Float.class)) {
+				opCachePrim.put(op, value, new CalcValue.FloatValue.FuncRaw(op, this, value.floatValue()));
+			}
+			else if (envelopeClass.equals(Double.class)) {
+				opCachePrim.put(op, value, new CalcValue.DoubleValue.FuncRaw(op, this, value.doubleValue()));
+			}
+			else if (envelopeClass.equals(Integer.class)) {
+				opCachePrim.put(op, value, new CalcValue.IntValue.FuncRaw(op, this, value.intValue()));
+			}
+			else if (envelopeClass.equals(Long.class)) {
+				opCachePrim.put(op, value, new CalcValue.LongValue.FuncRaw(op, this, value.longValue()));
+			}
+			else {
+				throw new UnsupportedOperationException("Can not determine numeric type for " + op.toString().toLowerCase() + " operation on DataValue.");
+			}
 		}
-		if (envelopeClass.equals(Double.class)) {
-			return new CalcValue.DoubleValue.FuncRaw(op, this, value.doubleValue());
-		}
-		if (envelopeClass.equals(Integer.class)) {
-			return new CalcValue.IntValue.FuncRaw(op, this, value.intValue());
-		}
-		if (envelopeClass.equals(Long.class)) {
-			return new CalcValue.LongValue.FuncRaw(op, this, value.longValue());
-		}
-		throw new UnsupportedOperationException("Can not determine numeric type for " + op.toString().toLowerCase() + " operation on DataValue.");
+		return opCachePrim.get(op, value);
 	}
 	
-	private DataValue<V> op(Op op, DataValue value) {
-		if (!isNumeric() || !value.isNumeric()) {
-			throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation on non-numeric DataValue");
+	private DataValue<?> op(Op op, DataValue<?> value) {
+		if (opCacheDV == null) {
+			opCacheDV = HashBasedTable.create();
 		}
-		
-		Class<?> envelopeClass = Util.getEnvelopeNumberType((Class<Number>) getType(), (Class<Number>) value.getType(), true);
-		
-		if (envelopeClass.equals(Float.class)) {
-			return new CalcValue.FloatValue.FuncDV(op, this, value);
+		if (!opCacheDV.contains(op,  value)) {
+			if (!isNumeric() || !value.isNumeric()) {
+				throw new RuntimeException("Can not perform " + op.toString().toLowerCase() + " operation on non-numeric DataValue");
+			}
+			
+			Class<?> envelopeClass = Util.getEnvelopeNumberType((Class<Number>) getType(), (Class<Number>) value.getType(), true);
+			
+			if (envelopeClass.equals(Float.class)) {
+				opCacheDV.put(op, value, new CalcValue.FloatValue.FuncDV(op, this, value));
+			}
+			else if (envelopeClass.equals(Double.class)) {
+				opCacheDV.put(op, value, new CalcValue.DoubleValue.FuncDV(op, this, value));
+			}
+			else if (envelopeClass.equals(Integer.class)) {
+				opCacheDV.put(op, value, new CalcValue.IntValue.FuncDV(op, this, value));
+			}
+			else if (envelopeClass.equals(Long.class)) {
+				opCacheDV.put(op, value, new CalcValue.LongValue.FuncDV(op, this, value));
+			}
+			else {
+				throw new UnsupportedOperationException("Can not determine numeric type for " + op.toString().toLowerCase() + " operation on DataValue.");
+			}
 		}
-		if (envelopeClass.equals(Double.class)) {
-			return new CalcValue.DoubleValue.FuncDV(op, this, value);
-		}
-		if (envelopeClass.equals(Integer.class)) {
-			return new CalcValue.IntValue.FuncDV(op, this, value);
-		}
-		if (envelopeClass.equals(Long.class)) {
-			return new CalcValue.LongValue.FuncDV(op, this, value);
-		}
-		throw new UnsupportedOperationException("Can not determine numeric type for " + op.toString().toLowerCase() + " operation on DataValue.");
+		return opCacheDV.get(op, value);
 	}
 	
 	@Override

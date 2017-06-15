@@ -17,6 +17,7 @@ float pointDiameter = 30;
 String xSeries = "Sepal.Length";
 String ySeries = "Sepal.Width";
 
+
 // Method containing one-off setup code.
 void setup() {
   // Make a canvas that is 1000 pixels wide by 500 pixels high.
@@ -29,7 +30,7 @@ void setup() {
 }
 
 
-// Method that gets called when a file is selected.
+// Method that is called when a file is selected.
 void fileSelected(File selection) {
   // If no file was selected.
   if (selection == null) {
@@ -38,13 +39,18 @@ void fileSelected(File selection) {
   else {
     // Get data from the spread sheet. 
     // The spread sheet reader will automatically update the DataTable if the source file is changed.
-  	DataTable rawData = HV.loadSpreadSheet(
-  	  HV.loadSSConfig().sourceFile(selection)
-  	);
-    
-    // Convert the numeric series to the unit range [0, 1]. This will make it easier to work with when we plot it.
-    // We also add " (UR)" to the series names to distinguish them from the original series (PP stands for Prefix/Postfix).
-    DataTable scaledData = rawData.toUnitRange().relabelSeriesPP("", " (UR)");
+    DataTable rawData = HV.loadSpreadSheet(
+      HV.loadSSConfig().sourceFile(selection)
+    );
+  
+    // Scale the series/columns we wish to plot to the window pixel coordinates. 
+    // We're using the whole window, but have to account for the size of the 
+    // points and we also allow for a margin the same size as the points.
+    DataTable scaledData = HV.newTable(); 
+    scaledData.addSeries("x", rawData.get(xSeries).toRange(pointDiameter, width - pointDiameter));
+    // Note that we're swapping the "top" and "bottom" of the y-axis so that the smallest values appear 
+    // at the bottom of the window (the (0, 0) coordinates are at the top-left of the window in Processing).
+    scaledData.addSeries("y", rawData.get(ySeries).toRange(height - pointDiameter, pointDiameter));
     
     // Get a table containing the original data and the scaled data.
     data = rawData.combine(scaledData);
@@ -63,40 +69,17 @@ void draw() {
   
   // If the data is ready to plot.
   if (data != null) {
-    // Calculate the dimensions of the plot.
-    // We're using the whole window, but have to account for the size of the points.
-    // We substract twice the point diameter to allow for a margin.
-    float plotWidth = width - pointDiameter * 2;
-    float plotHeight = height - pointDiameter * 2;
     
     // Draw a dot for each data point/row in the table.
     for (DataRow row : data) {
-      // Get values from the data point. The method getFloat(label) returns the value for 
-      // the series with the label as a 'float' number, which is what Processing works with.
-      // We append " (UR)" to the series labels to get the unit-range series created in fileSelected().
-      float x = row.getFloat(xSeries + " (UR)");
-      float y = row.getFloat(ySeries + " (UR)");
-      
-      // Translate and scale the coordinates to allow for the size of the points and the margin.
-      x = x * plotWidth + pointDiameter;
-      y = height - (y * plotHeight + pointDiameter); // Subtract from height to flip the y-axis.
-      
       // Draw the dot.
-      ellipse(x, y, pointDiameter, pointDiameter);
+      ellipse(row.getFloat("x"), row.getFloat("y"), pointDiameter, pointDiameter);
     }
     
     // Draw axes.
-    stroke(0, 127, 0);
     fill(0, 127, 0);
-    // x axis.
-    line(pointDiameter, height - pointDiameter, width - pointDiameter, height - pointDiameter);
-    textAlign(CENTER, TOP);
-    text("" + data.get(xSeries).min().getFloat(), pointDiameter, height - pointDiameter + 5);
-    text("" + data.get(xSeries).max().getFloat(), width-pointDiameter, height - pointDiameter + 5);
-    // y axis.
-    line(pointDiameter, height - pointDiameter, pointDiameter, pointDiameter);
-    textAlign(LEFT, CENTER);
-    text("" + data.get(ySeries).min().getFloat(), 2, height - pointDiameter);
-    text("" + data.get(ySeries).max().getFloat(), 2, pointDiameter);
+    stroke(0, 127, 0);
+    HVDraw.xAxis(this, data.get(xSeries), pointDiameter, height-pointDiameter, width-pointDiameter*2);
+    HVDraw.yAxis(this, data.get(ySeries), pointDiameter, pointDiameter, height-pointDiameter*2);
   }
 }

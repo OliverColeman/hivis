@@ -29,6 +29,7 @@ import java.util.Map;
 
 import com.google.common.reflect.TypeToken;
 
+import hivis.common.HV;
 import hivis.common.Util;
 import hivis.data.view.AbstractSeriesView;
 import hivis.data.view.AbstractSeriesViewMultiple;
@@ -125,11 +126,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 				values[i] = (V) ((Data) values[i]).immutableCopy();
 			}
 		}
-		return new AbstractUnmodifiableDataSeries<V>() {
-			@Override
-			public boolean isMutable() {
-				return false;
-			}
+		return new AbstractImmutableDataSeries<V>() {
 			@Override
 			public int length() {
 				return values.length;
@@ -644,36 +641,54 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 		return Number.class.isAssignableFrom(getType());
 	}
 
+//	private DataValue<?> op(SeriesOp op) {
+//		if (dataValueOp == null || !dataValueOp.containsKey(op)) {
+//			if (dataValueOp == null) dataValueOp = new EnumMap<>(SeriesOp.class);
+//			if (op.realOutput) {
+//				if (getType().equals(Float.class)) {
+//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+//				}
+//				if (getType().equals(Double.class)) {
+//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+//				}
+//				if (getType().equals(Integer.class)) {
+//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+//				}
+//				if (getType().equals(Long.class)) {
+//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+//				}
+//			}
+//			else {
+//				if (getType().equals(Float.class)) {
+//					dataValueOp.put(op, new CalcValue.FloatValue.SeriesFunc(this, op));
+//				}
+//				if (getType().equals(Double.class)) {
+//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+//				}
+//				if (getType().equals(Integer.class)) {
+//					dataValueOp.put(op, new CalcValue.IntValue.SeriesFunc(this, op));
+//				}
+//				if (getType().equals(Long.class)) {
+//					dataValueOp.put(op, new CalcValue.LongValue.SeriesFunc(this, op));
+//				}
+//			}
+//		}
+//		return dataValueOp.get(op);
+//	}
 	private DataValue<?> op(SeriesOp op) {
 		if (dataValueOp == null || !dataValueOp.containsKey(op)) {
 			if (dataValueOp == null) dataValueOp = new EnumMap<>(SeriesOp.class);
-			if (op.realOutput) {
-				if (getType().equals(Float.class)) {
-					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-				}
-				if (getType().equals(Double.class)) {
-					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-				}
-				if (getType().equals(Integer.class)) {
-					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-				}
-				if (getType().equals(Long.class)) {
-					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-				}
+			if (op.realOutput || getType().equals(Double.class)) {
+				dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
 			}
-			else {
-				if (getType().equals(Float.class)) {
-					dataValueOp.put(op, new CalcValue.FloatValue.SeriesFunc(this, op));
-				}
-				if (getType().equals(Double.class)) {
-					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-				}
-				if (getType().equals(Integer.class)) {
-					dataValueOp.put(op, new CalcValue.IntValue.SeriesFunc(this, op));
-				}
-				if (getType().equals(Long.class)) {
-					dataValueOp.put(op, new CalcValue.LongValue.SeriesFunc(this, op));
-				}
+			else if (getType().equals(Float.class)) {
+				dataValueOp.put(op, new CalcValue.FloatValue.SeriesFunc(this, op));
+			}
+			else if (getType().equals(Integer.class)) {
+				dataValueOp.put(op, new CalcValue.IntValue.SeriesFunc(this, op));
+			}
+			else if (getType().equals(Long.class)) {
+				dataValueOp.put(op, new CalcValue.LongValue.SeriesFunc(this, op));
 			}
 		}
 		return dataValueOp.get(op);
@@ -1310,6 +1325,16 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 		public int size() {
 			return length();
 		}
+		
+	}
+	
+	
+	
+	public static void main(String[] args) {
+		DataSeries<?> s = HV.randomUniformSeries(5, 1, 10);
+		System.out.println(s);
+		DataSeries<?> r = s.toRange(0, 5);
+		System.out.println(r);
 		
 	}
 }

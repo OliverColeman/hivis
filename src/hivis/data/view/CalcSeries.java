@@ -47,7 +47,8 @@ import hivis.data.DataSeriesFloat;
  * @author O. J. Coleman
  */
 public abstract class CalcSeries<I, O> extends AbstractSeriesViewMultiple<I, O> {
-	boolean recalc = true;
+	protected boolean recalc = true;
+	
 	/**
 	 * The cache of values. This is lazily calculated on the first call to
 	 * {@link #get(int)}, {@link #getBoolean(int)} etc.

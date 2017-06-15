@@ -106,7 +106,8 @@ public abstract class AbstractSeriesViewMultiple<I, O> extends AbstractSeriesVie
 	 */
 	public AbstractSeriesViewMultiple(DataValue<?>... values) {
 		super(values[0]);
-		inputValues = Collections.unmodifiableList(Arrays.asList(Arrays.copyOf(values, values.length)));
+		List<DataValue<?>> list = Arrays.asList(Arrays.copyOf(values, values.length));
+		inputValues = Collections.unmodifiableList(list);
 		for (DataValue<?> s : inputValues) {
 			s.addChangeListener(this);
 		}

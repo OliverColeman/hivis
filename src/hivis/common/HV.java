@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.Random;
 
 import hivis.data.AbstractDataSeries;
+import hivis.data.AbstractImmutableDataSeries;
 import hivis.data.AbstractModifiableDataSeries;
 import hivis.data.AbstractUnmodifiableDataSeries;
 import hivis.data.DataEvent;
@@ -95,6 +96,16 @@ public class HV {
 	 */
 	public static <K, V> DataMap newMap() {
 		return new DataMapDefault<K, V>();
+	}
+	
+	
+	/**
+	 * Create a new configuration object, for use with, for example
+	 * {@link HVDraw#drawAxis(processing.core.PApplet, hivis.common.Config)} and
+	 * {@link #loadSpreadSheet(Config)}
+	 */
+	public static hivis.common.Config newConfig() {
+		return new hivis.common.Config();
 	}
 	
 	
@@ -261,7 +272,7 @@ public class HV {
 	 * @param step The step between values, may be positive or negative.
 	 */
 	public static DataSeries<Integer> integerSequence(final int length, final int start, final int step) {
-		return new AbstractUnmodifiableDataSeries<Integer>() {
+		return new AbstractImmutableDataSeries<Integer>() {
 			public int length() {
 				return length;
 			}
@@ -283,7 +294,7 @@ public class HV {
 	 * @param step The step between values, may be positive or negative.
 	 */
 	public static DataSeries<Double> realSequence(final int length, final double start, final double step) {
-		return new AbstractUnmodifiableDataSeries<Double>() {
+		return new AbstractImmutableDataSeries<Double>() {
 			public int length() {
 				return length;
 			}
@@ -392,5 +403,36 @@ public class HV {
 		mt.addSeries("carb", newSeries( 4, 4, 1, 1, 2, 1, 4, 2, 2, 4, 4, 3, 3, 3, 4, 4, 4, 1, 2, 1, 1, 2, 2, 4, 2, 1, 2, 2, 4, 6, 8, 2));
 		
 		return mt;
+	}
+	
+	
+	/**
+	 * Given a number range [l, h] and a value, x, 
+	 * returns the relative position of x with respect
+	 * to the range, calculated as (x - l) / (h - l). If l < x < h
+	 * then x will be in the range (0, 1).
+	 */
+	public DataValue<Double> getRelativePosition(DataValue<?> l, DataValue<?> h, DataValue<?> x) {
+		return (x.subtract(l)).divide(h.subtract(l)).asDouble();
+	}
+	
+	/**
+	 * Given a number range [l, h] and a value, x, 
+	 * returns the relative position of x with respect
+	 * to the range, calculated as (x - l) / (h - l). If l < x < h
+	 * then x will be in the range (0, 1).
+	 */
+	public float getRelativePosition(float l, float h, float x) {
+		return (x - l)  / (h - l);
+	}
+	
+	/**
+	 * Given a number range [l, h] and a value, x, 
+	 * returns the relative position of x with respect
+	 * to the range, calculated as (x - l) / (h - l). If l < x < h
+	 * then x will be in the range (0, 1).
+	 */
+	public double getRelativePosition(double l, double h, double x) {
+		return (x - l)  / (h - l);
 	}
 }

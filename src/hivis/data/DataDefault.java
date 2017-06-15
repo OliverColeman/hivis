@@ -197,12 +197,21 @@ public abstract class DataDefault implements Data {
 	
 	@Override
 	public void lock() {
-		throw new UnsupportedOperationException("This Data set (" + this.getClass().getCanonicalName() + ") does not implement lock! This probably means you found a bug.");
+		throw new UnsupportedOperationException("This Data set (" + getClassName() + ") does not implement lock! This probably means you found a bug.");
 	}
 	
 	@Override
 	public void unlock() {
-		throw new UnsupportedOperationException("This Data set (" + this.getClass().getCanonicalName() + ") does not implement unlock. This probably means you found a bug.");
+		throw new UnsupportedOperationException("This Data set (" + getClassName() + ") does not implement unlock. This probably means you found a bug.");
+	}
+	
+	private String getClassName() {
+		Class<?> clazz = this.getClass();
+		String out = clazz.getName();
+		if (clazz.isAnonymousClass()) {
+			out += " (super class is " + clazz.getSuperclass().getName() + ")";
+		}
+		return out;
 	}
 	
 	/**
@@ -212,7 +221,7 @@ public abstract class DataDefault implements Data {
 	public boolean isMutable() {
 		return true;
 	}
-	
+
 	/**
 	 * <p>
 	 * Final implementation of equals that returns true if the given object is
@@ -222,15 +231,17 @@ public abstract class DataDefault implements Data {
 	 * otherwise returns false.
 	 * </p>
 	 * <p>
-	 * Rationale: when overriding equals the hashCode method should also be
-	 * overridden to be consistent with it. The hashCode method should always
-	 * return the same value for the same object. In almost all cases the equals
-	 * method would be overridden to be based on the values stored by the Data
-	 * set. However in most cases these values can change over time, meaning the
-	 * hashCode for the Data set will also change over time. Thus - to avoid the
-	 * likely introduction of bugs caused by either a hash code method
-	 * inconsistent with the equals method or a hash code that changes over time
-	 * - we prevent using the equals method for testing data set value equality.
+	 * Rationale: in most cases the equals method would be overridden to be
+	 * based on the values stored by the Data set. When overriding the equals
+	 * method the hashCode method should also be overridden to be consistent
+	 * with it. However if the hash code for a Data set changes over time and it
+	 * is used as the key object in a hash table-based data structure (which is
+	 * the case in numerous locations throughout the HiVis library) then
+	 * subsequent accesses of the hash table with the same Data set will not
+	 * behave consistently. Thus - to avoid the likely introduction of bugs
+	 * caused by either a hash code method inconsistent with the equals method
+	 * or a hash code that changes over time - we prevent using the equals
+	 * method for testing Data set value equality.
 	 * </p>
 	 * <p>
 	 * Use {@link #equalTo(Data)} instead.
