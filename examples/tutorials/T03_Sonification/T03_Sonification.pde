@@ -19,6 +19,7 @@ DataSeries freqSeries;
 
 // Used to control the frequency of the audio when hovering over a data point.
 Envelope freqEnv;
+WavePlayer wp;
 Gain gainControl;
 
 // This is a flag to indicate that data has not been loaded and so the plot may not be drawn yet.
@@ -59,7 +60,7 @@ void fileSelected(File selection) {
     // Set-up audio.
     AudioContext ac = new AudioContext();
     freqEnv = new Envelope(ac);
-    WavePlayer wp = new WavePlayer(ac, freqEnv, Buffer.SINE);
+    wp = new WavePlayer(ac, freqEnv, Buffer.SINE);
     gainControl = new Gain(ac, 1, 0);
     gainControl.addInput(wp);
     ac.out.addInput(gainControl);
@@ -101,6 +102,7 @@ void draw() {
         // Multiply by 900 and add 100 to get frequency range [100, 1000] Hertz. 
         float freq = freqSeries.getFloat(row) * 900 + 100;
         freqEnv.addSegment(freq, 10);
+        
         // Set maximum volume.
         gainControl.setGain(1);
         
