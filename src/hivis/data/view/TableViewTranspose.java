@@ -31,7 +31,7 @@ import hivis.data.DataTable;
  * 
  * @author O. J. Coleman
  */
-public class TableViewTranspose extends AbstractTableView<DataSeries<?>> {
+public class TableViewTranspose extends AbstractTableView<DataSeries<?>, DataTable> {
 	public TableViewTranspose(DataTable inputTable) {
 		super(inputTable);
 		updateSeries();
@@ -42,7 +42,7 @@ public class TableViewTranspose extends AbstractTableView<DataSeries<?>> {
 		HashMap<String, DataSeries<?>> oldSeries = new HashMap<>(series);
 		series.clear();
 		
-		DataTable table = inputTables.get(0);
+		DataTable table = input.get(0);
 		
 		if (table.seriesCount() == 0 || table.length() == 0) {
 			return;

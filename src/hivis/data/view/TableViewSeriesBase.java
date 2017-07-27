@@ -38,7 +38,7 @@ import hivis.data.DataTableDefault;
  * 
  * @author O. J. Coleman
  */
-public abstract class TableViewSeriesBase extends AbstractTableView<DataSeries<?>> {
+public abstract class TableViewSeriesBase extends AbstractTableView<DataSeries<?>, DataTable> {
 	public TableViewSeriesBase(DataTable source) {
 		super(source);
 	}
@@ -63,9 +63,9 @@ public abstract class TableViewSeriesBase extends AbstractTableView<DataSeries<?
 				String srcLabel = newSelected[0].get(idx);
 				String newLabel = newSelected[1].get(idx);
 				
-				if (inputTables.get(0).hasSeries(srcLabel)) {
-					series.put(newLabel, inputTables.get(0).get(srcLabel));
-					inputTables.get(0).get(srcLabel).addContainer(this);
+				if (input.get(0).hasSeries(srcLabel)) {
+					series.put(newLabel, input.get(0).get(srcLabel));
+					input.get(0).get(srcLabel).addContainer(this);
 				}
 			}
 		}

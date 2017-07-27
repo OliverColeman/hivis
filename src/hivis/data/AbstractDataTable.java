@@ -37,6 +37,7 @@ import hivis.common.Util;
 import hivis.data.view.CalcSeries;
 import hivis.data.view.Function;
 import hivis.data.view.GroupedTable;
+import hivis.data.view.DefaultGroupedTable;
 import hivis.data.view.RowFilter;
 import hivis.data.view.SeriesFunction;
 import hivis.data.view.SeriesView;
@@ -349,18 +350,18 @@ public abstract class AbstractDataTable extends DataDefault implements DataTable
 	
 	
 	@Override
-	public <K> DataMap<K, TableView> group(int groupingSeries) {
-		return new GroupedTable<>(this, groupingSeries);
+	public <K> GroupedTable<K> group(int groupingSeries) {
+		return new DefaultGroupedTable<K>(this, groupingSeries);
 	}
 
 	@Override
-	public <K> DataMap<K, TableView> group(String groupingSeries) {
-		return new GroupedTable<>(this, groupingSeries);
+	public <K> GroupedTable<K> group(String groupingSeries) {
+		return new DefaultGroupedTable<K>(this, groupingSeries);
 	}
 
 	@Override
-	public <K> DataMap<K, TableView> group(Function<DataRow, K> keyFunction) {
-		return new GroupedTable<>(this, keyFunction);
+	public <K> GroupedTable<K> group(Function<DataRow, K> keyFunction) {
+		return new DefaultGroupedTable<K>(this, keyFunction);
 	}
 
 	

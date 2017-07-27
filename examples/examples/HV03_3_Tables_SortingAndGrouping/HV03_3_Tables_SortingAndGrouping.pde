@@ -66,6 +66,14 @@ void setup() {
   });
   println("\nmtCars grouped by first word in \"model\" series => \n" + mtCarsGroupedCustom);
   
+  // We can get a view of a table group in which the table for each
+  // group is aggregated into a single row of the returned table view.
+  // Note that the built-in statistical aggregation functions return 
+  // the first value of non-numeric series. Custom aggregation functions 
+  // may be specified with GroupedTable.aggregate(AggregationFunction).
+  DataTable mtCarsGroupedByCylAggregated = mtCarsGroupedByCyl.aggregateMean();
+  println("\nmtCarsGroupedByCyl aggregated (mean of each series) => \n" + mtCarsGroupedByCylAggregated);
+  
   
   // Changes in the source table are reflected in the sorted and grouped views:
   for (int row = 0; row < mtCars.length(); row++) {
@@ -80,6 +88,8 @@ void setup() {
   
   println("\nmtCars grouped by \"cyl\" series (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedByCyl);
   println("\nmtCars grouped by first word in \"model\" series (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedCustom);
+  
+  println("\nmtCarsGroupedByCyl aggregated (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedByCylAggregated);
 }
 
 

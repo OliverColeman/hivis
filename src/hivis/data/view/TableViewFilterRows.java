@@ -31,7 +31,7 @@ import hivis.data.DataTable;
  * 
  * @author O. J. Coleman
  */
-public class TableViewFilterRows extends AbstractTableView<SeriesViewRow<?>> {
+public class TableViewFilterRows extends AbstractTableView<SeriesViewRow<?>, DataTable> {
 	private RowFilter filter;
 	
 	public TableViewFilterRows(DataTable input, RowFilter filter) {
@@ -47,7 +47,7 @@ public class TableViewFilterRows extends AbstractTableView<SeriesViewRow<?>> {
 		
 		series.clear();
 		
-		DataTable inputTable = inputTables.get(0);
+		DataTable inputTable = input.get(0);
 		int inputTableLength = inputTable.length();
 		
 		// Create/reuse a SeriesViewRow for each series in the input table. 

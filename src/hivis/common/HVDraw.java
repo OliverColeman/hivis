@@ -32,6 +32,7 @@ import hivis.data.DataTable;
 import hivis.data.DataValue;
 import hivis.data.DataValueDouble;
 import hivis.data.view.CalcSeries;
+import hivis.data.view.GroupedTable;
 import processing.core.PApplet;
 import processing.core.PConstants;
 
@@ -352,7 +353,6 @@ public class HVDraw {
 	}
 	
 	
-	
 	/**
 	 * Draws a pie chart based on a sequence of values (for example a {@link DataSeries} or {@link hivis.data.DataRow}). 
 	 * Non-numeric values are ignored.
@@ -392,23 +392,5 @@ public class HVDraw {
 	 */
 	public static void pie(PApplet applet, DataTable data, int row, float diameter, float x, float y, int[] palette, int paletteOffset) {
 		pie(applet, data.getRow(row), diameter, x, y, palette, paletteOffset);
-	}
-	
-	
-	public static void main (String[] args) {
-		DataValue min = HV.newValue(4.3);
-		DataValue max = HV.newValue(7.9);
-		DataValue targetTics = HV.newValue(5);
-		Config config = new Config();
-		config.set("size", 1000);
-		config.set("targetTicCount", targetTics);
-		config.set("min", min);
-		config.set("max", max);
-		DataSeries tics = getTicSeries(config);
-		
-		for (int count = 2; count <= 25; count += 1) {
-			targetTics.set(count);
-			System.out.println(count + ": " + tics);
-		}
 	}
 }

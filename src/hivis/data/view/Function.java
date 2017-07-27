@@ -64,11 +64,10 @@ public abstract class Function<I, O> {
 				} catch (NoSuchMethodException | SecurityException e) {}
 			}
 		}
-		catch (StackOverflowError ex) {
-			
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new RuntimeException("Something went terribly wrong: ", e);
 		}
+		
 		throw new IllegalStateException("Please implement the method '" + outputType.getSimpleName() + " apply(" + inputType.getSimpleName() + ")' in your Function.");
 	}
 	

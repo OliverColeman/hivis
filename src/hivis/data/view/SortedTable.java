@@ -40,7 +40,7 @@ import hivis.data.DataTable;
  * 
  * @author O. J. Coleman
  */
-public class SortedTable extends AbstractTableView<SeriesViewRow<?>> {
+public class SortedTable extends AbstractTableView<SeriesViewRow<?>, DataTable> {
 	private Comparator<DataRow> comparator;
 	
 	/**
@@ -118,8 +118,7 @@ public class SortedTable extends AbstractTableView<SeriesViewRow<?>> {
 		
 		series.clear();
 		
-		DataTable inputTable = inputTables.get(0);
-		int inputTableLength = inputTable.length();
+		DataTable inputTable = input.get(0);
 		
 		// Create/reuse a SeriesViewRow for each series in the input table. 
 		for (Entry<String, DataSeries<?>> inputS : inputTable.getLabelledSeries().entrySet()) {

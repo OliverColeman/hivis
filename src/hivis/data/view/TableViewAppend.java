@@ -28,7 +28,7 @@ import hivis.data.DataTableChange;
  *  
  * @author O. J. Coleman
  */
-public class TableViewAppend extends AbstractTableView<SeriesViewAppend<?>> {
+public class TableViewAppend extends AbstractTableView<SeriesViewAppend<?>, DataTable> {
 	public TableViewAppend(DataTable... input) {
 		super(input);
 		updateSeries();
@@ -40,9 +40,9 @@ public class TableViewAppend extends AbstractTableView<SeriesViewAppend<?>> {
 		// (which will trigger a change event if necessary).
 		if (eventTypes.isEmpty() || eventTypes.contains(DataTableChange.SeriesAdded) || eventTypes.contains(DataTableChange.SeriesRemoved) || eventTypes.contains(DataTableChange.SeriesReordered)) {
 			// Check series in input tables match.
-			DataTable first = inputTables.get(0);
-			for (int tableIndex = 1; tableIndex < inputTables.size(); tableIndex++) {
-				DataTable table = inputTables.get(tableIndex);
+			DataTable first = input.get(0);
+			for (int tableIndex = 1; tableIndex < input.size(); tableIndex++) {
+				DataTable table = input.get(tableIndex);
 				
 				if (first.seriesCount() != table.seriesCount()) {
 					throw new IllegalArgumentException("Cannot append tables with differing numbers of series.");
@@ -77,9 +77,9 @@ public class TableViewAppend extends AbstractTableView<SeriesViewAppend<?>> {
 					
 					
 					// Get the corresponding series from each table.
-					DataSeries<?>[] seriesToAppend = new DataSeries[inputTables.size()];
-					for (int ti = 0; ti < inputTables.size(); ti++) {
-						seriesToAppend[ti] = inputTables.get(ti).get(label);
+					DataSeries<?>[] seriesToAppend = new DataSeries[input.size()];
+					for (int ti = 0; ti < input.size(); ti++) {
+						seriesToAppend[ti] = input.get(ti).get(label);
 					}
 					// Create new series appender and add to series in this view.
 					SeriesViewAppend<?> appendedSeries = new SeriesViewAppend(seriesToAppend);

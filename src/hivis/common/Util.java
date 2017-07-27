@@ -207,6 +207,27 @@ public class Util {
 	
 	
 	/**
+	 * Given two classes, determine the common ancestor class.
+	 * @return The common ancestor class 
+	 */
+	public static Class<?> getCommonAncestorClass(Class<?> c1, Class<?> c2) {
+		if (c1.isAssignableFrom(c2)) {
+			return c1;
+		}
+		if (c2.isAssignableFrom(c1)) {
+			return c2;
+		}
+		Class<?> superClass = c1.getSuperclass();
+		do {
+			if (superClass == null) return Object.class;
+			if (superClass.isAssignableFrom(c2)) return superClass;
+			superClass = superClass.getSuperclass();
+		}
+		while (true);
+	}
+	
+	
+	/**
 	 * Try to determine the date format of the given String.
 	 * @param input The String containing a date and optional time.
 	 * @param customDateFormats One or more date formats to use instead of the standard date formats. Time elements may also be included. See https://docs.oracle.com/javase/8/docs/api/index.html?java/time/format/DateTimeFormatter.html

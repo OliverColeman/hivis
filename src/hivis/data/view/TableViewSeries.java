@@ -57,15 +57,15 @@ public class TableViewSeries extends TableViewSeriesBase {
 	 * @return This data table view.
 	 */
 	public TableViewSeries renameSeries(String...labels) {
-		if (labels.length != inputTables.get(0).seriesCount()) {
+		if (labels.length != input.get(0).seriesCount()) {
 			throw new IllegalArgumentException("The number of labels given does not match the number of series in the input table.");
 		}
 		
 		selected.clear();
-		selected.addAll(inputTables.get(0).getSeriesLabels());
+		selected.addAll(input.get(0).getSeriesLabels());
 		selectedRename = new BMListSet<>(labels);
 
-		if (selectedRename.size() != inputTables.get(0).seriesCount()) {
+		if (selectedRename.size() != input.get(0).seriesCount()) {
 			throw new IllegalArgumentException("The labels given are not unique.");
 		}
 		
@@ -95,7 +95,7 @@ public class TableViewSeries extends TableViewSeriesBase {
 			postfix = "";
 
 		selected.clear();
-		selected.addAll(inputTables.get(0).getSeriesLabels());
+		selected.addAll(input.get(0).getSeriesLabels());
 
 		selectedRename = new BMListSet<>();
 		for (int i = 0; i < selected.size(); i++) {
@@ -130,11 +130,11 @@ public class TableViewSeries extends TableViewSeriesBase {
 	public TableViewSeries setSeries(int... series) {
 		selected.clear();
 		for (int index : series) {
-			if (index >= inputTables.get(0).seriesCount()) {
+			if (index >= input.get(0).seriesCount()) {
 				throw new IllegalArgumentException(
 						"Error setting series for ViewTableSeries: no series with index " + index + " in input table.");
 			}
-			selected.add(inputTables.get(0).getSeriesLabel(index));
+			selected.add(input.get(0).getSeriesLabel(index));
 		}
 		// No rename.
 		selectedRename = selected;
@@ -157,13 +157,13 @@ public class TableViewSeries extends TableViewSeriesBase {
 		if (begin < 0) {
 			throw new IllegalArgumentException("Error setting series for ViewTableSeries: first index less than 0.");
 		}
-		if (end >= inputTables.get(0).seriesCount()) {
+		if (end >= input.get(0).seriesCount()) {
 			throw new IllegalArgumentException("Error setting series for ViewTableSeries: last index greater than last series index in input table.");
 		}
 		
 		selected.clear();
 		for (int index = begin; index <= end; index++) {
-			selected.add(inputTables.get(0).getSeriesLabel(index));
+			selected.add(input.get(0).getSeriesLabel(index));
 		}
 		// No rename.
 		selectedRename = selected;
@@ -181,9 +181,9 @@ public class TableViewSeries extends TableViewSeriesBase {
 	public TableViewSeries setSeries(String... series) {
 		selected.clear();
 		for (String label : series) {
-			if (!inputTables.get(0).hasSeries(label)) {
+			if (!input.get(0).hasSeries(label)) {
 				label = label.trim();
-				if (!inputTables.get(0).hasSeries(label)) {
+				if (!input.get(0).hasSeries(label)) {
 					// System.err.println("No series with label " + label + " in input table, ignoring.");
 					continue;
 				}
@@ -244,8 +244,8 @@ public class TableViewSeries extends TableViewSeriesBase {
 	public TableViewSeries setSeriesRE(Pattern pattern, String renamePattern) {
 		selected.clear();
 		selectedRename = new BMListSet<>();
-		for (int oi = 0; oi < inputTables.get(0).getAll().size(); oi++) {
-			String label = inputTables.get(0).getSeriesLabels().get(oi);
+		for (int oi = 0; oi < input.get(0).getAll().size(); oi++) {
+			String label = input.get(0).getSeriesLabels().get(oi);
 			Matcher m = pattern.matcher(label);
 			if (m.matches()) {
 				if (renamePattern != null) {

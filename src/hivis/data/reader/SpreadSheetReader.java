@@ -628,7 +628,7 @@ public class SpreadSheetReader implements DataSetSource<DataTable> {
 		 */
 		public Config columnCount(int columnCount) { this.dataColumnCountDesired = columnCount; return this; }
 		
-		protected boolean doublePrecision = false;
+		protected boolean doublePrecision = true;
 		/**
 		 * Set whether numeric series should be created as DataSeries&lt;Double&gt; (true), or as DataSeries&lt;Float&gt; (false).
 		 */

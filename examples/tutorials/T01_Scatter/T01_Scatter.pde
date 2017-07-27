@@ -2,10 +2,6 @@ import hivis.common.*;
 import hivis.data.*;
 import java.util.*;
 
-// Example of drawing a scatter plot of two columns in a spreadsheet. 
-// Exercises:
-//  1. Try plotting different columns/series.
-//  2. Change the brightness of the data points based on the values in a third column/series.
 
 // Stores the data to plot.
 DataTable data;
@@ -46,6 +42,8 @@ void fileSelected(File selection) {
     // Scale the series/columns we wish to plot to the window pixel coordinates. 
     // We're using the whole window, but have to account for the size of the 
     // points and we also allow for a margin the same size as the points.
+    // The DataSeries.toRange method accepts two values: the minimum and maximum 
+    // values to scale the data in the series to.
     DataTable scaledData = HV.newTable(); 
     scaledData.addSeries("x", rawData.get(xSeries).toRange(pointDiameter, width - pointDiameter));
     // Note that we're swapping the "top" and "bottom" of the y-axis so that the smallest values appear 

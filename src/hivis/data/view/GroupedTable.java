@@ -15,155 +15,102 @@
  */
 package hivis.data.view;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import hivis.data.DataRow;
+import hivis.data.AggregateFunction;
+import hivis.data.DataMap;
 import hivis.data.DataTable;
 
 /**
  * <p>
- * Create a view of a DataTable containing the rows collected into groups. The
- * grouping is represented as a {@link DataMap} where the map keys represent the
- * group identifier and the map values are DataTable views containing the rows
- * belonging to that group. See the various constructors for details on how
- * groups are formed.
+ * Represents a view of a DataTable containing the rows collected into groups.
+ * The grouping is represented as a {@link DataMap} where the map keys represent
+ * the group identifier and the map values are DataTable views containing the
+ * rows belonging to that group.
  * </p>
  * <p>
- * The rows in the group table views appear in the same order as their order in
- * the input table.
+ * The rows in the group table views should appear in the same order as their
+ * order in the input table.
  * </p>
  * <p>
  * The group table views returned by {@link #get(Object)} and {@link #values()}
- * will be emptied (set to length 0) if the group size becomes zero (and calls
+ * should be emptied (set to length 0) if the group size becomes zero (and calls
  * to {@link #get(Object)} for groups that do not yet exist will return empty
  * group table views, but not add them to the list of groups returned by
  * {@link #values()} ). If the group size subsequently becomes non-zero this
  * same group table view will be reused. This allows external observers to
  * monitor the size of a group (even before it has existed in the input table).
  * </p>
- *
+ * 
+ * @see DataTable#group(int)
+ * @see DataTable#group(String)
+ * 
  * @author O. J. Coleman
  */
-public class GroupedTable<K> extends CalcMap<K, TableView, DataTable> {
-	/**
-	 * The function used to generate group keys from values.
-	 */
-	protected Function<DataRow, K> keyFunction;
-
-	/**
-	 * A map of all groups ever produced. Allows re-use of groups.
-	 */
-	protected Map<K, TableViewFilterRows> allGroups = new HashMap<>();
-
-	/**
-	 * Create a grouping where the key for a row is based on the value of the
-	 * specified series in that row. More specifically, groups are formed by
-	 * placing all rows for which
-	 * input.getRow(x).get(groupingSeries).equals(input.getRow(y).get(
-	 * groupingSeries)), for all rows x and y, into the same group (and rows
-	 * where this is false into different groups). The key for each group is a
-	 * value such that key.equals(group.getRow(z).get(groupingSeries)) for all
-	 * rows z in the group table.
-	 */
-	public GroupedTable(DataTable input, int groupingSeries) {
-		super(input);
-		keyFunction = new Function<DataRow, K>() {
-			@Override
-			public K apply(DataRow input) {
-				return (K) input.get(groupingSeries);
-			}
-		};
-	}
-
-	/**
-	 * Create a grouping where the key for a row is based on the value of the
-	 * specified series in that row. More specifically, groups are formed by
-	 * placing all rows for which
-	 * input.getRow(x).get(groupingSeries).equals(input.getRow(y).get(
-	 * groupingSeries)), for all rows x and y, into the same group (and rows
-	 * where this is false into different groups). The key for each group is a
-	 * value such that key.equals(group.getRow(z).get(groupingSeries)) for all
-	 * rows z in the group table.
-	 */
-	public GroupedTable(DataTable input, String groupingSeries) {
-		super(input);
-		keyFunction = new Function<DataRow, K>() {
-			@Override
-			public K apply(DataRow input) {
-				return (K) input.get(groupingSeries);
-			}
-		};
-	}
-
-	/**
-	 * Create a grouping where the key for a row is calculated using the given
-	 * key function, which should accept a row from the table and return a group
-	 * key (identifier) for that row. Groups are formed by placing all rows for
-	 * which keyFunction(input.getRow(x)).equals(keyFunction(input.getRow(y)),
-	 * for all rows x and y, into the same group (and rows where this is false
-	 * into different groups). The key for each group is a value such that
-	 * key.equals(keyFunction(group.getRow(z)) for all rows z in the group
-	 * table.
-	 */
-	public GroupedTable(DataTable input, Function<DataRow, K> keyFuntion) {
-		super(input);
-		this.keyFunction = keyFuntion;
-	}
-
+public interface GroupedTable<K> extends DataMap<K, TableView> {
 	/**
 	 * Get the group table view for the specified key. If the key does not
 	 * currently exist then an empty group table view will be returned. If the
 	 * group for that key subsequently becomes non-empty then the previously
 	 * returned table view will be populated accordingly.
 	 */
-	@Override
-	public TableView get(K key) {
-		if (!allGroups.containsKey(key)) {
-			TableViewFilterRows newGroup = new TableViewFilterRows(input, new GroupRowFilter(key));
-			allGroups.put(key, newGroup);
-		}
-		return allGroups.get(key);
-	}
+	TableView get(K key);
 
-	@Override
-	public void update() {
-		// Determine current groups.
-		Map<K, TableView> newGroups = new HashMap<>();
+	/**
+	 * Returns a view of this table group in which the table for each
+	 * group/sub-table is aggregated into a row of the returned table view.
+	 * 
+	 * @param function
+	 *            The aggregation function.
+	 */
+	TableView aggregate(AggregateFunction function);
 
-		for (DataRow row : input) {
-			K key = keyFunction.apply(row);
-			if (!newGroups.containsKey(key)) {
-				TableViewFilterRows group = (TableViewFilterRows) get(key);
-				newGroups.put(key, group);
-			}
-		}
+	/**
+	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
+	 * . The aggregation function returns the minimum value of each series in
+	 * the group tables, or the first value of the series if it's not numeric.
+	 */
+	public TableView aggregateMin();
 
-		// Remove groups that no longer exist.
-		for (K key : cache.keys().asArray()) {
-			if (!newGroups.containsKey(key)) {
-				cache.remove(key);
-			}
-		}
+	/**
+	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
+	 * . The aggregation function returns the maximum of each series in the
+	 * group tables, or the first value of the series if it's not numeric.
+	 */
+	public TableView aggregateMax();
 
-		// Add new groups.
-		for (K key : newGroups.keySet()) {
-			if (!cache.containsKey(key)) {
-				cache.put(key, newGroups.get(key));
-			}
-		}
-	}
+	/**
+	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
+	 * . The aggregation function returns the sum of each series in the group
+	 * tables, or the first value of the series if it's not numeric.
+	 */
+	public TableView aggregateSum();
 
-	private class GroupRowFilter implements RowFilter {
-		K key;
+	/**
+	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
+	 * . The aggregation function returns the product of each series in the
+	 * group tables, or the first value of the series if it's not numeric.
+	 */
+	public TableView aggregateProduct();
 
-		GroupRowFilter(K key) {
-			this.key = key;
-		}
+	/**
+	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
+	 * . The aggregation function returns the mean of each series in the group
+	 * tables, or the first value of the series if it's not numeric.
+	 */
+	public TableView aggregateMean();
 
-		@Override
-		public boolean excludeRow(DataTable input, int index) {
-			return !keyFunction.apply(input.getRow(index)).equals(key);
-		}
-	}
+	/**
+	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
+	 * . The aggregation function returns the variance of each series in the
+	 * group tables, or the first value of the series if it's not numeric.
+	 */
+	public TableView aggregateVariance();
+
+	/**
+	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
+	 * . The aggregation function returns the standard deviation of each series
+	 * in the group tables, or the first value of the series if it's not
+	 * numeric.
+	 */
+	public TableView aggregateStdDev();
+
 }

@@ -44,45 +44,52 @@ import hivis.data.DataTableChange;
  * 
  * @author O. J. Coleman
  */
-public abstract class AbstractTableView<S extends DataSeries<?>> extends AbstractUnmodifiableDataTable<S> implements DataListener, TableView {
+public abstract class AbstractTableView<S extends DataSeries<?>, I extends Data> extends AbstractUnmodifiableDataTable<S> implements DataListener, TableView {
 	protected int rowKeySeries = Integer.MIN_VALUE;
 	
 	
 	/**
 	 * The source data table for this view.
 	 */
-	protected final List<DataTable> inputTables;
+	protected final List<I> input;
 	
 	/**
 	 * The data series this view presents, keyed by label.
 	 */
 	protected ListMap<String, S> series;
 	
-	private final Data primarySource;
+	private final I primarySource;
 	
 	/**
-	 * Create a ViewTable that is not derived from a source DataTable.
+	 * Create a ViewTable that is not derived from a source Data set.
 	 */
 	public AbstractTableView() {
-		this(null);
+		super();
+		primarySource = null;
+		this.input = new ArrayList<>();
+		series = new LSListMap<>();
+		for (I s : input) {
+			s.addChangeListener(this);
+		}
 	}
 	
 	/**
-	 * Create a ViewTable that is derived from the given source DataTable.
+	 * Create a ViewTable that is derived from the given source Data set(s).
 	 */
-	public AbstractTableView(DataTable... inputTables) {
+	@SafeVarargs
+	public AbstractTableView(I... input) {
 		super();
 		
-		primarySource = inputTables[0] == null ? this : inputTables[0];
-		
-		if (inputTables == null) {
-			this.inputTables = new ArrayList<>();
+		if (input == null || input.length == 0) {
+			primarySource = null;
+			this.input = new ArrayList<>();
 		}
 		else {
-			this.inputTables = Arrays.asList(inputTables);
+			primarySource = input[0];
+			this.input = Arrays.asList(input);
 		}
 		series = new LSListMap<>();
-		for (DataTable s : inputTables) {
+		for (I s : input) {
 			s.addChangeListener(this);
 		}
 	}
@@ -100,7 +107,7 @@ public abstract class AbstractTableView<S extends DataSeries<?>> extends Abstrac
 	
 	@Override
 	public void dataChanged(DataEvent event) {
-		if (inputTables.contains(event.affected)) {
+		if (input.contains(event.affected)) {
 			updateSeriesWrapper(new ArrayList<>(event.getTypes()));
 		}
 	}

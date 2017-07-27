@@ -2,15 +2,11 @@ import hivis.common.*;
 import hivis.data.*;
 import hivis.data.reader.*;
 import hivis.data.view.*;
-import beads.*;
-
-// THIS EXAMPLE REQUIRES the Beads Library (Sketch -> Import Library -> Add Library ...)
-// Example of using sonification to "render" additional dimensions of the data. 
-// A scatter plot is produced, with two of the dimensions used for  the coordinates, and 
-// another dimension used to control the frequency of a tone when hovering over a data point.
-// Exercises:
-//  1. Set the volume/gain of the tone based on another series in the data table.
-//  2. When hovering over a data point, display text that lists the values for that point in each series.
+import beads.WavePlayer;
+import beads.Envelope;
+import beads.Gain;
+import beads.AudioContext;
+import beads.Buffer;
 
 
 // Stores the data to plot.
@@ -52,6 +48,7 @@ void fileSelected(File selection) {
     // Get data from spread sheet. 
     // The SpreadSheetReader will automatically update the DataTable it provides if the source file is changed.
     data = HV.loadSpreadSheet(selection);
+    println(data);
     
     // Get the series/columns we're interested in.
     // Transform to unit range [0, 1] to make them easier to work with.
@@ -90,9 +87,10 @@ void draw() {
       float x = xSeries.getFloat(row) * (width - 30) + 15;
       float y = ySeries.getFloat(row) * (height - 30) + 15;
       
-      // Also set the colour based on the same series as we use to set the frequency.
+      // Also set the colour based on the same series as we use to set the frequency, and set the hue based on the species.
+      float hue = 0;
       float brightness = freqSeries.getFloat(row);
-      fill(0.8, 1, brightness, 0.7);
+      fill(hue, 1, brightness, 0.7);
       
       // Draw the data point.
       ellipse(x, y, 30, 30);

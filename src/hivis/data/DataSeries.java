@@ -195,6 +195,12 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * Get a view of this series representing the values as long integers.
 	 */
 	LongSeries asLong();
+	
+	/**
+	 * Get a view of this series representing the values as Strings.
+	 */
+	StringSeries asString();
+
 
 	/**
 	 * Get the values in this series as an array of values.
@@ -539,4 +545,9 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * Allows {@link #asLong()} to return series that do not lose their generic type due to type erasure.
 	 */
 	public interface LongSeries extends DataSeries<Long> {}
+	/**
+	 * Interface for DataSeries representing String values.
+	 * Allows {@link #asString()} to return series that do not lose their generic type due to type erasure.
+	 */
+	public interface StringSeries extends DataSeries<String> {}
 }

@@ -25,6 +25,7 @@ import hivis.data.DataRow;
 import hivis.data.DataSeries;
 import hivis.data.DataTable;
 import hivis.data.view.Function;
+import hivis.data.view.GroupedTable;
 import hivis.data.view.RowFilter;
 import hivis.data.view.SeriesFunction;
 
@@ -78,7 +79,7 @@ public class E3_3_Tables_SortingAndGrouping {
 		// We can group by the values in a series, rows that have equal values in this series 
 		// will be grouped together. The key for each group is a value such that 
 		// key.equals(seriesValue) for all values in the grouping series:
-		DataMap mtCarsGroupedByCyl = mtCars.group("cyl");
+		GroupedTable mtCarsGroupedByCyl = mtCars.group("cyl");
 		System.out.println("\nmtCars grouped by \"cyl\" series => \n" + mtCarsGroupedByCyl);
 		// Note: the index of a series may also be used to specify the grouping series.
 		
@@ -86,7 +87,7 @@ public class E3_3_Tables_SortingAndGrouping {
 		// table and produces a key representing the group that row belongs to).
 		// The key for each group is then a value such that 
 		// key.equals(keyFunction(row)) for all table rows in the group:
-		DataMap mtCarsGroupedCustom = mtCars.group(new Function<DataRow, String>() {
+		GroupedTable mtCarsGroupedCustom = mtCars.group(new Function<DataRow, String>() {
 			public String apply(DataRow row) {
 				// Group by first word of the model series.
 				String[] words = row.getString(0).split(" ", 2);
@@ -94,6 +95,14 @@ public class E3_3_Tables_SortingAndGrouping {
 			}
 		});
 		System.out.println("\nmtCars grouped by first word in \"model\" series => \n" + mtCarsGroupedCustom);
+		
+		// We can get a view of a table group in which the table for each
+		// group is aggregated into a single row of the returned table view.
+		// Note that the built-in statistical aggregation functions return 
+		// the first value of non-numeric series. Custom aggregation functions 
+		// may be specified with GroupedTable.aggregate(AggregationFunction).
+		DataTable mtCarsGroupedByCylAggregated = mtCarsGroupedByCyl.aggregateMean();
+		System.out.println("\nmtCarsGroupedByCyl aggregated (mean of each series) => \n" + mtCarsGroupedByCylAggregated);
 		
 		
 		// Changes in the source table are reflected in the sorted and grouped views:
@@ -109,5 +118,8 @@ public class E3_3_Tables_SortingAndGrouping {
 		
 		System.out.println("\nmtCars grouped by \"cyl\" series (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedByCyl);
 		System.out.println("\nmtCars grouped by first word in \"model\" series (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedCustom);
+		
+		System.out.println("\nmtCarsGroupedByCyl aggregated (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedByCylAggregated);
+		
 	}
 }

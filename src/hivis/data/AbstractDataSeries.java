@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import com.google.common.reflect.TypeToken;
 
 import hivis.common.HV;
@@ -57,12 +59,15 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	 */
 	protected Class<?> type = typeToken.getRawType();
 	
-	Map<SeriesOp, DataValue<V>> dataValueOp;
+	// caches for various operations.
+	private Map<SeriesOp, DataValue<V>> cacheDataValueOp;
+	private Table<Op, Object, SeriesView<?>> cacheDataSeriesOp;
 	
 	private DataSeries.FloatSeries floatSeriesView;
 	private DataSeries.DoubleSeries doubleSeriesView;
 	private DataSeries.IntSeries intSeriesView;
 	private DataSeries.LongSeries longSeriesView;
+	private DataSeries.StringSeries stringSeriesView;
 	private SeriesView<V> unmodifiableView;
 	private int equalToHashCode = 0; // cached hashcode for equalToHashCode().
 	
@@ -300,7 +305,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 				floatSeriesView = (DataSeries.FloatSeries) this;
 			}
 			else {
-				floatSeriesView = new FloatSeriesView();
+				floatSeriesView = new FloatSeriesView(this);
 			}
 		}
 		return floatSeriesView;
@@ -318,7 +323,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 				doubleSeriesView = (DataSeries.DoubleSeries) this;
 			}
 			else {
-				doubleSeriesView = new DoubleSeriesView();
+				doubleSeriesView = new DoubleSeriesView(this);
 			}
 		}
 		return doubleSeriesView;
@@ -336,7 +341,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 				intSeriesView = (DataSeries.IntSeries) this;
 			}
 			else {
-				intSeriesView = new IntSeriesView();
+				intSeriesView = new IntSeriesView(this);
 			}
 		}
 		return intSeriesView;
@@ -354,10 +359,28 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 				longSeriesView = (DataSeries.LongSeries) this;
 			}
 			else {
-				longSeriesView = new LongSeriesView();
+				longSeriesView = new LongSeriesView(this);
 			}
 		}
 		return longSeriesView;
+	}
+	
+	/**
+	 * Get a view of this series representing the values as long integers.
+	 * This default implementation first checks if the type of this series is {@link DataSeries.StringSeries} 
+	 * and returns it if so, otherwise creates a wrapper that represent the values as longs.
+	 */
+	@Override
+	public DataSeries.StringSeries asString() {
+		if (stringSeriesView == null) {
+			if (this instanceof DataSeries.StringSeries) {
+				stringSeriesView = (DataSeries.StringSeries) this;
+			}
+			else {
+				stringSeriesView = new StringSeriesView(this);
+			}
+		}
+		return stringSeriesView;
 	}
 
 	/**
@@ -641,57 +664,23 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 		return Number.class.isAssignableFrom(getType());
 	}
 
-//	private DataValue<?> op(SeriesOp op) {
-//		if (dataValueOp == null || !dataValueOp.containsKey(op)) {
-//			if (dataValueOp == null) dataValueOp = new EnumMap<>(SeriesOp.class);
-//			if (op.realOutput) {
-//				if (getType().equals(Float.class)) {
-//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-//				}
-//				if (getType().equals(Double.class)) {
-//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-//				}
-//				if (getType().equals(Integer.class)) {
-//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-//				}
-//				if (getType().equals(Long.class)) {
-//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-//				}
-//			}
-//			else {
-//				if (getType().equals(Float.class)) {
-//					dataValueOp.put(op, new CalcValue.FloatValue.SeriesFunc(this, op));
-//				}
-//				if (getType().equals(Double.class)) {
-//					dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
-//				}
-//				if (getType().equals(Integer.class)) {
-//					dataValueOp.put(op, new CalcValue.IntValue.SeriesFunc(this, op));
-//				}
-//				if (getType().equals(Long.class)) {
-//					dataValueOp.put(op, new CalcValue.LongValue.SeriesFunc(this, op));
-//				}
-//			}
-//		}
-//		return dataValueOp.get(op);
-//	}
 	private DataValue<?> op(SeriesOp op) {
-		if (dataValueOp == null || !dataValueOp.containsKey(op)) {
-			if (dataValueOp == null) dataValueOp = new EnumMap<>(SeriesOp.class);
+		if (cacheDataValueOp == null || !cacheDataValueOp.containsKey(op)) {
+			if (cacheDataValueOp == null) cacheDataValueOp = new EnumMap<>(SeriesOp.class);
 			if (op.realOutput || getType().equals(Double.class)) {
-				dataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
+				cacheDataValueOp.put(op, new CalcValue.DoubleValue.SeriesFunc(this, op));
 			}
 			else if (getType().equals(Float.class)) {
-				dataValueOp.put(op, new CalcValue.FloatValue.SeriesFunc(this, op));
+				cacheDataValueOp.put(op, new CalcValue.FloatValue.SeriesFunc(this, op));
 			}
 			else if (getType().equals(Integer.class)) {
-				dataValueOp.put(op, new CalcValue.IntValue.SeriesFunc(this, op));
+				cacheDataValueOp.put(op, new CalcValue.IntValue.SeriesFunc(this, op));
 			}
 			else if (getType().equals(Long.class)) {
-				dataValueOp.put(op, new CalcValue.LongValue.SeriesFunc(this, op));
+				cacheDataValueOp.put(op, new CalcValue.LongValue.SeriesFunc(this, op));
 			}
 		}
-		return dataValueOp.get(op);
+		return cacheDataValueOp.get(op);
 	}
 
 	@Override
@@ -790,9 +779,41 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 		// Determine function output type. This is used to create the cache series in CalcSeries.
 		Class<?> outputType = (new TypeToken<O>(getClass()) {}).getRawType();
 		// If the type doesn't appear to have been provided via generics (and if the length is 0),
-		// then get the type from an example.
+		// then get the type from examples. We consider all examples, in order to be sure we have
+		// the most common ancestor type or the correct envelope numeric type.
 		if (length() > 0 && (outputType == null || outputType.equals(Object.class))) {
-			outputType = function.apply(get(0)).getClass();
+			for (V o : me) {
+				Object output = function.apply(o);
+				if (output == null) {
+					continue;
+				}
+				
+				Class<?> oType = output.getClass();
+				if (outputType == null) {
+					outputType = oType;
+				}
+				else if (outputType.equals(oType)) {
+					// Types match, nothing to do. 
+				}
+				else if (oType.isAssignableFrom(Number.class) && outputType.isAssignableFrom(Number.class)) {
+					// If we have two (different) number types, find the envelope type.
+					outputType = Util.getEnvelopeNumberType((Class<Number>) oType, (Class<Number>) outputType, false);
+				}
+				else if (!outputType.equals(oType)) {
+					// If we have two different object types, find the common denominator.
+					outputType = Util.getCommonAncestorClass(oType, outputType);
+				}
+				
+				if (outputType.equals(Object.class)) {
+					// This is as low as we can go.
+					break;
+				}
+			}
+			
+			// If we couldn't determine a type, let's just go with generic.
+			if (outputType == null) {
+				outputType = Object.class;
+			}
 		}
 		final Class<?> outputTypeFinal = outputType;
 		
@@ -906,39 +927,53 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	}
 
 	private SeriesView<?> op(Op op, Number value) {
-		Class<?> envelopeClass = envelopeClassForOp(op, value);
-		
-		if (envelopeClass.equals(Float.class)) {
-			return new CalcSeries.FloatSeries.FuncValue(op, this, value.floatValue());
+		if (cacheDataSeriesOp == null || !cacheDataSeriesOp.contains(op, value)) {
+			if (cacheDataSeriesOp == null) cacheDataSeriesOp = HashBasedTable.create();
+			
+			Class<?> envelopeClass = envelopeClassForOp(op, value);
+			
+			if (envelopeClass.equals(Float.class)) {
+				cacheDataSeriesOp.put(op, value, new CalcSeries.FloatSeries.FuncValue(op, this, value.floatValue()));
+			}
+			else if (envelopeClass.equals(Double.class)) {
+				cacheDataSeriesOp.put(op, value, new CalcSeries.DoubleSeries.FuncValue(op, this, value.doubleValue()));
+			}
+			else if (envelopeClass.equals(Integer.class)) {
+				cacheDataSeriesOp.put(op, value, new CalcSeries.IntSeries.FuncValue(op, this, value.intValue()));
+			}
+			else if (envelopeClass.equals(Long.class)) {
+				cacheDataSeriesOp.put(op, value, new CalcSeries.LongSeries.FuncValue(op, this, value.longValue()));
+			}
+			else {
+				throw new UnsupportedOperationException();
+			}
 		}
-		if (envelopeClass.equals(Double.class)) {
-			return new CalcSeries.DoubleSeries.FuncValue(op, this, value.doubleValue());
-		}
-		if (envelopeClass.equals(Integer.class)) {
-			return new CalcSeries.IntSeries.FuncValue(op, this, value.intValue());
-		}
-		if (envelopeClass.equals(Long.class)) {
-			return new CalcSeries.LongSeries.FuncValue(op, this, value.longValue());
-		}
-		throw new UnsupportedOperationException();
+		return cacheDataSeriesOp.get(op, value);
 	}
 
 	private SeriesView<?> op(Op op, DataValue<?> value) {
-		Class<?> envelopeClass = envelopeClassForOp(op, value);
-		
-		if (envelopeClass.equals(Float.class)) {
-			return new CalcSeries.FloatSeries.FuncValue(op, this, value);
+		if (cacheDataSeriesOp == null || !cacheDataSeriesOp.contains(op, value)) {
+			if (cacheDataSeriesOp == null) cacheDataSeriesOp = HashBasedTable.create();
+			
+			Class<?> envelopeClass = envelopeClassForOp(op, value);
+			
+			if (envelopeClass.equals(Float.class)) {
+				cacheDataSeriesOp.put(op, value, new CalcSeries.FloatSeries.FuncValue(op, this, value));
+			}
+			else if (envelopeClass.equals(Double.class)) {
+				cacheDataSeriesOp.put(op, value, new CalcSeries.DoubleSeries.FuncValue(op, this, value));
+			}
+			else if (envelopeClass.equals(Integer.class)) {
+				cacheDataSeriesOp.put(op, value, new CalcSeries.IntSeries.FuncValue(op, this, value));
+			}
+			else if (envelopeClass.equals(Long.class)) {
+				cacheDataSeriesOp.put(op, value, new CalcSeries.LongSeries.FuncValue(op, this, value));
+			}
+			else {
+				throw new UnsupportedOperationException();
+			}
 		}
-		if (envelopeClass.equals(Double.class)) {
-			return new CalcSeries.DoubleSeries.FuncValue(op, this, value);
-		}
-		if (envelopeClass.equals(Integer.class)) {
-			return new CalcSeries.IntSeries.FuncValue(op, this, value);
-		}
-		if (envelopeClass.equals(Long.class)) {
-			return new CalcSeries.LongSeries.FuncValue(op, this, value);
-		}
-		throw new UnsupportedOperationException();
+		return cacheDataSeriesOp.get(op, value);
 	}
 
 	private SeriesView<?> op(Op op, DataSeries<?> series) {
@@ -946,21 +981,28 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 			throw new IllegalArgumentException("Can not " + op.toString().toLowerCase() + " two DataSeries with differing lengths.");
 		}
 		
-		Class<?> envelopeClass = envelopeClassForOp(op, series);
-		
-		if (envelopeClass.equals(Float.class)) {
-			return new CalcSeries.FloatSeries.FuncSeries(op, this, series);
+		if (cacheDataSeriesOp == null || !cacheDataSeriesOp.contains(op, series)) {
+			if (cacheDataSeriesOp == null) cacheDataSeriesOp = HashBasedTable.create();
+			
+			Class<?> envelopeClass = envelopeClassForOp(op, series);
+			
+			if (envelopeClass.equals(Float.class)) {
+				cacheDataSeriesOp.put(op, series, new CalcSeries.FloatSeries.FuncSeries(op, this, series));
+			}
+			else if (envelopeClass.equals(Double.class)) {
+				cacheDataSeriesOp.put(op, series, new CalcSeries.DoubleSeries.FuncSeries(op, this, series));
+			}
+			else if (envelopeClass.equals(Integer.class)) {
+				cacheDataSeriesOp.put(op, series, new CalcSeries.IntSeries.FuncSeries(op, this, series));
+			}
+			else if (envelopeClass.equals(Long.class)) {
+				cacheDataSeriesOp.put(op, series, new CalcSeries.LongSeries.FuncSeries(op, this, series));
+			}
+			else {
+				throw new UnsupportedOperationException();
+			}
 		}
-		if (envelopeClass.equals(Double.class)) {
-			return new CalcSeries.DoubleSeries.FuncSeries(op, this, series);
-		}
-		if (envelopeClass.equals(Integer.class)) {
-			return new CalcSeries.IntSeries.FuncSeries(op, this, series);
-		}
-		if (envelopeClass.equals(Long.class)) {
-			return new CalcSeries.LongSeries.FuncSeries(op, this, series);
-		}
-		throw new UnsupportedOperationException();
+		return cacheDataSeriesOp.get(op, series);
 	}
 
 	private Class<?> envelopeClassForOp(Op op, Object arg) {
@@ -1287,6 +1329,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	
 
 	class FloatSeriesView extends AbstractSeriesView<Float> implements DataSeries.FloatSeries {
+		public FloatSeriesView(DataSeries<V> s) { super(s); }
 		@Override public int length() {	return AbstractDataSeries.this.length(); }
 		@Override public Float get(int index) { return AbstractDataSeries.this.getFloat(index); }
 		@Override public float getFloat(int index) { return AbstractDataSeries.this.getFloat(index); }
@@ -1294,6 +1337,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	}
 	
 	class DoubleSeriesView extends AbstractSeriesView<Double> implements DataSeries.DoubleSeries {
+		public DoubleSeriesView(DataSeries<V> s) { super(s); }
 		@Override public int length() {	return AbstractDataSeries.this.length(); }
 		@Override public Double get(int index) { return AbstractDataSeries.this.getDouble(index); }
 		@Override public double getDouble(int index) { return AbstractDataSeries.this.getDouble(index); }
@@ -1301,6 +1345,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	}
 	
 	class IntSeriesView extends AbstractSeriesView<Integer> implements DataSeries.IntSeries {
+		public IntSeriesView(DataSeries<V> s) { super(s); }
 		@Override public int length() {	return AbstractDataSeries.this.length(); }
 		@Override public Integer get(int index) { return AbstractDataSeries.this.getInt(index); }
 		@Override public int getInt(int index) { return AbstractDataSeries.this.getInt(index); }
@@ -1308,9 +1353,17 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	}
 	
 	class LongSeriesView extends AbstractSeriesView<Long> implements DataSeries.LongSeries {
+		public LongSeriesView(DataSeries<V> s) { super(s); }
 		@Override public int length() {	return AbstractDataSeries.this.length(); }
 		@Override public Long get(int index) { return AbstractDataSeries.this.getLong(index); }
 		@Override public long getLong(int index) { return AbstractDataSeries.this.getLong(index); }
+		@Override public void update(DataEvent cause) {}
+	}
+	
+	class StringSeriesView extends AbstractSeriesView<String> implements DataSeries.StringSeries {
+		public StringSeriesView(DataSeries<V> s) { super(s); }
+		@Override public int length() {	return AbstractDataSeries.this.length(); }
+		@Override public String get(int index) { return ""+AbstractDataSeries.this.get(index); }
 		@Override public void update(DataEvent cause) {}
 	}
 	

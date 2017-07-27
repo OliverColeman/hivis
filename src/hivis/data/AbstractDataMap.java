@@ -20,12 +20,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.Map.Entry;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Streams;
 
 import hivis.common.LSListMap;
 import hivis.common.ListMap;
+import hivis.data.view.AbstractTableView;
+import hivis.data.view.CalcMap;
 import hivis.data.view.SeriesView;
+import hivis.data.view.SeriesViewRow;
 
 /**
  * Base class for {@link DataMap} implementations.
@@ -65,6 +70,20 @@ public abstract class AbstractDataMap<K, V> extends DataDefault implements DataM
 		}
 		return equalToHashCode;
 	}
+	
+	
+	public <T> DataMap<K, T> apply(MapFunction<K, V, T> function) {
+		return new CalcMap<K, T, DataMap<K, V>>(this) {
+			@Override
+			public void update() {
+				for (K key : AbstractDataMap.this.keys()) {
+					// If the key exists and the calculated value equals the existing value then no change will occur.
+					cache.put(key, function.apply(key, AbstractDataMap.this.get(key)));
+				}
+			}
+		};
+	}
+	
 	
 	
 	@Override
