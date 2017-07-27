@@ -62,7 +62,7 @@ There are several things to note about the above code:
 
 You can see more [examples of working with DataSeries](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/E2_Series.java).
 
-## Soring and grouping series and tables
+## Sorting and grouping series and tables
 
 There is now built-in support for obtaining Views of DataSeries and DataTables that sort the values/rows, or group the values/rows. A quick synopsis is provided below, but you can see [more in depth examples and information about sorting and grouping DataSeries](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/E2_Series.java) and [more in depth examples and information about sorting and grouping DataTables](https://github.com/OliverColeman/hivis/blob/latest/src/hivis/example/E3_Tables.java).
 
@@ -107,7 +107,7 @@ The ordering of the values in the groups matches the ordering of those values in
 
 ### Grouping Tables
 
-A grouping over a table is also represented as a DataMap. The values of the DataMap are DataTables containing the rows for a group. 
+A grouping over a table is represented as a GroupedTable (an extension of DataMap). The values of the DataMap are DataTables containing the rows for a group. 
 
 We can group by the values in a series, in which case the key for each group is a value such that `key.equals(v)` for all values `v` in the grouping series. For example:
 ``` java
@@ -148,6 +148,19 @@ Then the key for each group is a value such that `key.equals(keyFunction(row))` 
 ``` java
 DataMap groupedTableByNameCustom = myTable.group(new Function<DataRow, [TypeOfTheKey]>() { ... });
 ```
+One cool thing to do with GroupedTables is aggregate them. You can try an example of this in the second tutorial at examples/tutorials/T02_pie, from which a snippet:
+``` java
+DataTable rawData = HV.loadSpreadSheet(HV.loadSSConfig().sourceFile("iris.csv").columnIndex(1));
+
+// Group on the species.
+GroupedTable groupedData = rawData.group("Species");
+
+// Get a table in which the table for each group/sub-table is aggregated into a 
+// single row using an aggregation function (in this case the mean of the series 
+// in the sub-table, or the first value of the series if it's not numeric). 
+meanValuesBySpecies = groupedData.aggregateMean();
+```
+You can create custom aggregation functions as well, see the API docs for GroupedTable.
 
 # Loading data from spreadsheets
 
