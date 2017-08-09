@@ -3,7 +3,8 @@ import hivis.data.*;
 import hivis.data.reader.*;
 import hivis.data.view.*;
 
-// Uses pie charts to represent proportional data over several groups under several classifications.
+// Uses pie charts to represent proportional data over several groups under 
+// several classifications.
 
 
 // Stores the data to plot. MF = male/female; Eth = ethnicity.
@@ -95,10 +96,12 @@ void draw() {
     for (int p = 0; p < socialMF.length(); p++) {
       // The social pie charts are distributed evenly in a circle around the centre.
       
-      // First determine the angle (relative to horizontal, in radians) from the centre of window to where we want to put social pie chart p.
+      // First determine the angle (relative to horizontal, in radians) from 
+      // the centre of window to where we want to put social pie chart p.
       float angle = (p * TWO_PI) / socialMF.length();
       
-      // We use trigonometry to determine the position of pie chart p, relative to the centre of the window. 
+      // We use trigonometry to determine the position of pie chart p, 
+      // relative to the centre of the window. 
       float x = xCentre + sin(angle) * ringRadius;
       float y = yCentre + cos(angle) * ringRadius;
       
@@ -112,7 +115,8 @@ void draw() {
     // Draw pie chart for each row of the tech data.
     ringRadius = diameter * 1.725; // The radius of the circle of pie charts.
     for (int p = 0; p < techMF.length(); p++) {
-      // Spin it around 3 spots so that "Apple (excluding undeclared)" is at the bottom.
+      // Spin it around 3 spots so that "Apple (excluding undeclared)" is at 
+      // the bottom.
       float angle = ((p - 3) * TWO_PI) / techMF.length();
       float x = xCentre + sin(angle) * ringRadius;
       float y = yCentre + cos(angle) * ringRadius;
@@ -124,8 +128,8 @@ void draw() {
   }
 }
 
-// Draws a double pie chart using the specified row of the two given data tables.
-// diameter, x and y specify the size and center of the pie chart.
+// Draws a double pie chart using the specified row of the two given data 
+// tables. diameter, x and y specify the size and center of the pie chart.
 void makePieInPie(DataTable mf, DataTable eth, int row, float diameter, float x, float y) {
   HVDraw.pie(this, eth.getRow(row), diameter, x, y, palette, 2);
     

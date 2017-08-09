@@ -5,15 +5,14 @@ import hivis.data.view.*;
 import controlP5.*;
 import java.util.*;
 
-// Example of visualising data in a 3D plot, transforming the data with a custom function, 
-// and using an interactive control to modify the behaviour of the function. 
-// A ControlP5 slider (shown at bottom of the window) controls a parameter to the function. Try sliding it. 
-// Exercises:
-// 1. Play around with different functions.
-// 2. Add more sliders or other control elements to allow interactively setting the values for other parameters or control the animated rotation.
+// Example of visualising data in a 3D plot, transforming the data with a 
+// custom function, and using an interactive control to modify the behaviour
+// of the function. A ControlP5 slider (shown at bottom of the window) controls
+//  a parameter to the function. Try sliding it. 
 
 
-// Data series associated with x and y coordinates and a series to contain values based on the x and y series.
+// Data series associated with x and y coordinates and a series to contain 
+// values based on the x and y series.
 DataSeries xSeries;
 DataSeries ySeries; 
 CalcSeries.DoubleSeries func; 
@@ -51,11 +50,12 @@ void setup() {
   xSeries = HV.randomUniformSeries(dataLength, minValueX, maxValueX);
   ySeries = HV.randomUniformSeries(dataLength, minValueY, maxValueY);
   
-  // Make a series that is a function of the x and y series. By supplying the series to the 
-  // constructor we ensure the calculated series is updated if the underlying series change. 
-  // A CalcSeries.DoubleSeries is a generic class for creating a DataSeries, representing
-  // double values, derived from zero, one or more other series. You just have to override 
-  // the calcDouble method. There is also CalcSeries.FloatSeries, CalcSeries.IntSeries and CalcSeries.LongSeries.
+  // Make a series that is a function of the x and y series. By supplying the 
+  // series to the constructor we ensure the calculated series is updated if 
+  // the underlying series change. A CalcSeries.DoubleSeries is a generic class 
+  // for creating a DataSeries, representing double values, derived from zero, 
+  // one or more other series. You just have to override the calcDouble method. 
+  // There is also CalcSeries.FloatSeries, CalcSeries.IntSeries and CalcSeries.LongSeries.
   func = new CalcSeries.DoubleSeries(xSeries, ySeries) {
     public double calcDouble(int index) {
       double x = xSeries.getDouble(index);
@@ -72,12 +72,12 @@ void setup() {
 }
 
 // Update the calculated values for the function when the slider value changes.
-// This method is called by ControlP5 when the slider is adjusted. It must match
-// the name given to the slider.
+// This method is called by ControlP5 when the slider is adjusted. It must 
+// match the name given to the slider.
 void sliderParam(float value) {
   // (only if the calc series has been initialised).
   if (func != null) {
-    func.updateView(null);
+    func.update();
   }
 }
 
@@ -114,7 +114,8 @@ void draw() {
     
     pushMatrix();
     
-    // Draw rect at x and y according to this data point, with function value associated with z axis.
+    // Draw rect at x and y according to this data point, with function 
+    // value associated with z axis.
     translate(xCoord, yCoord, value);
     rect(0, 0, 0.05, 0.05);
     

@@ -5,9 +5,10 @@ import hivis.data.view.*;
 import controlP5.*;
 import org.gicentre.utils.stat.*;
 
-// Example of creating scatter or line chart using the XYChart object provided by giCentre (see http://www.gicentre.net/utils/chart)
-// The ChartGI sketch file integrates the XYChart object with HiVis such that when the DataTable to chart is modified the 
-// chart will automatically be updated.
+// Example of creating scatter or line chart using the XYChart object provided 
+// by giCentre (see http://www.gicentre.net/utils/chart). The ChartGI sketch 
+// file integrates the XYChart object with HiVis such that when the DataTable 
+// to chart is modified the chart will automatically be updated.
 // Also provides examples of:
 //  * selecting series via ControlP5 scrollableLists.
 //  * creating calculated series (CalcSeries) that are controlled via ControlP5 controllers.
@@ -24,7 +25,8 @@ ChartGI scatterPlot;
 ScrollableList selectX;
 ScrollableList selectY;
 
-// ControlP5 elements that allow controlling the thresholding of the series being plotted.
+// ControlP5 elements that allow controlling the thresholding of the series 
+// being plotted.
 Slider sliderX;
 Slider thresholdY;
 
@@ -98,12 +100,13 @@ void selectSeries() {
   thresholdY.setRange(minY + 0.0001, maxY);
   thresholdY.setValue(maxY);
   
-  // Get the series for the x values, with values represented as real (double) numbers.
-  // Must be final so we can access it in the anonymous inner class below.
+  // Get the series for the x values, with values represented as real (double) 
+  // numbers. Must be final so we can access it in the anonymous inner class below.
   final DataSeries seriesX = cars.get(seriesXIndex);
   
-  // Make a series that raises the values in the x series to the exponent given by the x slider.
-  // CalcSeries.DoubleSeries produces a DataSeries<Double> from one or more input series.
+  // Make a series that raises the values in the x series to the exponent given 
+  // by the x slider. CalcSeries.DoubleSeries produces a DataSeries<Double> 
+  // from one or more input series.
   calcSeriesX = new CalcSeries.FloatSeries(seriesX) {
     public float calcFloat(int index) {
       // Math.pow returns a 'double' float, have to cast back to float.
@@ -111,10 +114,12 @@ void selectSeries() {
     }
   };
   
-  // Make a table containing the series to plot, using the thresholded views of the selected series.
+  // Make a table containing the series to plot, using the thresholded views 
+  // of the selected series.
   String xLabel = cars.getSeriesLabel(seriesXIndex);
   String yLabel = cars.getSeriesLabel(seriesYIndex);
-  // A DataTable cannot have series with the same label, so add a . after the y label if it's the same as the x label.
+  // A DataTable cannot have series with the same label, so add a . after 
+  // the y label if it's the same as the x label.
   if (yLabel.equals(xLabel)) {
     yLabel = yLabel + ".";
   }
@@ -123,7 +128,8 @@ void selectSeries() {
       .addSeries(xLabel, calcSeriesX)
       .addSeries(yLabel, cars.get(seriesYIndex));
   
-  // Get a view of the table to plot which filters out rows which contain a Y value outside the threshold value set by the Y slider.
+  // Get a view of the table to plot which filters out rows which contain 
+  // a Y value outside the threshold value set by the Y slider.
   toPlot = toPlotUnfiltered.selectRows(new RowFilter() {
     public boolean excludeRow(DataTable input, int index) {
       return input.get(1).getFloat(index) > thresholdY.getValue();
@@ -135,7 +141,8 @@ void selectSeries() {
   
   // Get the maximum value for the x series.
   float maxX = cars.get(seriesXIndex).max().getFloat();
-  // Set the max possible value for the x series after applying exponential function.
+  // Set the max possible value for the x series after applying exponential 
+  // function.
   scatterPlot.chart.setMaxX((float) Math.pow(maxX, sliderX.getMax()));
   
   // Set the chart x axis label.
@@ -144,10 +151,10 @@ void selectSeries() {
 
 
 void sliderX(float value) {
-  // Update the calculated values for the x series when the slider value changes.
-  // (only if the calc series has been initialised).
+  // Update the calculated values for the x series when the slider value 
+  // changes (only if the calc series has been initialised).
   if (calcSeriesX != null) {
-    calcSeriesX.updateView(null);
+    calcSeriesX.update(null);
     
     // Also update the chart x axis label
     scatterPlot.chart.setXAxisLabel(toPlot.getSeriesLabel(0) + "^" + sliderX.getValue());
@@ -158,7 +165,7 @@ void thresholdY(float value) {
   // Update the filtered table to plot.
   // (only if it has been initialised).
   if (calcSeriesX != null) {
-    toPlot.updateView(null);
+    toPlot.update(null);
   }
 }
 

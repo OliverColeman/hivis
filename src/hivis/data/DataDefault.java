@@ -130,7 +130,12 @@ public abstract class DataDefault implements Data {
 	public void setDataChanged(Object changeType) {
 		changeTypes.add(changeType);
 		
-		for (Data c : containers) {
+		// In the process of notifying containers that data has changed, 
+		// containers may be added/removed to/from the set of containers. 
+		// These  new containers do not need to be notified that data has changed. 
+		// To avoid ConcurrentModificationExceptions while iterating over the 
+		// containers collection we iterate over an array copy of the current set.
+		for (Data c : containers.toArray(new Data[containers.size()])) {
 			c.setDataChanged(changeType);
 		}
 		

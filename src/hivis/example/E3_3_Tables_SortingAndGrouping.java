@@ -43,16 +43,19 @@ public class E3_3_Tables_SortingAndGrouping {
 		
 		// SORTING.
 		
-		// We can get a View of a table in which the rows are sorted according to the values in one of the series.
+		// We can get a View of a table in which the rows are sorted according 
+		// to the values in one of the series.
 		// For example sorting the cars by their "mpg" values:
 		DataTable mtCarsSortedByMPG = mtCars.sort("mpg");
 		System.out.println("\nmtCarsSortedByMPG = mtCars.sort(\"mpg\") => \n" + mtCarsSortedByMPG);
 		// Note: the index of a series may also be used to specify the sorting series.
 		
 		
-		// Or we can sort using a custom Comparator (see https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html)
-		// The Comparator compares the rows of the table to determine their ordering. Here we sort the cars
-		// first by number of cylinders and then by their horsepower.
+		// Or we can sort using a custom Comparator 
+		// (see https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html)
+		// The Comparator compares the rows of the table to determine their 
+		// ordering. Here we sort the cars first by number of cylinders and 
+		// then by their horsepower.
 		DataTable mtCarsSortedByCylThenHP = mtCars.sort(new Comparator<DataRow>() {
 			public int compare(DataRow row1, DataRow row2) {
 				int row1Cyl = row1.getInt("cyl");
@@ -64,7 +67,8 @@ public class E3_3_Tables_SortingAndGrouping {
 				// Same number of cylinders, compare by hp.
 				double row1HP = row1.getDouble("hp");
 				double row2HP = row2.getDouble("hp");
-				return Double.compare(row1HP, row2HP); // Use utility method provided by Java standard library.
+				// Use utility method provided by Java standard library.
+				return Double.compare(row1HP, row2HP); 
 				
 			}
 		});
@@ -72,20 +76,21 @@ public class E3_3_Tables_SortingAndGrouping {
 		
 		
 		// GROUPING.
-		// We can obtain "grouped" views over a table. A grouping over a table is represented
-		// as a DataMap (which represents a mapping from keys to values, see the Maps example). 
-		// The values of the DataMap are DataTables containing the rows belonging to that group.
+		// We can obtain "grouped" views over a table. A grouping over a table 
+		// is represented as a GroupedTable (an extension of DataMap). The 
+		// values of the DataMap are DataTables containing the rows for a group.
 		
-		// We can group by the values in a series, rows that have equal values in this series 
-		// will be grouped together. The key for each group is a value such that 
-		// key.equals(seriesValue) for all values in the grouping series:
+		// We can group by the values in a series, rows that have equal values 
+		// in this series will be grouped together. The key for each group is a 
+		// value such that key.equals(seriesValue) for all values in the 
+		// grouping series:
 		GroupedTable mtCarsGroupedByCyl = mtCars.group("cyl");
 		System.out.println("\nmtCars grouped by \"cyl\" series => \n" + mtCarsGroupedByCyl);
 		// Note: the index of a series may also be used to specify the grouping series.
 		
-		// Or we can group using a custom "key function" which takes a row of the 
-		// table and produces a key representing the group that row belongs to).
-		// The key for each group is then a value such that 
+		// Or we can group using a custom "key function" which takes a row of 
+		// the table and produces a key representing the group that row 
+		// belongs to). The key for each group is then a value such that 
 		// key.equals(keyFunction(row)) for all table rows in the group:
 		GroupedTable mtCarsGroupedCustom = mtCars.group(new Function<DataRow, String>() {
 			public String apply(DataRow row) {
@@ -120,6 +125,5 @@ public class E3_3_Tables_SortingAndGrouping {
 		System.out.println("\nmtCars grouped by first word in \"model\" series (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedCustom);
 		
 		System.out.println("\nmtCarsGroupedByCyl aggregated (reflecting conversion of 6 cylinder to 12 cylinder, woah) => \n" + mtCarsGroupedByCylAggregated);
-		
 	}
 }

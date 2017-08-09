@@ -17,14 +17,9 @@
 package hivis.example;
 
 
-import java.util.Comparator;
-
 import hivis.common.HV;
-import hivis.data.DataMap;
-import hivis.data.DataRow;
 import hivis.data.DataSeries;
 import hivis.data.DataTable;
-import hivis.data.view.Function;
 import hivis.data.view.RowFilter;
 import hivis.data.view.SeriesFunction;
 

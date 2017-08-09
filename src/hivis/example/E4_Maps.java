@@ -28,18 +28,24 @@ import hivis.data.DataSeries;
  */
 public class E4_Maps {
 	public static void main(String[] args) {
-		// DataMaps represent a mapping from keys to values. 
-		// Keys are always unique with respect to each other, values may be duplicated. 
-		// The keys and values may be any type of Object, however typically a key will be "simple", such as numbers, 
-		// strings, dates, but values may be simple or more complex, for example other data structures such as 
-		// DataSeries. (Note that a DataTable is a specialised kind of DataMap where the keys (labels) are Strings 
-		// and the values are DataSeries.)
-		// DataMaps are currently primarily used to support the grouping functions over DataSeries and DataTables.
-		// For the complete API see https://olivercoleman.github.io/hivis/reference/hivis/data/DataMap.html
+		// DataMaps represent a mapping from keys to values. At the moment 
+		// DataMaps are primarily used to support the grouping functions over 
+		// DataSeries and DataTables; you will be unlikely to use DataMaps
+		// directly. This example is included for the sake of completeness.
+		// Keys are always unique with respect to each other, values may be 
+		// duplicated. The keys and values may be any type of Object, however 
+		// typically a key will be "simple", such as numbers, strings, dates, 
+		// but values may be simple or more complex, for example other data 
+		// structures such as DataSeries. (Note that a DataTable is a 
+		// specialised kind of DataMap where the keys (labels) are Strings and 
+		// the values are DataSeries.) For the complete API see 
+		// https://olivercoleman.github.io/hivis/reference/hivis/data/DataMap.html
 		
-		// (Advanced Java developers: DataMaps have a generic type parameter for the key and values they represent, 
-		// however this can generally be safely ignored. This is done here for readability and simplicity (one of the 
-		// core design principles of HiVis). The examples below indicate when type must be taken into consideration.)
+		// (Advanced Java developers: DataMaps have a generic type parameter 
+		// for the key and values they represent, however this can generally 
+		// be safely ignored. This is done here for readability and simplicity 
+		// (one of the core design principles of HiVis). The examples below 
+		// indicate when type must be taken into consideration.)
 		
 		// Make a new DataMap.
 		DataMap map = HV.newMap();

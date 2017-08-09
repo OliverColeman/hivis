@@ -4,15 +4,8 @@ import hivis.data.reader.*;
 import hivis.data.view.*;
 
 // Plots the ratio of the corresponding values stored in two columns, 
-// separated into sub plots according to the integer values stored in a third column.
-// Hovering over a point will provide more information.
-// Exercises:
-// 1. Try plotting ratio or other functions over other series/columns.
-// 3. Change the shape that is drawn depending on the value of a series with integer values.
-// 2. Currently when hovering over two data points that are close to each other they 
-//    may both have labels shown for them simultaneously and rather messily. Modify the code 
-//    so that only the data point closest to the mouse pointer has its label shown (hint: only 
-//    draw the label after iterating over all points and recording the closest).
+// separated into sub plots according to the integer values stored in a third 
+// column. Hovering over a point will provide more information.
 
 
 // Stores the data to plot.
@@ -31,10 +24,12 @@ void setup() {
   // Add some series unchanged from the original data set.
   data.addSeries(cars.selectSeries("cyl", "disp", "hp"));
   
-  // Add a series containing the values in hp divided by the corresponding values in disp.
+  // Add a series containing the values in hp divided by the corresponding 
+  // values in disp.
   data.addSeries("hp / disp", data.get("hp").divide(data.get("disp")));
   
-  // Add versions of disp and hp that are scaled to unit range [0, 1], used for x and y coorindates.
+  // Add versions of disp and hp that are scaled to unit range [0, 1], used 
+  // for x and y coorindates.
   data.addSeries("disp unit", data.get("disp").toUnitRange());
   data.addSeries("hp unit", data.get("hp").toUnitRange());
 }
@@ -68,14 +63,16 @@ void draw() {
     float w = row.getFloat("disp unit") * 100;
     float h = row.getFloat("hp unit") * 100;
     
-    // Determine if we're hovering over a data point by testing if the distance from 
-    // the centre of it to the mouse is less than the average/approximate radius of the point. 
+    // Determine if we're hovering over a data point by testing if the distance
+    // from the centre of it to the mouse is less than the average/approximate 
+    // radius of the point. 
     float approxRadius = (w + h) / (2 * 2);
     boolean isHovering = distanceToMouse(x, y) < approxRadius;
     
     float hue = c / 10.0;
     float saturationAndBrightness = isHovering ? 1 : 0.8;
-    float alpha = isHovering ? 1 : 0.6; // make semi-transparent if mouse is not hovering over this point.
+    // make semi-transparent if mouse is not hovering over this point.
+    float alpha = isHovering ? 1 : 0.6; 
     
     fill(hue, saturationAndBrightness, saturationAndBrightness, alpha);
     ellipse(x, y, w, h);

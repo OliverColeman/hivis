@@ -20,7 +20,8 @@ DataTable data;
 // The data to plot.
 DataTable toPlot;
 
-// This is a flag to indicate that data is being (re)loaded and so the plot should not be drawn yet.
+// This is a flag to indicate that data is being (re)loaded and so the plot 
+// should not be drawn yet.
 boolean settingUp = true;
 
 
@@ -50,7 +51,8 @@ void setup() {
   }
   
   // We automatically load the supplied data file by default. 
-  // If you want to load your own data then comment the below line and uncomment the line beginning "selectInput(..." 
+  // If you want to load your own data then comment the below line and 
+  // uncomment the line beginning "selectInput(..." 
   fileSelected(sketchFile("mtcars.xlsx"));
   //selectInput("Select an xlsx or CSV file to visualise:", "fileSelected");
 }
@@ -61,7 +63,8 @@ void fileSelected(File selection) {
     println("No file selected.");
   } 
   else {
-    // Get data from spread sheet. The SpreadSheetReader will automatically update the DataTable it provides.
+    // Get data from spread sheet. The SpreadSheetReader will automatically 
+    // update the DataTable it provides.
     data = HV.loadSpreadSheet(
 	    HV.loadSSConfig().sourceFile(selection)
 	  );
@@ -101,7 +104,8 @@ void updatePlotTable() {
       series = data.get(seriesIndex);
     }
     else {
-      // For all other plot dimensions get a view of the series that converts the values to a unit range [0, 1] as this is easier to work with in the draw method.
+      // For all other plot dimensions get a view of the series that converts the 
+      // values to a unit range [0, 1] as this is easier to work with in the draw method.
       series = data.get(seriesIndex).toUnitRange();
     }
    
