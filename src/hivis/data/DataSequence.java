@@ -16,8 +16,9 @@
 package hivis.data;
 
 /**
- * Represents an ordered sequence of data items, possibly of different types.
- * Provides methods to access those data items as numeric values (if applicable).
+ * Represents an ordered sequence of items, possibly of different types.
+ * Provides methods to access the items as numeric values (if applicable).
+ * This is a common interface for {@link DataSeries} and {@link DataRow}s.
  * 
  * @author O. J. Coleman
  */
@@ -30,16 +31,19 @@ public interface DataSequence extends Data {
 	
 	/**
 	 * Returns true iff the element at the specified index is numeric.
+	 * @throws IndexOutOfBoundsException if the index is invalid.
 	 */
 	boolean isNumeric(int index);
 
 	/**
 	 * Get the element at the specified index.
+	 * @throws IndexOutOfBoundsException if the index is invalid.
 	 */
 	Object get(int index);
 
 	/**
 	 * Get the element at the specified index as the primitive type 'boolean'.
+	 * @throws IndexOutOfBoundsException if the index is invalid.
 	 * @throws UnsupportedOperationException If the specified element cannot be
 	 * converted to a boolean.
 	 */
@@ -47,6 +51,7 @@ public interface DataSequence extends Data {
 
 	/**
 	 * Get the element at the specified index as the primitive type 'int'.
+	 * @throws IndexOutOfBoundsException if the index is invalid.
 	 * @throws UnsupportedOperationException If the specified element cannot be
 	 * converted to an int.
 	 */
@@ -54,6 +59,7 @@ public interface DataSequence extends Data {
 
 	/**
 	 * Get the element at the specified index as the primitive type 'long'.
+	 * @throws IndexOutOfBoundsException if the index is invalid.
 	 * @throws UnsupportedOperationException If the specified element cannot be
 	 * converted to a long.
 	 */
@@ -61,6 +67,7 @@ public interface DataSequence extends Data {
 
 	/**
 	 * Get the element at the specified index as the primitive type 'float'.
+	 * @throws IndexOutOfBoundsException if the index is invalid.
 	 * @throws UnsupportedOperationException If the specified element cannot be
 	 * converted to a float.
 	 */
@@ -68,6 +75,7 @@ public interface DataSequence extends Data {
 
 	/**
 	 * Get the element at the specified index as the primitive type 'double'.
+	 * @throws IndexOutOfBoundsException if the index is invalid.
 	 * @throws UnsupportedOperationException If the specified element cannot be
 	 * converted to a double.
 	 */

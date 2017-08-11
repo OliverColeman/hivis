@@ -21,10 +21,6 @@ import hivis.data.view.Function;
 
 /**
  * Represents a single value. 
- * Changes to the value may be monitored via event listeners.
- * Views of the value may be obtained via various functions.
- * Implementations typically define the type of value to store. 
- * This may be numeric or any other kind of object.
  * 
  * @author O. J. Coleman
  */
@@ -35,14 +31,15 @@ public interface DataValue<V> extends Data, Comparable<V> {
 	V get();
 
 	/**
-	 * Set the value.
+	 * Set the value. This method should
+	 * only be used when the new value is exactly the same type represented by this DataValue. In general it is best to use {@link #set(Object)}.
 	 */
 	void setValue(V value);
 
 	/**
-	 * Set the value. Attempts to cast the given object to the type stored.
+	 * Set the value. Attempts to cast the given object to the type represented by this DataValue.
 	 * For typed value setting use {@link DataValue#setValue(Object)}.
-	 * @throws IllegalArgumentException if the given object cannot be cast to the type stored.
+	 * @throws IllegalArgumentException if the given object cannot be cast to the type represented by this DataValue.
 	 */
 	void set(Object value);
 
@@ -53,18 +50,18 @@ public interface DataValue<V> extends Data, Comparable<V> {
 	V getEmptyValue();
 
 	/**
-	 * Returns true iff the stored value is considered empty
+	 * Returns true iff the value is considered empty
 	 * @see #getEmptyValue()
 	 */
 	boolean isEmpty();
 	
 	/**
-	 * Return the Class of the type stored.
+	 * Return the Class of the type represented by this DataValue.
 	 */
 	Class<?> getType();
 
 	/**
-	 * Get the value as the primitive type 'boolean'.
+	 * Get the value as the primitive type 'boolean'. 
 	 * This is an optional operation, not all DataValue implementations support
 	 * it, in which case an {@link UnsupportedOperationException} will be
 	 * thrown. It is provided to allow more efficient access to DataValues that
@@ -132,17 +129,18 @@ public interface DataValue<V> extends Data, Comparable<V> {
 	
 	
 	/**
-	 * Get an empty DataVale of the same type as this DataValue.
+	 * Get an empty DataValue of the same type as this DataValue.
 	 */
 	public DataValue<V> getNewDataValue();
 	
 	/**
-	 * Get an immutable copy of this DataValue.
+	 * Get an independent and immutable copy of this DataValue (the returned value cannot be
+	 * modified, and changes to this value will not be reflected in the returned value).
 	 */
 	public DataValue<V> immutableCopy();
 	
 	/**
-	 * Returns true iff this DataValue stores a numeric value.
+	 * Returns true iff this DataValue represents a numeric value.
 	 */
 	public boolean isNumeric();
 	
@@ -159,23 +157,81 @@ public interface DataValue<V> extends Data, Comparable<V> {
 	public <O> DataValue<O> apply(Function<V, O> function);
 	
 	
+	/**
+	 * Create a view of this DataValue in which the value is the result of
+	 * adding the given value to this value.
+	 * 
+	 * @param value The value to add.
+	 * @throws UnsupportedOperationException if this value is not numeric.
+	 */
 	public DataValue<?> add(Number value);
-	//public DataValue<?> add(double value);
-	//public DataValue<?> add(long value);
+	
+	/**
+	 * Create a view of this DataValue in which the value is the result of
+	 * adding the given value to this value.
+	 * 
+	 * @param value The value to add. Changes to the DataValue will be
+	 *            reflected in the returned value.
+	 * @throws UnsupportedOperationException if this or the given value are not numeric.
+	 */
 	public DataValue<?> add(DataValue<?> value);
 	
+	
+	/**
+	 * Create a view of this DataValue in which the value is the result of
+	 * subtracting the given value from this value.
+	 * 
+	 * @param value The value to subtract.
+	 * @throws UnsupportedOperationException if this value is not numeric.
+	 */
 	public DataValue<?> subtract(Number value);
-	//public DataValue<?> subtract(double value);
-	//public DataValue<?> subtract(long value);
+	
+	/**
+	 * Create a view of this DataValue in which the value is the result of
+	 * subtracting the given value from this value.
+	 * 
+	 * @param value The value to subtract. Changes to the DataValue will be
+	 *            reflected in the returned value.
+	 * @throws UnsupportedOperationException if this or the given value are not numeric.
+	 */
 	public DataValue<?> subtract(DataValue<?> value);
 	
+	/**
+	 * Create a view of this DataValue in which the value is the result of
+	 * multiplying the given value by this value.
+	 * 
+	 * @param value The value to multiply by.
+	 * @throws UnsupportedOperationException if this value is not numeric.
+	 */
 	public DataValue<?> multiply(Number value);
-	//public DataValue<?> multiply(double value);
-	//public DataValue<?> multiply(long value);
+	
+	/**
+	 * Create a view of this DataValue in which the value is the result of
+	 * multiplying the given value by this value.
+	 * 
+	 * @param value The value to multiply by. Changes to the DataValue will be
+	 *            reflected in the returned value.
+	 * @throws UnsupportedOperationException if this or the given value are not numeric.
+	 */
 	public DataValue<?> multiply(DataValue<?> value);
 	
+	
+	/**
+	 * Create a view of this DataValue in which the value is the result of
+	 * dividing this value by the given value.
+	 * 
+	 * @param value The value to divide by.
+	 * @throws UnsupportedOperationException if this value is not numeric.
+	 */
 	public DataValue<?> divide(Number value);
-	//public DataValue<?> divide(double value);
-	//public DataValue<?> divide(long value);
+	
+	/**
+	 * Create a view of this DataValue in which the value is the result of
+	 * dividing this value by the given value.
+	 * 
+	 * @param value The value to divide by. Changes to the DataValue will be
+	 *            reflected in the returned value.
+	 * @throws UnsupportedOperationException if this or the given value are not numeric.
+	 */
 	public DataValue<?> divide(DataValue<?> value);
 }

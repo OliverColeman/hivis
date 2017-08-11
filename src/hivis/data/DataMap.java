@@ -15,16 +15,19 @@
  */
 package hivis.data;
 
-
 /**
- * Represents a mapping from keys to (collections of) items. This is primarily
- * used for the series and table grouping methods.
+ * Represents a mapping from keys to items. This is a minimal Data structure
+ * primarily used to support the series and table grouping functions. Perhaps in
+ * the future this will include nice things like filtering and reducing
+ * functionality.
  * 
  * @author O. J. Coleman
  */
 public interface DataMap<K, V> extends Data {
 	/**
-	 * Get the value for the given key if present otherwise the equivalent of calling {@link DataSeries#getEmptyValue()} on the series returned by {@link #values()}. 
+	 * Get the value for the given key if present otherwise the equivalent of
+	 * calling {@link DataSeries#getEmptyValue()} on the series returned by
+	 * {@link #values()}.
 	 */
 	V get(K key);
 
@@ -34,8 +37,9 @@ public interface DataMap<K, V> extends Data {
 	boolean containsKey(K key);
 
 	/**
-	 * Assigns the given value to the given key (if there is not already a value assigned to the given key which {@link Object#equals(Object)) the given value), 
-	 * replacing the existing value if present. Optional operation.
+	 * Assigns the given value to the given key (if there is not already a value
+	 * assigned to the given key which {@link Object#equals(Object)) the given
+	 * value), replacing the existing value if present. Optional operation.
 	 * 
 	 * @return the existing value, or null if not present.
 	 */
@@ -56,18 +60,22 @@ public interface DataMap<K, V> extends Data {
 
 	/**
 	 * Get a view of the keys in this map. The keys will have the same order as
-	 * the values provided by {@link #values()}.
+	 * the values provided by {@link #values()}. Changes to this map will be
+	 * reflected in the returned series.
 	 */
 	DataSeries<K> keys();
 
 	/**
 	 * Get a view of the values in this map. The values will have the same order
-	 * as the keys provided by {@link #keys()}.
+	 * as the keys provided by {@link #keys()}. Changes to this map will be
+	 * reflected in the returned series.
 	 */
 	DataSeries<V> values();
-	
+
 	/**
-	 * Get an immutable copy of this DataMap.
+	 * Get an immutable and independent copy of this DataMap (the returned map
+	 * cannot be modified, and changes to this map will not be reflected in the
+	 * returned map).
 	 */
 	public DataMap<K, V> immutableCopy();
 }

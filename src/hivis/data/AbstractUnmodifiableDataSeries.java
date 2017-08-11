@@ -42,6 +42,16 @@ public abstract class AbstractUnmodifiableDataSeries<V> extends AbstractDataSeri
 	public void append(Object value) {
 		throw new UnsupportedOperationException("Can not append values to unmodifiable series.");
 	}
+	
+	@Override
+	public void appendAllValues(V... values) {
+		throw new UnsupportedOperationException("Can not append values to unmodifiable series.");
+	}
+
+	@Override
+	public void appendAll(Object... values) {
+		throw new UnsupportedOperationException("Can not append values to unmodifiable series.");
+	}
 
 	@Override
 	public void remove(int index) {

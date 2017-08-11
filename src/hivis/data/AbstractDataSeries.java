@@ -679,18 +679,21 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 			else if (getType().equals(Long.class)) {
 				cacheDataValueOp.put(op, new CalcValue.LongValue.SeriesFunc(this, op));
 			}
+			else {
+				throw new UnsupportedOperationException("Cannot get the " + op.name().toLowerCase() + " of a non-numeric DataSeries.");
+			}
 		}
 		return cacheDataValueOp.get(op);
 	}
 
 	@Override
 	public DataValue<V> min() {
-		return (DataValue<V>) op(SeriesOp.MIN);
+		return (DataValue<V>) op(SeriesOp.MINIMUM);
 	}
 
 	@Override
 	public DataValue<V> max() {
-		return (DataValue<V>) op(SeriesOp.MAX);
+		return (DataValue<V>) op(SeriesOp.MAXIMUM);
 	}
 
 	@Override
@@ -715,7 +718,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 
 	@Override
 	public DataValue<Double> stdDev() {
-		return (DataValue<Double>) op(SeriesOp.STD_DEV);
+		return (DataValue<Double>) op(SeriesOp.STANDARD_DEVIATION);
 	}
 
 	@Override
@@ -945,7 +948,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 				cacheDataSeriesOp.put(op, value, new CalcSeries.LongSeries.FuncValue(op, this, value.longValue()));
 			}
 			else {
-				throw new UnsupportedOperationException();
+				throw new UnsupportedOperationException("Cannot perform an " + op.name().toLowerCase() + " operation on a non-numeric DataSeries.");
 			}
 		}
 		return cacheDataSeriesOp.get(op, value);
@@ -970,7 +973,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 				cacheDataSeriesOp.put(op, value, new CalcSeries.LongSeries.FuncValue(op, this, value));
 			}
 			else {
-				throw new UnsupportedOperationException();
+				throw new UnsupportedOperationException("Cannot perform an " + op.name().toLowerCase() + " operation on a non-numeric DataSeries.");
 			}
 		}
 		return cacheDataSeriesOp.get(op, value);
@@ -999,7 +1002,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 				cacheDataSeriesOp.put(op, series, new CalcSeries.LongSeries.FuncSeries(op, this, series));
 			}
 			else {
-				throw new UnsupportedOperationException();
+				throw new UnsupportedOperationException("Cannot perform an " + op.name().toLowerCase() + " operation on a non-numeric DataSeries.");
 			}
 		}
 		return cacheDataSeriesOp.get(op, series);

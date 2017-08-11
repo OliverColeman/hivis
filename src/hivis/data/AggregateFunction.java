@@ -15,8 +15,11 @@
  */
 package hivis.data;
 
+import hivis.data.view.GroupedTable;
+
 /**
- * Interface for classes implementing an aggregation function over a {@link DataSeries}.
+ * Interface for classes implementing an aggregation function over a {@link GroupedTable}.
+ * @see GroupedTable#aggregate(AggregateFunction)
  * 
  * @author O. J. Coleman
  */

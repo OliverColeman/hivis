@@ -82,7 +82,8 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	DataSeries<?> get(int index);
 
 	/**
-	 * Get the specified series, or null if there is no series with the given label.
+	 * Get the specified series. 
+	 * @throws IllegalArgumentException if there is no series with the given label.
 	 */
 	DataSeries<?> get(String label);
 
@@ -100,11 +101,13 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	
 	/**
 	 * Get a view of the specified row.
+	 * @throws IndexOutOfBoundsException if the index is out of range ( index < 0 || index >= length())
 	 */
 	DataRow getRow(int index);
 
 	/**
 	 * Returns the label associated with the specified series.
+	 * @throws IndexOutOfBoundsException if the index is out of range ( index < 0 || index >= seriesCount())
 	 */
 	String getSeriesLabel(int index);
 
@@ -115,6 +118,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 
 	/**
 	 * Returns true iff this table has a series that represents the row keys.
+	 * The row key is used in the {@link #transpose()} operation. 
 	 */
 	boolean hasRowKeys();
 
@@ -122,6 +126,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * Returns the index of the series that represents the row keys, or -1 if
 	 * there is no such series. By default this is set to the first series added
 	 * that contains String values.
+	 * The row key is used in the {@link #transpose()} operation. 
 	 */
 	int getRowKeyIndex();
 
@@ -129,21 +134,24 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * Returns the label of the series that represents the row keys, or null if
 	 * there is no such series. By default this is set to the first series added
 	 * that contains String values.
+	 * The row key is used in the {@link #transpose()} operation. 
 	 */
 	String getRowKeyLabel();
 
 	/**
 	 * Set the series that represents the row keys. By default this is set to
 	 * the first series added that contains String values.
+	 * The row key is used in the {@link #transpose()} operation. 
 	 * 
 	 * @param index
 	 *            The index of the series to use for the row keys, or -1 to
 	 *            indicate no such series.
+	 * @throws IndexOutOfBoundsException if the index is out of range ( index < 0 || index >= seriesCount())
 	 */
 	void setRowKey(int index);
 
 	/**
-	 * Add the given series to this table with the given label
+	 * Add the given series to this table with the given label.
 	 * 
 	 * @return This DataTable.
 	 * 
@@ -154,7 +162,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	DataTable addSeries(String label, DataSeries<?> newSeries);
 
 	/**
-	 * Add the series from the given table to this table.
+	 * Add the series in the given table to this table.
 	 * 
 	 * @return This DataTable.
 	 * 
@@ -168,6 +176,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * Remove the specified series from this table.
 	 * 
 	 * @return This DataTable.
+	 * @throws IllegalArgumentException if there is no series with the given label.
 	 */
 	DataTable removeSeries(String label);
 
@@ -175,18 +184,20 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * Remove the specified series from this table.
 	 * 
 	 * @return This DataTable.
+	 * @throws IndexOutOfBoundsException if the index is out of range ( index < 0 || index >= seriesCount())
 	 */
 	DataTable removeSeries(int index);
 	
 	/**
 	 * Get a copy of this DataTable. The returned table will contain
 	 * copies of the series (see {@link DataSeries#copy()). 
-	 * Changes to this table will not be reflected in the returned table.
+	 * Changes to this table will not be reflected in the returned table, or vice versa.
 	 */
 	DataTable copy();
 	
 	/**
-	 * Get an immutable copy of this DataValue.
+	 * Get an independent and immutable copy of this DataTable (the returned table cannot be
+	 * modified, and changes to this table will not be reflected in the returned table).
 	 */
 	DataTable immutableCopy();
 
@@ -198,6 +209,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * 
 	 * @param series
 	 *            Indices of series to select in the order to select them.
+	 * @throws IndexOutOfBoundsException if any indices are out of range ( index < 0 || index >= seriesCount())
 	 * @return a view of this table containing the specified series in the
 	 *         specified order.
 	 */
@@ -212,6 +224,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * @param end
 	 *            The index of the last series to include.
 	 * 
+	 * @throws IndexOutOfBoundsException if the indices are out of range ( index < 0 || index >= seriesCount())
 	 * @return a view of this table containing the specified series in the order
 	 *         they appear in this table.
 	 */
@@ -272,7 +285,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	/**
 	 * Get a view of this table containing the series in this table renamed 
 	 * with the specified labels. The number of labels given must match
-	 * the numbers of series in the table.
+	 * the number of series in this table.
 	 * 
 	 * @param labels The new labels.
 	 */
@@ -306,12 +319,13 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * All values in the specified series must implement the Comparable
 	 * interface. Furthermore, all values must be mutually comparable (that is,
 	 * v1.compareTo(v2) must not throw a ClassCastException for any values v1
-	 * and v2).
+	 * and v2). (This is the case for all numeric, string and date values.)
 	 * <p>
 	 * <p>
 	 * This sort is guaranteed to be stable: equal values will not be reordered
 	 * as a result of the sort.
 	 * </p>
+	 * @throws IndexOutOfBoundsException if the sortingSeries index is out of range ( index < 0 || index >= seriesCount())
 	 */
 	public TableView sort(int sortingSeries);
 	
@@ -325,12 +339,13 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * All values in the specified series must implement the Comparable
 	 * interface. Furthermore, all values must be mutually comparable (that is,
 	 * v1.compareTo(v2) must not throw a ClassCastException for any values v1
-	 * and v2).
+	 * and v2). (This is the case for all numeric, string and date values.)
 	 * <p>
 	 * <p>
 	 * This sort is guaranteed to be stable: equal values will not be reordered
 	 * as a result of the sort.
 	 * </p>
+	 * @throws IllegalArgumentException if there is no series with the given sortingSeries label.
 	 */
 	public TableView sort(String sortingSeries);
 	
@@ -355,13 +370,11 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * <p>
 	 * Create a view of this table containing the rows in the table grouped
 	 * according to the values in the specified series. The grouping is
-	 * represented as a {@link DataMap} where the map keys represent the group
-	 * identifier and the map values are DataTable views containing the rows
-	 * belonging to that group. Groups are formed by placing all rows for which
-	 * getRow(x).get(groupingSeries).equals(getRow(y).get(groupingSeries)), for
+	 * represented as a {@link GroupedTable}. Groups are formed by placing all rows for which
+	 * <code>getRow(x).get(groupingSeries).equals(getRow(y).get(groupingSeries))</code>, for
 	 * all rows x and y, into the same group (and rows where this is false into
 	 * different groups). The key for each group is a value such that
-	 * key.equals(group.getRow(z).get(groupingSeries)) for all rows z in the
+	 * <code>key.equals(group.getRow(z).get(groupingSeries))</code> for all rows z in the
 	 * group.
 	 * </p>
 	 * <p>
@@ -369,8 +382,9 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * in this table.
 	 * </p>
 	 * <p>
-	 * See {@link hivis.data.view.DefaultGroupedTable} for more information.
+	 * See {@link GroupedTable} for more information.
 	 * </p>
+	 * @throws IndexOutOfBoundsException if the groupingSeries index is out of range ( index < 0 || index >= seriesCount())
 	 */
 	<K> GroupedTable<K> group(int groupingSeries);
 	
@@ -378,13 +392,11 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * <p>
 	 * Create a view of this table containing the rows in the table grouped
 	 * according to the values in the specified series. The grouping is
-	 * represented as a {@link DataMap} where the map keys represent the group
-	 * identifier and the map values are DataTable views containing the rows
-	 * belonging to that group. Groups are formed by placing all rows for which
-	 * getRow(x).get(groupingSeries).equals(getRow(y).get(groupingSeries)), for
+	 * represented as a {@link GroupedTable}. Groups are formed by placing all rows for which
+	 * <code>getRow(x).get(groupingSeries).equals(getRow(y).get(groupingSeries))</code>, for
 	 * all rows x and y, into the same group (and rows where this is false into
 	 * different groups). The key for each group is a value such that
-	 * key.equals(group.getRow(z).get(groupingSeries)) for all rows z in the
+	 * <code>key.equals(group.getRow(z).get(groupingSeries))</code> for all rows z in the
 	 * group.
 	 * </p>
 	 * <p>
@@ -392,8 +404,9 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * in this table.
 	 * </p>
 	 * <p>
-	 * See {@link hivis.data.view.DefaultGroupedTable} for more information.
+	 * See {@link GroupedTable} for more information.
 	 * </p>
+	 * @throws IllegalArgumentException if there is no series with the given groupingSeries label.
 	 */
 	<K> GroupedTable<K> group(String groupingSeries);
 	
@@ -401,15 +414,13 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * <p>
 	 * Create a view of this table containing the rows in the table grouped
 	 * according to the specified row key function. The grouping is represented
-	 * as a {@link DataMap} where the map keys represent the group identifier
-	 * and the map values are DataTable views containing the rows belonging to
-	 * that group. The key for a row is calculated using the given row key
+	 * as a {@link GroupedTable}. The key for a row is calculated using the given row key
 	 * function, which should accept a row from the table and return a group key
 	 * (identifier) for that row. Groups are formed by placing all rows for
-	 * which rowKeyFunction(getRow(x)).equals(rowKeyFunction(getRow(y)), for all
+	 * which <code>rowKeyFunction(getRow(x)).equals(rowKeyFunction(getRow(y))</code>, for all
 	 * rows x and y, into the same group (and rows where this is false into
 	 * different groups). The key for each group is a value such that
-	 * key.equals(rowKeyFunction(group.getRow(z)) for all rows z in the group
+	 * <code>key.equals(rowKeyFunction(group.getRow(z))</code> for all rows z in the group
 	 * table.
 	 * </p>
 	 * <p>
@@ -417,7 +428,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * in this table.
 	 * </p>
 	 * <p>
-	 * See {@link hivis.data.view.DefaultGroupedTable} for more information.
+	 * See {@link GroupedTable} for more information.
 	 * </p>
 	 */
 	<K> GroupedTable<K> group(Function<DataRow, K> rowKeyFunction);
@@ -443,7 +454,7 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * The series labels remain unchanged. The function must be able to handle each
 	 * series in this table. If series are added or removed from this series it will be
 	 * reflected in the returned table. If values change in the series in this table
-	 * the changes will be reflected in the series in the returned table.
+	 * the changes will be reflected in the series in the returned table (as applicable according to the function).
 	 * 
 	 * @param function
 	 *            The function to generate the series for the new table.
@@ -463,16 +474,29 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 
 	/**
 	 * Get a view of this table in which the numeric series are scaled to the
-	 * specified range.
+	 * specified range. For example if a series contains the values [5,
+	 * 25, 11, 16] and toRange(0, 10) is called on it the resulting series will
+	 * contain (0, 10, 3, 5.5).
 	 * 
+	 * @param min
+	 *            The minimum value of the range.
+	 * @param max
+	 *            The maximum value of the range.
 	 * @see DataSeries#toRange(double, double)
 	 */
 	TableView toRange(double min, double max);
 
 	/**
 	 * Get a view of this table in which the numeric series are scaled to the
-	 * specified range.
-	 * 
+	 * specified range. For example if a series contains the values [5,
+	 * 25, 11, 16] and toRange(0, 10) is called on it the resulting series will
+	 * contain (0, 10, 3, 5.5).
+	 * @param min
+	 *            The minimum value of the range. Changes to this DataValue will
+	 *            be reflected in the returned table.
+	 * @param max
+	 *            The maximum value of the range. Changes to this DataValue will
+	 *            be reflected in the returned table.
 	 * @see DataSeries#toRange(DataValue, DataValue)
 	 */
 	TableView toRange(DataValue<?> min, DataValue<?> max);
@@ -480,8 +504,8 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	/**
 	 * Get a transposed view of this table. If a row key series is set in this
 	 * table and it contains no duplicate values it will be used for the series
-	 * labels in the transposed table, otherwise the row index will be used for
-	 * the series label in the transposed table (see {@link #setRowKey(int)}).
+	 * labels in the transposed table, otherwise the row indices will be used for
+	 * the series labels in the transposed table (see {@link #setRowKey(int)}).
 	 * The series labels for this table will become the row key in the
 	 * transposed table.
 	 */
@@ -489,14 +513,20 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	
 	/**
 	 * Get a table view comprising the series in this table followed by the series in the given table.
-	 * If any series labels in this table are the same as any series labels in the given table then
-	 * an error will occur. 
+	 * 
+	 * The returned table will have <code>this.seriesCount() + table.seriesCount()</code> series.
+	 * @param table The table to combine with this table.
+	 * 
+	 * @throws IllegalArgumentException If this table and the given table contain any series with the same labels.
 	 */
 	TableView combine(DataTable table);
 	
 	/**
-	 * Get a table view comprising the series in the given table appended to the series in this table.
-	 * If the series labels (both presence and order) or types do not match then an error will occur.
+	 * Get a table view comprising the series in the given table appended to the series in this table. 
+	 * The returned table will have the same number of series as this (and the given) table, but the length will be 
+	 * <code>this.length() + table.length()</code>.
+	 * @param table The table to append. It must have series with the same labels in the same order as this table.
+	 * @throws IllegalArgumentException If the series labels (both presence and order) or types do not match.
 	 */
 	TableView append(DataTable table);
 	
@@ -504,12 +534,14 @@ public interface DataTable extends DataMap<String, DataSeries<?>>, Iterable<Data
 	 * Get a view of this table containing the specified contiguous range of rows.
 	 * @param beginIndex The index of the first row to include, inclusive.
 	 * @param endIndex The index of the last row to include, inclusive.
+	 * @throws IndexOutOfBoundsException if the indices are out of range ( index < 0 || index >= length())
 	 */
 	TableView selectRowRange(int beginIndex, final int endIndex);
 
 	/**
 	 * Get a view of this table containing the specified rows.
 	 * @param rows The indices of the rows to include, in any order. May be an array or list of ints.
+	 * @throws IndexOutOfBoundsException if the indices are out of range ( index < 0 || index >= length())
 	 */
 	TableView selectRows(int... rows);
 	

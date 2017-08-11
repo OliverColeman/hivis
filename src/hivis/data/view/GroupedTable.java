@@ -23,21 +23,22 @@ import hivis.data.DataTable;
  * <p>
  * Represents a view of a DataTable containing the rows collected into groups.
  * The grouping is represented as a {@link DataMap} where the map keys represent
- * the group identifier and the map values are DataTable views containing the
+ * the group identifier or key and the map values are DataTables containing the
  * rows belonging to that group.
  * </p>
  * <p>
- * The rows in the group table views should appear in the same order as their
- * order in the input table.
+ * The rows in the group tables appear in the same order as their order in the
+ * original table.
  * </p>
  * <p>
- * The group table views returned by {@link #get(Object)} and {@link #values()}
- * should be emptied (set to length 0) if the group size becomes zero (and calls
- * to {@link #get(Object)} for groups that do not yet exist will return empty
- * group table views, but not add them to the list of groups returned by
+ * The group tables returned by {@link #get(Object)} and {@link #values()} are
+ * emptied (set to length 0) if the group size becomes zero (and calls to
+ * {@link #get(Object)} for groups that do not yet exist will return empty group
+ * tables, but not add them to the list of group tables returned by
  * {@link #values()} ). If the group size subsequently becomes non-zero this
- * same group table view will be reused. This allows external observers to
- * monitor the size of a group (even before it has existed in the input table).
+ * same group table will be reused. This allows external observers to monitor
+ * the size of a group even if it may become empty, and before it has existed in
+ * the input table.
  * </p>
  * 
  * @see DataTable#group(int)
@@ -47,16 +48,24 @@ import hivis.data.DataTable;
  */
 public interface GroupedTable<K> extends DataMap<K, TableView> {
 	/**
-	 * Get the group table view for the specified key. If the key does not
-	 * currently exist then an empty group table view will be returned. If the
-	 * group for that key subsequently becomes non-empty then the previously
-	 * returned table view will be populated accordingly.
+	 * Get the group table for the specified group identifier/key. If the key
+	 * does not currently exist then an empty table will be returned. If the
+	 * group for the key subsequently becomes non-empty then the previously
+	 * returned table will be populated accordingly.
 	 */
 	TableView get(K key);
 
 	/**
-	 * Returns a view of this table group in which the table for each
-	 * group/sub-table is aggregated into a row of the returned table view.
+	 * <p>
+	 * Creates a view of the table groups in which each group table is
+	 * aggregated into a single row using the specified aggregation function.
+	 * </p>
+	 * <p>
+	 * The {@link AggregateFunction#apply(String, hivis.data.DataSeries)} method
+	 * of the given AggregateFunction will be called for each series in each
+	 * group table, and the resulting value used for the corresponding series 
+	 * and row for the group table in the returned table.
+	 * </p>
 	 * 
 	 * @param function
 	 *            The aggregation function.
@@ -65,50 +74,50 @@ public interface GroupedTable<K> extends DataMap<K, TableView> {
 
 	/**
 	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
-	 * . The aggregation function returns the minimum value of each series in
-	 * the group tables, or the first value of the series if it's not numeric.
+	 * . The aggregation function returns the minimum value of each series in a
+	 * given group table, or the first value of the series if it's not numeric.
 	 */
 	public TableView aggregateMin();
 
 	/**
 	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
-	 * . The aggregation function returns the maximum of each series in the
-	 * group tables, or the first value of the series if it's not numeric.
+	 * . The aggregation function returns the maximum of each series in a given
+	 * group table, or the first value of the series if it's not numeric.
 	 */
 	public TableView aggregateMax();
 
 	/**
 	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
-	 * . The aggregation function returns the sum of each series in the group
-	 * tables, or the first value of the series if it's not numeric.
+	 * . The aggregation function returns the sum of each series in a given
+	 * group table, or the first value of the series if it's not numeric.
 	 */
 	public TableView aggregateSum();
 
 	/**
 	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
-	 * . The aggregation function returns the product of each series in the
-	 * group tables, or the first value of the series if it's not numeric.
+	 * . The aggregation function returns the product of each series in a given
+	 * group table, or the first value of the series if it's not numeric.
 	 */
 	public TableView aggregateProduct();
 
 	/**
 	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
-	 * . The aggregation function returns the mean of each series in the group
-	 * tables, or the first value of the series if it's not numeric.
+	 * . The aggregation function returns the mean of each series in a given
+	 * group table, or the first value of the series if it's not numeric.
 	 */
 	public TableView aggregateMean();
 
 	/**
 	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
-	 * . The aggregation function returns the variance of each series in the
-	 * group tables, or the first value of the series if it's not numeric.
+	 * . The aggregation function returns the variance of each series in a given
+	 * group table, or the first value of the series if it's not numeric.
 	 */
 	public TableView aggregateVariance();
 
 	/**
 	 * Convenience aggregation method (see {@link #aggregate(AggregateFunction)}
 	 * . The aggregation function returns the standard deviation of each series
-	 * in the group tables, or the first value of the series if it's not
+	 * in a given group table, or the first value of the series if it's not
 	 * numeric.
 	 */
 	public TableView aggregateStdDev();

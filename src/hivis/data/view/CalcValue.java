@@ -279,12 +279,12 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 				Iterator<Float> itr = s.asFloat().iterator();
 				float val = itr.next();
 				switch (op) {
-				case MIN:
+				case MINIMUM:
 					while (itr.hasNext()) {
 						val = Math.min(val, itr.next());
 					}
 					return val;
-				case MAX:
+				case MAXIMUM:
 					while (itr.hasNext()) {
 						val = Math.max(val, itr.next());
 					}
@@ -389,14 +389,14 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 				Iterator<Double> itr;
 				double val;
 				switch (op) {
-				case MIN:
+				case MINIMUM:
 					itr = s.asDouble().iterator();
 					val = itr.next();
 					while (itr.hasNext()) {
 						val = Math.min(val, itr.next());
 					}
 					return val;
-				case MAX:
+				case MAXIMUM:
 					itr = s.asDouble().iterator();
 					val = itr.next();
 					while (itr.hasNext()) {
@@ -429,7 +429,7 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 						val += v * v;
 					}
 					return val / len;
-				case STD_DEV:
+				case STANDARD_DEVIATION:
 					// If s is derived from AbstractDataCollection (very likely), then we'll be reusing the same CalcValue object.
 					// This means that if s.variance() is called elsewhere we won't recalculate it unnecessarily. 
 					return Math.sqrt(s.variance().getDouble());
@@ -524,12 +524,12 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 				Iterator<Integer> itr = s.asInt().iterator();
 				int val = itr.next();
 				switch (op) {
-				case MIN:
+				case MINIMUM:
 					while (itr.hasNext()) {
 						val = Math.min(val, itr.next());
 					}
 					return val;
-				case MAX:
+				case MAXIMUM:
 					while (itr.hasNext()) {
 						val = Math.max(val, itr.next());
 					}
@@ -634,12 +634,12 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 				Iterator<Long> itr = s.asLong().iterator();
 				long val = itr.next();
 				switch (op) {
-				case MIN:
+				case MINIMUM:
 					while (itr.hasNext()) {
 						val = Math.min(val, itr.next());
 					}
 					return val;
-				case MAX:
+				case MAXIMUM:
 					while (itr.hasNext()) {
 						val = Math.max(val, itr.next());
 					}
@@ -665,13 +665,13 @@ public abstract class CalcValue<I, O> extends AbstractValueView<I, O> {
 	}
 	
 	public enum SeriesOp {
-		MIN(true, false), 
-		MAX(true, false), 
+		MINIMUM(true, false), 
+		MAXIMUM(true, false), 
 		SUM(false, false), 
 		PRODUCT(true, false), 
 		MEAN(true, true), 
 		VARIANCE(true, true),
-		STD_DEV(true, true);
+		STANDARD_DEVIATION(true, true);
 		
 		SeriesOp(boolean ufe, boolean ro) {
 			undefinedForEmpty = ufe;
