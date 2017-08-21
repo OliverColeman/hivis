@@ -3,15 +3,27 @@ layout: post
 title: Changes introduced in HiVis 2
 ---
 
-HiVis 2 is coming. This page is a work-in-progress that describes the changes and how to update your code. You probably shouldn't pay any attention to it until we've officially released the new version (but feel free to get excited).
-
-We've made a number of changes to make HiVis even simpler to use, and add some exciting new functionality. We've tried to minimise the changes so that for the most part your existing code won't need to change very much, if at all.
+HiVis 2 is here! We've made a number of changes to make HiVis even simpler to use, and added some exciting new functionality. We've minimised changes to the existing API so that your existing code should continue to work.
 
 # Working With Data
 
+## Generics
+
+For most use cases we've removed the need to explicitly specify the type of data stored by a Data set via [Java generics](https://docs.oracle.com/javase/tutorial/java/generics/types.html). So instead of doing something like:
+``` java
+    DataSeries<Double> mySeries = HV.newSeries(1.1, 2.2, 3.3).asDouble();
+    double hi = mySeries.get(index);
+```
+You could do:
+``` java
+    DataSeries mySeries = HV.newSeries(1.1, 2.2, 3.3);
+    double hi = mySeries.getDouble(index);
+```
+You can still explicitly specify the type of data for most types of Data set via generics if desired.
+
 ## New DataValue data type
 
-We've added a new data type called `DataValue`. This type stores a single data item or value. It's utility comes from the fact that it's a fully-fledged `DataSet` with all the attendent functionality (for advanced developers, it represents an observable object, for which you may monitor for changes to the data it represents). Thus the value it represents may be based on other data sources - we sometimes refer to this as a ___View___ of the underlying data source - such as a DataSeries. When the underlying data source(s) change the value represented by the DataValue will be recalculated automatically. This comes in especially handy when the data in, say, a DataSeries changes and you need an up-to-date value based on that series to pipe into another DataSet or data consumer. More on this, and examples, in the _Arithmetic operations_ section below.
+We've added a new data type called `DataValue`. This type stores a single data item or value. It's utility comes from the fact that it's a fully-fledged `DataSet` with all the attendent functionality (for advanced developers, it represents an observable object, for which you may monitor for changes to the data it represents). Thus the value it represents may be based on other data sources - we refer to this as a ___View___ of the underlying data source - such as a DataSeries. When the underlying data source(s) change the value represented by the DataValue will be recalculated automatically. This comes in especially handy when the data in, say, a DataSeries changes and you need an up-to-date value based on that series to pipe into another DataSet or data consumer. More on this, and examples, in the _Arithmetic operations_ section below.
 
 A DataValue may represent numeric values or any other type of object. For DataValues representing numeric values there are methods defined on the DataValue class for performing the basic arithmetic operations _add_, _subtract_, _multiply_, and _divide_. See the _Arithmetic operations_ section below for more information.
 
@@ -69,15 +81,15 @@ There is now built-in support for obtaining Views of DataSeries and DataTables t
 ### Sorting
 
 ``` java
-// Sort a series according to the "natural" ordering of the values, in ascending order.
-DataSeries sortedSeriesNatural = mySeries.sort();
-// Sort a series with a custom Comparator (see examples linked above for more info on Comparator usage).
-DataSeries sortedSeriesCustom = mySeries.sort(new Comparator() { ...  } );
+    // Sort a series according to the "natural" ordering of the values, in ascending order.
+    DataSeries sortedSeriesNatural = mySeries.sort();
+    // Sort a series with a custom Comparator (see examples linked above for more info on Comparator usage).
+    DataSeries sortedSeriesCustom = mySeries.sort(new Comparator() { ...  } );
 
-// Sort the rows of a table according to the "natural" ordering of the values in the "name" series in the table.
-DataTable sortedTableNaturalName = myTable.sort("name");
-// Sort the rows of a table according to a custom Comparator (see examples linked above for more info on Comparator usage).
-DataTable sortedTableCustom = myTable.sort(new Comparator<DataRow>() { ... });
+    // Sort the rows of a table according to the "natural" ordering of the values in the "name" series in the table.
+    DataTable sortedTableNaturalName = myTable.sort("name");
+    // Sort the rows of a table according to a custom Comparator (see examples linked above for more info on Comparator usage).
+    DataTable sortedTableCustom = myTable.sort(new Comparator<DataRow>() { ... });
 ```
 
 ### Grouping Series
@@ -86,20 +98,20 @@ A grouping over a series is represented as a DataMap (see above). The values of 
 
 We can group by the values' own equality (values that are equal are grouped together), in which case the key for each group is a value such that key.equals(v) for all values in the group:
 ``` java
-		DataMap randomIntsGrouped = randomInts.group();
+    DataMap randomIntsGrouped = randomInts.group();
 ```
 Will produce a grouping something like (depending on the actual values in the series):
 ```
-	1 => DataSeries (1) [  1 ],
-	2 => DataSeries (3) [  2 ; 2 ; 2 ],
-	3 => DataSeries (2) [  3 ; 3 ],
-	...
+    1 => DataSeries (1) [  1 ],
+    2 => DataSeries (3) [  2 ; 2 ; 2 ],
+    3 => DataSeries (2) [  3 ; 3 ],
+    ...
 ```
 The numbers on the left are the keys of the map, and the DataSeries are the groups (showing the values they contain). If we called `group()` on a series containing Strings or dates then the keys would be Strings or dates.
 
 We can also group using a custom "key function", in which case the key for each group is a value such that `key.equals(keyFunction(v))` for all values `v` in the group:
 ``` java
-DataMap randomIntsGroupedCustom = randomInts.group(new Function<[SeriesType], [TypeOfTheKey]>() { });
+    DataMap randomIntsGroupedCustom = randomInts.group(new Function<[SeriesType], [TypeOfTheKey]>() { });
 ```
 The output of the key function can be any kind of value. 
 
@@ -111,34 +123,34 @@ A grouping over a table is represented as a GroupedTable (an extension of DataMa
 
 We can group by the values in a series, in which case the key for each group is a value such that `key.equals(v)` for all values `v` in the grouping series. For example:
 ``` java
-// Make a table of peoples' names and their ages.
-DataSeries name = HV.newSeries("Genevieve", "Charlotte", "Roberto", "Stefan", "Franklin", "Amelia");
-DataSeries age = HV.newSeries(7, 8, 7, 6, 8, 7);
-DataTable nameAge = HV.newTable().addSeries("name", name).addSeries("age", age);
-// Group by "age" series.
-DataMap ageGrouping = nameAge.group("age");
-System.out.println(ageGrouping);
+    // Make a table of peoples' names and their ages.
+    DataSeries name = HV.newSeries("Genevieve", "Charlotte", "Roberto", "Stefan", "Franklin", "Amelia");
+    DataSeries age = HV.newSeries(7, 8, 7, 6, 8, 7);
+    DataTable nameAge = HV.newTable().addSeries("name", name).addSeries("age", age);
+    // Group by "age" series.
+    DataMap ageGrouping = nameAge.group("age");
+    System.out.println(ageGrouping);
 ```
 Will output:
 ```
 DataMap (3) [ 
-	6 => |   name | age | 
-	     ----------------
-	     | Stefan |   6 | 
-	     ----------------,
+    6 => |   name | age | 
+         ----------------
+         | Stefan |   6 | 
+         ----------------,
 
-	7 => |      name | age | 
-	     -------------------
-	     | Genevieve |   7 | 
-	     |   Roberto |   7 | 
-	     |    Amelia |   7 | 
-	     -------------------,
+    7 => |      name | age | 
+         -------------------
+         | Genevieve |   7 | 
+         |   Roberto |   7 | 
+         |    Amelia |   7 | 
+         -------------------,
 
-	8 => |      name | age | 
-	     -------------------
-	     | Charlotte |   8 | 
-	     |  Franklin |   8 | 
-	     -------------------
+    8 => |      name | age | 
+         -------------------
+         | Charlotte |   8 | 
+         |  Franklin |   8 | 
+         -------------------
  ]
 
 ```
@@ -146,19 +158,19 @@ DataMap (3) [
 Or we can group using a custom "key function" which, given a row of the table, produces a key representing the group that row belongs to.
 Then the key for each group is a value such that `key.equals(keyFunction(row))` for all table rows in the group:
 ``` java
-DataMap groupedTableByNameCustom = myTable.group(new Function<DataRow, [TypeOfTheKey]>() { ... });
+    DataMap groupedTableByNameCustom = myTable.group(new Function<DataRow, [TypeOfTheKey]>() { ... });
 ```
 One cool thing to do with GroupedTables is aggregate them. You can try an example of this in the second tutorial at examples/tutorials/T02_pie, from which a snippet:
 ``` java
-DataTable rawData = HV.loadSpreadSheet(HV.loadSSConfig().sourceFile("iris.csv").columnIndex(1));
+    DataTable rawData = HV.loadSpreadSheet(HV.loadSSConfig().sourceFile("iris.csv").columnIndex(1));
 
-// Group on the species.
-GroupedTable groupedData = rawData.group("Species");
+    // Group on the species.
+    GroupedTable groupedData = rawData.group("Species");
 
-// Get a table in which the table for each group/sub-table is aggregated into a 
-// single row using an aggregation function (in this case the mean of the series 
-// in the sub-table, or the first value of the series if it's not numeric). 
-meanValuesBySpecies = groupedData.aggregateMean();
+    // Get a table in which the table for each group/sub-table is aggregated into a 
+    // single row using an aggregation function (in this case the mean of the series 
+    // in the sub-table, or the first value of the series if it's not numeric). 
+    meanValuesBySpecies = groupedData.aggregateMean();
 ```
 You can create custom aggregation functions as well, see the API docs for GroupedTable.
 
@@ -173,9 +185,9 @@ Data may now be loaded from CSV (Comma Separated Values) and similar text files.
 There are now many more configuration options available when loading data from spreadsheets. To facilitate this a new configuration object has been introduced. An example usage:
 
 ```java
-DataTable data = HV.loadSpreadSheet(
-  HV.loadSSConfig().sourceFile("myspreadsheet.csv").headerRowIndex(2).rowIndex(3).columnIndex(2)
-);
+    DataTable data = HV.loadSpreadSheet(
+        HV.loadSSConfig().sourceFile("myspreadsheet.csv").headerRowIndex(2).rowIndex(3).columnIndex(2)
+    );
 ```
 
 For all configuration options see [here](https://olivercoleman.github.io/hivis/reference/hivis/data/reader/SpreadSheetReader.Config.html).
