@@ -4,6 +4,12 @@ HiVis is a Java library for importing, manipulating, shaping, processing and oth
 
 HiVis is developed as part of a collaboration between the School of Medical Sciences at the University of Sydney and the Interactive Media Lab in Art and Design at the University of New South Wales.
 
+
+## Version 2 is here!
+
+Check out the [upgrade page](https://olivercoleman.github.io/hivis/upgrade2) for info on what's new.
+
+
 ## HiVis in 30 seconds
 
 Typically raw data is loaded from a data source, for example a spreadsheet, and then ***views*** of that data are derived from it via transformation operations or functions. Some example views are mathematical and statistical operations, filtering and rearranging elements of the data, sorting and grouping data, or applying a function to each element of the data. Custom views can easily be created too. 
