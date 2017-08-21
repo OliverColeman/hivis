@@ -424,7 +424,6 @@ public abstract class CalcSeries<I, O> extends AbstractSeriesViewMultiple<I, O> 
 
 		@Override
 		public void update() {
-
 			for (int i = 0; i < length(); i++) {
 				cache.setValue(i, calcDouble(i));
 			}

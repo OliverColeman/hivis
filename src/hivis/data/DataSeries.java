@@ -726,7 +726,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * @throws UnsupportedOperationException
 	 *             if this series does not represent numeric values.
 	 */
-	public SeriesView<?> add(Number value);
+	public <O> SeriesView<O> add(Number value);
 
 	/**
 	 * Create a view of this series in which the values are the result of adding
@@ -739,7 +739,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 *             if this series or the given value do not represent numeric
 	 *             values.
 	 */
-	public SeriesView<?> add(DataValue<?> value);
+	public <O> SeriesView<O> add(DataValue<?> value);
 
 	/**
 	 * Create a view of this series in which the values are the result of adding
@@ -755,7 +755,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 *             if this series or the given series do not represent numeric
 	 *             values.
 	 */
-	public SeriesView<?> add(DataSeries<?> series);
+	public <O> SeriesView<O> add(DataSeries<?> series);
 
 	/**
 	 * Create a view of this series in which the values are the result of
@@ -766,7 +766,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * @throws UnsupportedOperationException
 	 *             if this series does not represent numeric values.
 	 */
-	public SeriesView<?> subtract(Number value);
+	public <O> SeriesView<O> subtract(Number value);
 
 	/**
 	 * Create a view of this series in which the values are the result of
@@ -779,7 +779,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 *             if this series or the given value do not represent numeric
 	 *             values.
 	 */
-	public SeriesView<?> subtract(DataValue<?> value);
+	public <O> SeriesView<O> subtract(DataValue<?> value);
 
 	/**
 	 * Create a view of this series in which the values are the result of
@@ -795,7 +795,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 *             if this series or the given series do not represent numeric
 	 *             values.
 	 */
-	public SeriesView<?> subtract(DataSeries<?> series);
+	public <O> SeriesView<O> subtract(DataSeries<?> series);
 
 	/**
 	 * Create a view of this series in which the values are the result of
@@ -806,7 +806,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * @throws UnsupportedOperationException
 	 *             if this series does not represent numeric values.
 	 */
-	public SeriesView<?> multiply(Number value);
+	public <O> SeriesView<O> multiply(Number value);
 
 	/**
 	 * Create a view of this series in which the values are the result of
@@ -819,7 +819,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 *             if this series or the given value do not represent numeric
 	 *             values.
 	 */
-	public SeriesView<?> multiply(DataValue<?> value);
+	public <O> SeriesView<O> multiply(DataValue<?> value);
 
 	/**
 	 * Create a view of this series in which the values are the result of
@@ -835,7 +835,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 *             if this series or the given series do not represent numeric
 	 *             values.
 	 */
-	public SeriesView<?> multiply(DataSeries<?> series);
+	public <O> SeriesView<O>  multiply(DataSeries<?> series);
 
 	/**
 	 * Create a view of this series in which the values are the result of
@@ -846,7 +846,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 * @throws UnsupportedOperationException
 	 *             if this series does not represent numeric values.
 	 */
-	public SeriesView<?> divide(Number value);
+	public <O> SeriesView<O>  divide(Number value);
 
 	/**
 	 * Create a view of this series in which the values are the result of
@@ -859,7 +859,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 *             if this series or the given value do not represent numeric
 	 *             values.
 	 */
-	public SeriesView<?> divide(DataValue<?> value);
+	public <O> SeriesView<O>  divide(DataValue<?> value);
 
 	/**
 	 * Create a view of this series in which the values are the result of
@@ -875,7 +875,7 @@ public interface DataSeries<V> extends DataSequence, Iterable<V> {
 	 *             if this series or the given series do not represent numeric
 	 *             values.
 	 */
-	public SeriesView<?> divide(DataSeries<?> series);
+	public <O> SeriesView<O>  divide(DataSeries<?> series);
 
 	/**
 	 * Internal use. Interface for DataSeries representing float values. Allows

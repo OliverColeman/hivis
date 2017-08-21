@@ -1044,63 +1044,63 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 	}
 
 	@Override
-	public SeriesView<?> add(Number value) {
-		return op(Op.ADD, value);
+	public <O> SeriesView<O> add(Number value) {
+		return (SeriesView<O>) op(Op.ADD, value);
 	}
 
 	@Override
-	public SeriesView<?> add(DataSeries<?> series) {
-		return op(Op.ADD, series);
+	public <O> SeriesView<O> add(DataSeries<?> series) {
+		return (SeriesView<O>) op(Op.ADD, series);
 	}
 
 	@Override
-	public SeriesView<?> add(DataValue<?> value) {
-		return op(Op.ADD, value);
+	public <O> SeriesView<O> add(DataValue<?> value) {
+		return (SeriesView<O>) op(Op.ADD, value);
 	}
 
 	@Override
-	public SeriesView<?> subtract(Number value) {
-		return op(Op.SUBTRACT, value);
+	public <O> SeriesView<O> subtract(Number value) {
+		return (SeriesView<O>) op(Op.SUBTRACT, value);
 	}
 
 	@Override
-	public SeriesView<?> subtract(DataSeries<?> series) {
-		return op(Op.SUBTRACT, series);
+	public <O> SeriesView<O> subtract(DataSeries<?> series) {
+		return (SeriesView<O>) op(Op.SUBTRACT, series);
 	}
 
 	@Override
-	public SeriesView<?> subtract(DataValue<?> value) {
-		return op(Op.SUBTRACT, value);
+	public <O> SeriesView<O> subtract(DataValue<?> value) {
+		return (SeriesView<O>) op(Op.SUBTRACT, value);
 	}
 
 	@Override
-	public SeriesView<?> multiply(Number value) {
-		return op(Op.MULTIPLY, value);
+	public <O> SeriesView<O> multiply(Number value) {
+		return (SeriesView<O>) op(Op.MULTIPLY, value);
 	}
 
 	@Override
-	public SeriesView<?> multiply(DataSeries<?> series) {
-		return op(Op.MULTIPLY, series);
+	public <O> SeriesView<O> multiply(DataSeries<?> series) {
+		return (SeriesView<O>) op(Op.MULTIPLY, series);
 	}
 
 	@Override
-	public SeriesView<?> multiply(DataValue<?> value) {
-		return op(Op.MULTIPLY, value);
+	public <O> SeriesView<O> multiply(DataValue<?> value) {
+		return (SeriesView<O>) op(Op.MULTIPLY, value);
 	}
 
 	@Override
-	public SeriesView<?> divide(Number value) {
-		return op(Op.DIVIDE, value);
+	public <O> SeriesView<O> divide(Number value) {
+		return (SeriesView<O>) op(Op.DIVIDE, value);
 	}
 
 	@Override
-	public SeriesView<?> divide(DataSeries<?> series) {
-		return op(Op.DIVIDE, series);
+	public <O> SeriesView<O> divide(DataSeries<?> series) {
+		return (SeriesView<O>) op(Op.DIVIDE, series);
 	}
 
 	@Override
-	public SeriesView<?> divide(DataValue<?> value) {
-		return op(Op.DIVIDE, value);
+	public <O> SeriesView<O> divide(DataValue<?> value) {
+		return (SeriesView<O>) op(Op.DIVIDE, value);
 	}
 
 	/**
@@ -1282,7 +1282,7 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 			throw new UnsupportedOperationException("Cannot perform Range operation on non-numeric DataSeries containing " + getType().getSimpleName());
 		}
 		String key = min.getDouble() + ":" + max.getDouble();
-		DataSeries<Double> rangeView = null;
+		SeriesView<Double> rangeView = null;
 		if (rangeViews == null || !rangeViews.containsKey(key)) {
 			if (rangeViews == null) {
 				rangeViews = new HashMap<>();
@@ -1290,15 +1290,15 @@ public abstract class AbstractDataSeries<V> extends DataDefault implements DataS
 			
 			DataValue<?> originalRange = max().subtract(min());
 			if (min.getDouble() == 0 && max.getDouble() == 1) {
-				rangeView = (DataSeries<Double>) subtract(min()).divide(originalRange);
+				rangeView = subtract(min()).divide(originalRange);
 			}
 			else {
 				DataValue<?> specRange = max.subtract(min);
-				rangeView = (DataSeries<Double>) (((subtract(min())).multiply(specRange)).divide(originalRange)).add(min);
+				rangeView = (((subtract(min())).multiply(specRange)).divide(originalRange)).add(min);
 			}
 		}
 		else {
-			rangeView = rangeViews.get(key);
+			rangeView = (SeriesView<Double>) rangeViews.get(key);
 		}
 		return rangeView;
 	}

@@ -71,28 +71,33 @@ public abstract class Function<I, O> {
 		throw new IllegalStateException("Please implement the method '" + outputType.getSimpleName() + " apply(" + inputType.getSimpleName() + ")' in your Function.");
 	}
 	
+	// The below methods handle two cases:
+	// 1. They may be overridden to support handling primitive types without (un)boxing.
+	// 2. If the appropriate primitive method isn't overridden then the apply(I) method is invoked to find the appropriate method to call.
+	// (We can't make these methods abstract otherwise sub-classes would have to override all possible primitive input types.)
+	
 	public O apply(float input) {
-		return apply(input);
+		return apply((I) (Float) input);
 	}
 	
 	public O apply(double input) {
-		return apply(input);
+		return apply((I) (Double) input);
 	}
 	
 	public O apply(int input) {
-		return apply(input);
+		return apply((I) (Integer) input);
 	}
 	
 	public O apply(long input) {
-		return apply(input);
+		return apply((I) (Long) input);
 	}
 	
 	public O apply(String input) {
-		return apply(input);
+		return apply((I) input);
 	}
 	
 	public O apply(Date input) {
-		return apply(input);
+		return apply((I) input);
 	}
 	
 	public O apply(TemporalAccessor input) {

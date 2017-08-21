@@ -15,6 +15,7 @@
  */
 package hivis.data.view;
 
+import hivis.data.DataEvent;
 import hivis.data.DataSeries;
 
 /**
@@ -23,4 +24,10 @@ import hivis.data.DataSeries;
  * @author O. J. Coleman
  */
 public interface SeriesView<V> extends DataSeries<V>, View {
+	/**
+	 * @deprecated Use {@link #update(DataEvent)} instead.
+	 */
+	default void updateView(DataEvent e) {
+		update(e);
+	}
 }

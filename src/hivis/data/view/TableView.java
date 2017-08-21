@@ -15,6 +15,7 @@
  */
 package hivis.data.view;
 
+import hivis.data.DataEvent;
 import hivis.data.DataTable;
 
 /**
@@ -23,4 +24,10 @@ import hivis.data.DataTable;
  * @author O. J. Coleman
  */
 public interface TableView extends DataTable, View {
+	/**
+	 * @deprecated Use {@link #update(DataEvent)} instead.
+	 */
+	default void updateView(DataEvent e) {
+		update(e);
+	}
 }
