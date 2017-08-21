@@ -1,9 +1,7 @@
----
-layout: post
-title: Changes introduced in HiVis 2
----
+# HiVis 2 is here! 
 
-HiVis 2 is here! We've made a number of changes to make HiVis even simpler to use, and added some exciting new functionality. We've minimised changes to the existing API so that your existing code should continue to work.
+We've made a number of changes to make HiVis even simpler to use, and added some exciting new functionality. We've minimised changes to the existing API so that your existing code should continue to work.
+
 
 # Working With Data
 
