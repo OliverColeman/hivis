@@ -10,12 +10,12 @@ HiVis 2 is here! We've made a number of changes to make HiVis even simpler to us
 ## Generics
 
 For most use cases we've removed the need to explicitly specify the type of data stored by a Data set via [Java generics](https://docs.oracle.com/javase/tutorial/java/generics/types.html). So instead of doing something like:
-``` java
+```java
     DataSeries<Double> mySeries = HV.newSeries(1.1, 2.2, 3.3).asDouble();
     double hi = mySeries.get(index);
 ```
 You could do:
-``` java
+```java
     DataSeries mySeries = HV.newSeries(1.1, 2.2, 3.3);
     double hi = mySeries.getDouble(index);
 ```
@@ -59,7 +59,7 @@ Arithmetic methods on DataSeries and DataValues (now) create new DataSeries or D
 The end result of these changes is that you can now be blissfully ignorant of the numeric type a series or value represents when performing arithmetic operations on or with it to derive new series or values. HiVis will automatically determine the appropriate numeric type, and, as in the past, will do it's best to accommodate the interchange of different numeric types when necessary (for example happily appending a floating-point value to an integer DataSeries if that floating-point value happens to represent an integer). In the rare instance that a calculated value or series might result in lost precision - for example, dealing with calculations involving 'long' and 'double' numbers - HiVis will emit a warning.
 
 DataValues can be provided as an argument, or operand, to arithmetic methods (or classes used to derive DataSeries or DataValues based on a custom operation). The resulting DataSeries or DataValues will be automatically updated if the underlying DataValue is changed. This makes it possible to derive a _View_ of an original data set from a chain of operations involving series and values. A simple example is recreating the `toUnitRange()` method of a DataSeries or calculating the dot product of two vectors:
-``` java
+```java
 DataSeries myData = HV.newIntegerSeries(1, 1, 2, 3, 5, 8);
 DataSeries myDataUnitRange = myData.subtract(myData.min()).divide(myData.max().subtract(myData.min()));
 
@@ -80,7 +80,7 @@ There is now built-in support for obtaining Views of DataSeries and DataTables t
 
 ### Sorting
 
-``` java
+```java
     // Sort a series according to the "natural" ordering of the values, in ascending order.
     DataSeries sortedSeriesNatural = mySeries.sort();
     // Sort a series with a custom Comparator (see examples linked above for more info on Comparator usage).
@@ -97,7 +97,7 @@ There is now built-in support for obtaining Views of DataSeries and DataTables t
 A grouping over a series is represented as a DataMap (see above). The values of the DataMap are DataSeries containing the values for a group. 
 
 We can group by the values' own equality (values that are equal are grouped together), in which case the key for each group is a value such that key.equals(v) for all values in the group:
-``` java
+```java
     DataMap randomIntsGrouped = randomInts.group();
 ```
 Will produce a grouping something like (depending on the actual values in the series):
@@ -110,7 +110,7 @@ Will produce a grouping something like (depending on the actual values in the se
 The numbers on the left are the keys of the map, and the DataSeries are the groups (showing the values they contain). If we called `group()` on a series containing Strings or dates then the keys would be Strings or dates.
 
 We can also group using a custom "key function", in which case the key for each group is a value such that `key.equals(keyFunction(v))` for all values `v` in the group:
-``` java
+```java
     DataMap randomIntsGroupedCustom = randomInts.group(new Function<[SeriesType], [TypeOfTheKey]>() { });
 ```
 The output of the key function can be any kind of value. 
@@ -122,7 +122,7 @@ The ordering of the values in the groups matches the ordering of those values in
 A grouping over a table is represented as a GroupedTable (an extension of DataMap). The values of the DataMap are DataTables containing the rows for a group. 
 
 We can group by the values in a series, in which case the key for each group is a value such that `key.equals(v)` for all values `v` in the grouping series. For example:
-``` java
+```java
     // Make a table of peoples' names and their ages.
     DataSeries name = HV.newSeries("Genevieve", "Charlotte", "Roberto", "Stefan", "Franklin", "Amelia");
     DataSeries age = HV.newSeries(7, 8, 7, 6, 8, 7);
@@ -157,11 +157,11 @@ DataMap (3) [
 
 Or we can group using a custom "key function" which, given a row of the table, produces a key representing the group that row belongs to.
 Then the key for each group is a value such that `key.equals(keyFunction(row))` for all table rows in the group:
-``` java
+```java
     DataMap groupedTableByNameCustom = myTable.group(new Function<DataRow, [TypeOfTheKey]>() { ... });
 ```
 One cool thing to do with GroupedTables is aggregate them. You can try an example of this in the second tutorial at examples/tutorials/T02_pie, from which a snippet:
-``` java
+```java
     DataTable rawData = HV.loadSpreadSheet(HV.loadSSConfig().sourceFile("iris.csv").columnIndex(1));
 
     // Group on the species.
